@@ -67,7 +67,11 @@ const server = http.createServer((req, res) => {
       res.writeHead(404); res.end('Agent not found'); return;
     }
     try {
-      const tarData = execSync(`tar -czf - -C "${PACKAGES}" "${name}"`, { maxBuffer: 10 * 1024 * 1024 });
+      // Pre-build tar to a temp file to avoid stream issues
+      const tmpFile = path.join(require('os').tmpdir(), `${name}-${Date.now()}.tar.gz`);
+      execSync(`tar -czf "${tmpFile}" -C "${PACKAGES}" "${name}"`);
+      const tarData = fs.readFileSync(tmpFile);
+      fs.unlinkSync(tmpFile);
       res.writeHead(200, {
         'Content-Type': 'application/gzip',
         'Content-Disposition': `attachment; filename="${name}.tar.gz"`,
@@ -75,6 +79,7 @@ const server = http.createServer((req, res) => {
       });
       res.end(tarData);
     } catch (e) {
+      console.error('Download error:', e.message);
       res.writeHead(500); res.end('Failed to create package');
     }
     return;
@@ -108,6 +113,9 @@ const server = http.createServer((req, res) => {
     res.writeHead(404); res.end('Not found');
   }
 });
+
+process.on('uncaughtException', (e) => { console.error('Uncaught:', e.message); });
+process.on('unhandledRejection', (e) => { console.error('Unhandled:', e); });
 
 server.listen(PORT, () => {
   console.log(`\n  🦞 Agent Arena server running on http://localhost:${PORT}\n`);

@@ -1,5 +1,9 @@
 # AGENTS.md — DevOps Agent
 
+## First Run
+
+If `BOOTSTRAP.md` exists, that's your birth certificate. Follow it, introduce yourself, figure out who your human is, then delete it. You won't need it again.
+
 ## Every Session
 1. Read `SOUL.md` — this is who you are
 2. Read `USER.md` — this is who you're helping

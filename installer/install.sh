@@ -150,15 +150,16 @@ ok "Agent metadata saved"
 
 # Restart gateway if running
 echo ""
-if command -v openclaw &>/dev/null; then
+if [[ -z "${SKIP_RESTART:-}" ]] && command -v openclaw &>/dev/null; then
   info "Restarting OpenClaw gateway..."
-  if openclaw gateway restart 2>/dev/null; then
+  if timeout 10 openclaw gateway restart 2>/dev/null; then
     ok "Gateway restarted"
   else
     warn "Could not restart gateway — run 'openclaw gateway restart' manually"
   fi
 else
-  warn "OpenClaw CLI not found — make sure it's installed"
+  [[ -n "${SKIP_RESTART:-}" ]] && info "Skipping gateway restart (test mode)"
+  [[ -z "${SKIP_RESTART:-}" ]] && warn "OpenClaw CLI not found — make sure it's installed"
 fi
 
 echo ""
