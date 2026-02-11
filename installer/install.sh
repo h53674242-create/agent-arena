@@ -165,9 +165,33 @@ fi
 echo ""
 echo -e "  ${GREEN}${BOLD}${EMOJI} ${DISPLAY_NAME} is ready!${RESET}"
 echo ""
-echo -e "  ${DIM}Your previous files are backed up in:${RESET}"
-echo -e "  ${DIM}$BACKUP_DIR${RESET}"
+
+# Check if OpenClaw is running
+if command -v openclaw &>/dev/null; then
+  GATEWAY_STATUS=$(openclaw gateway status 2>/dev/null || echo "not running")
+  if echo "$GATEWAY_STATUS" | grep -qi "running\|active\|ok"; then
+    echo -e "  ${GREEN}✓${RESET} OpenClaw detected and running!"
+    echo ""
+    echo -e "  ${BOLD}Your agent is live.${RESET} Open your chat (Telegram, webchat, etc.)"
+    echo -e "  and say hello — your new agent is waiting to introduce itself."
+    echo ""
+    echo -e "  ${DIM}To switch back to your previous agent:${RESET}"
+    echo -e "  ${DIM}  cp $BACKUP_DIR/* $WORKSPACE/ && openclaw gateway restart${RESET}"
+  else
+    echo -e "  ${YELLOW}!${RESET} OpenClaw is installed but the gateway isn't running."
+    echo -e "    Start it with: ${BOLD}openclaw gateway start${RESET}"
+    echo -e "    Then open your chat and say hello to your new agent!"
+  fi
+else
+  echo ""
+  echo -e "  ${YELLOW}!${RESET} OpenClaw not found on this machine."
+  echo -e "    Install it first: ${BOLD}https://openclaw.ai${RESET}"
+  echo -e "    Then run: ${BOLD}openclaw gateway start${RESET}"
+  echo -e "    Your agent files are ready — they'll come alive once OpenClaw is running."
+fi
+
 echo ""
+echo -e "  ${DIM}Files backed up to: $BACKUP_DIR${RESET}"
 echo -e "  ${DIM}To restore: cp $BACKUP_DIR/* $WORKSPACE/${RESET}"
 echo ""
 echo -e "  ${YELLOW}${BOLD}  Happy shipping! 🚀${RESET}"
