@@ -470,7 +470,7 @@ function renderProfile() {
     </div>
     <div class="profile-actions">
       <button class="btn-info" onclick="toggleSkills()">📊 Skills</button>
-      <button class="btn-activate" onclick="showActivate()">⚡ ${a.pkg ? 'Activate Agent' : 'Coming Soon'}</button>
+      <button class="btn-activate" onclick="${a.pkg ? `hireAndChat('${a.id}')` : 'showActivate()'}">⚡ ${a.pkg ? 'Hire Now' : 'Coming Soon'}</button>
     </div>
   `;
   renderSkills();
@@ -554,6 +554,64 @@ function send() {
 function scrollChat() {
   const c = document.getElementById('chat');
   setTimeout(() => c.scrollTop = c.scrollHeight, 50);
+}
+
+async function hireAndChat(agentId) {
+  const a = AGENTS.find(x => x.id === agentId);
+  if (!a || !a.pkg) return;
+
+  const chat = document.getElementById('chat');
+  const profile = document.getElementById('profile');
+
+  // Show hiring animation in chat
+  chat.innerHTML += `
+    <div class="msg" id="hire-progress">
+      <div class="msg-avatar" style="background:${a.color}20;">⚡</div>
+      <div class="msg-body">
+        <div class="msg-name" style="color:var(--accent);">Agent Arena</div>
+        <div class="msg-text" id="hire-status">Deploying ${a.name}...</div>
+      </div>
+    </div>`;
+  scrollChat();
+
+  const statusEl = document.getElementById('hire-status');
+  const steps = [
+    'Downloading agent package...',
+    'Installing personality + skills...',
+    'Configuring workspace...',
+    'Booting agent...',
+  ];
+
+  for (let i = 0; i < steps.length; i++) {
+    await new Promise(r => setTimeout(r, 600));
+    statusEl.innerHTML = `${steps.slice(0, i+1).map((s,j) => `<div style="color:${j<i?'var(--green)':'var(--accent)'};">${j<i?'✅':'⏳'} ${s}</div>`).join('')}`;
+    scrollChat();
+  }
+
+  // Fetch agent data from our API
+  try {
+    const resp = await fetch(`/api/agents/${a.pkg}/hire`, { method: 'POST' });
+    const data = await resp.json();
+
+    if (data.ok) {
+      await new Promise(r => setTimeout(r, 500));
+      statusEl.innerHTML = steps.map(s => `<div style="color:var(--green);">✅ ${s}</div>`).join('') +
+        `<div style="color:var(--green);font-weight:700;margin-top:8px;">🎉 ${a.name} is live!</div>`;
+      scrollChat();
+
+      // Now show the agent's real greeting
+      await new Promise(r => setTimeout(r, 800));
+      document.getElementById('hire-progress')?.remove();
+
+      // Switch to "live" mode for this agent
+      a._live = true;
+      a._prompt = data.prompt;
+      renderChat(); // Re-render with fresh greeting
+    }
+  } catch (e) {
+    statusEl.innerHTML = `<div style="color:var(--red);">❌ Could not connect to local server. Make sure the Agent Arena server is running.</div>
+    <div style="margin-top:8px;font-size:12px;color:var(--muted);">Run: <code style="background:#0d1117;padding:2px 6px;border-radius:4px;color:#06b6d4;">cd agent-arena && node server.js</code></div>`;
+  }
 }
 
 function showActivate() {

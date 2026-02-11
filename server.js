@@ -97,6 +97,104 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: hire/deploy agent — runs installer + spawns sub-agent
+  const hireMatch = url.pathname.match(/^\/api\/agents\/([a-z0-9-]+)\/hire$/);
+  if (hireMatch && req.method === 'POST') {
+    const name = hireMatch[1];
+    const pkgDir = path.join(PACKAGES, name);
+    if (!fs.existsSync(path.join(pkgDir, 'agent.json'))) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Agent not found' }));
+      return;
+    }
+
+    try {
+      // Read the agent's SOUL.md and BOOTSTRAP.md
+      const soul = fs.readFileSync(path.join(pkgDir, 'SOUL.md'), 'utf8');
+      const bootstrap = fs.existsSync(path.join(pkgDir, 'BOOTSTRAP.md'))
+        ? fs.readFileSync(path.join(pkgDir, 'BOOTSTRAP.md'), 'utf8')
+        : '';
+      const manifest = JSON.parse(fs.readFileSync(path.join(pkgDir, 'agent.json'), 'utf8'));
+
+      // Build the prompt for the sub-agent
+      const prompt = `${soul}\n\n---\n\nFIRST BOOT INSTRUCTIONS:\n${bootstrap}\n\nThis is your first time waking up. Follow the bootstrap instructions. Introduce yourself, show what you can do, and ask what to work on.`;
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        agent: manifest,
+        prompt: prompt,
+        message: `${manifest.displayName} is ready to deploy. Use the prompt to spawn a sub-agent.`
+      }));
+    } catch (e) {
+      console.error('Hire error:', e.message);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to prepare agent' }));
+    }
+    return;
+  }
+
+  // API: chat with agent via OpenClaw gateway
+  if (url.pathname === '/api/chat' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const { message, port, token } = JSON.parse(body);
+        const WebSocket = require('ws');
+        const wsUrl = `ws://127.0.0.1:${port || 18789}/`;
+        const ws = new WebSocket(wsUrl);
+
+        ws.on('open', () => {
+          // Authenticate
+          if (token) {
+            ws.send(JSON.stringify({
+              id: 1,
+              method: 'connect',
+              params: { auth: { token } }
+            }));
+          }
+          // Send message
+          ws.send(JSON.stringify({
+            id: 2,
+            method: 'chat.send',
+            params: { message }
+          }));
+        });
+
+        let response = '';
+        ws.on('message', (data) => {
+          try {
+            const msg = JSON.parse(data.toString());
+            if (msg.params?.text) response += msg.params.text;
+            if (msg.result?.status === 'ok' || msg.type === 'chat.done') {
+              ws.close();
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ ok: true, response }));
+            }
+          } catch (e) {}
+        });
+
+        ws.on('error', () => {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Could not connect to OpenClaw gateway' }));
+        });
+
+        setTimeout(() => {
+          if (!res.writableEnded) {
+            ws.close();
+            res.writeHead(504, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Timeout waiting for response' }));
+          }
+        }, 30000);
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid request' }));
+      }
+    });
+    return;
+  }
+
   // Static files — serve from project dir first, then demo
   let filePath = url.pathname === '/' ? '/index.html' : url.pathname;
   let fullPath = path.join(BASE, filePath);

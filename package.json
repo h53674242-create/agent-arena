@@ -1,0 +1,24 @@
+{
+  "name": "agent-arena",
+  "version": "1.0.0",
+  "description": "",
+  "main": "openclaw-bridge.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/h53674242-create/agent-arena.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/h53674242-create/agent-arena/issues"
+  },
+  "homepage": "https://github.com/h53674242-create/agent-arena#readme",
+  "dependencies": {
+    "ws": "^8.19.0"
+  }
+}
