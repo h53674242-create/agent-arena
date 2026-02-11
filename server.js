@@ -238,8 +238,11 @@ wss.on('connection', (clientWs) => {
           : '';
         const manifest = JSON.parse(fs.readFileSync(path.join(pkgDir, 'agent.json'), 'utf8'));
 
-        // Connect to OpenClaw gateway
-        const gw = new WebSocket(`ws://127.0.0.1:18789/`);
+        // Connect to OpenClaw gateway with auth
+        const gwUrl = GATEWAY_TOKEN
+          ? `ws://127.0.0.1:18789/?token=${encodeURIComponent(GATEWAY_TOKEN)}`
+          : `ws://127.0.0.1:18789/`;
+        const gw = new WebSocket(gwUrl);
 
         gw.on('open', () => {
           console.log(`  [ws] Client ${clientId}: connected to gateway for ${msg.agentPkg}`);
@@ -251,8 +254,7 @@ wss.on('connection', (clientWs) => {
             id: 1,
             method: 'chat.send',
             params: {
-              message: bootMessage,
-              ...(GATEWAY_TOKEN ? {} : {})
+              message: bootMessage
             }
           }));
 
@@ -286,8 +288,11 @@ wss.on('connection', (clientWs) => {
           clientWs.send(JSON.stringify({ type: 'error', error: 'Gateway connection failed: ' + e.message }));
         });
 
-        gw.on('close', () => {
-          console.log(`  [ws] Gateway closed for client ${clientId}`);
+        gw.on('close', (code, reason) => {
+          console.log(`  [ws] Gateway closed for client ${clientId}: code=${code} reason=${reason}`);
+          if (code === 1008) {
+            clientWs.send(JSON.stringify({ type: 'error', error: 'Gateway auth failed. Check your token.' }));
+          }
         });
 
         clientWs.send(JSON.stringify({ type: 'hire-ok', agent: manifest.displayName }));
@@ -297,10 +302,13 @@ wss.on('connection', (clientWs) => {
       if (msg.type === 'chat') {
         const session = sessions[clientId];
         if (!session || !session.gw || session.gw.readyState !== WebSocket.OPEN) {
-          clientWs.send(JSON.stringify({ type: 'error', error: 'No active agent session. Hire an agent first.' }));
+          // Try to reconnect for this client
+          console.log(`  [ws] Client ${clientId}: no active session, attempting reconnect...`);
+          clientWs.send(JSON.stringify({ type: 'error', error: 'Agent session disconnected. Click Hire Now again to reconnect.' }));
           return;
         }
 
+        console.log(`  [ws] Client ${clientId}: sending chat message`);
         session.gw.send(JSON.stringify({
           id: Date.now(),
           method: 'chat.send',
@@ -322,7 +330,7 @@ wss.on('connection', (clientWs) => {
   });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n  🦞 Agent Arena server running on http://localhost:${PORT}\n`);
   console.log(`  Endpoints:`);
   console.log(`    GET /                        → Arena UI`);
