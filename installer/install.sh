@@ -47,16 +47,20 @@ elif [[ -d "./$AGENT_NAME" ]]; then
 elif [[ -d "./packages/$AGENT_NAME" ]]; then
   PACKAGE_DIR="./packages/$AGENT_NAME"
 else
-  # Try GitHub
+  # Download from GitHub
   REPO_URL="https://github.com/h53674242-create/agent-arena"
   info "Downloading ${AGENT_NAME} from Agent Arena..."
   TMP_DIR=$(mktemp -d)
   trap "rm -rf $TMP_DIR" EXIT
-  if command -v git &>/dev/null; then
+  if command -v curl &>/dev/null; then
+    curl -fsSL "${REPO_URL}/archive/refs/heads/main.tar.gz" -o "$TMP_DIR/repo.tar.gz" || fail "Could not download from Agent Arena"
+    tar -xzf "$TMP_DIR/repo.tar.gz" -C "$TMP_DIR" || fail "Could not extract archive"
+    PACKAGE_DIR="$TMP_DIR/agent-arena-main/packages/$AGENT_NAME"
+  elif command -v git &>/dev/null; then
     git clone --depth 1 "$REPO_URL" "$TMP_DIR/repo" 2>/dev/null || fail "Could not download agent"
     PACKAGE_DIR="$TMP_DIR/repo/packages/$AGENT_NAME"
   else
-    fail "git not found. Install git or use --from <local-path>"
+    fail "curl or git required. Install either and try again."
   fi
 fi
 

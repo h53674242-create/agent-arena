@@ -794,7 +794,7 @@ function hireAgent() {
               <div style="margin-top:16px; text-align:left;">
                 <div style="font-size:12px; color:#8b949e; margin-bottom:8px; font-weight:600;">📋 Paste this in your terminal:</div>
                 <div id="installCmd" onclick="copyInstallCmd()" style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:14px;font-family:monospace;font-size:13px;color:#58a6ff;cursor:pointer;position:relative;word-break:break-all;">
-                  <span style="color:#8b949e">$</span> curl -fsSL agent-arena.sh/install | sh -s ${a.id}
+                  <span style="color:#8b949e">$</span> curl -fsSL https://raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s ${a.id}
                   <span id="copyHint" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:#8b949e;font-family:Inter,sans-serif;">click to copy</span>
                 </div>
                 <div style="margin-top:12px; font-size:11px; color:#8b949e; line-height:1.6;">
@@ -843,14 +843,8 @@ function copyInstallCmd() {
 
 // Real download for packaged agents
 function downloadAgent(agentId) {
-  // Try API server first (port 3333), fall back to GitHub
-  const apiUrl = `http://localhost:3333/api/agents/${agentId}/download`;
-  const link = document.createElement('a');
-  link.href = apiUrl;
-  link.download = `${agentId}.tar.gz`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  // Download from GitHub as zip
+  window.open(`https://github.com/h53674242-create/agent-arena/archive/refs/heads/main.zip`, '_blank');
 }
 
 function showCreateModal() {

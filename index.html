@@ -270,7 +270,7 @@
   </div>
   <div class="hero-install" onclick="copyInstall()">
     <div class="install-label">Install your first agent</div>
-    <span id="installCode">curl -fsSL agent-arena.sh/install | sh -s founder-agent</span>
+    <span id="installCode">curl -fsSL https://raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s founder-agent</span>
     <span class="copy-hint" id="copyHint">click to copy</span>
   </div>
   <div class="social-proof">
@@ -505,8 +505,8 @@ function install(agent) {
       <div style="font-size:48px;margin-bottom:12px;">⚡</div>
       <h3 style="font-family:'Press Start 2P',monospace;font-size:14px;color:#fbbf24;margin-bottom:16px;">INSTALL ${agent.toUpperCase().replace('-', ' ')}</h3>
       <p style="font-size:13px;color:#8e8ea0;margin-bottom:20px;">Paste this in your terminal:</p>
-      <div onclick="navigator.clipboard.writeText('curl -fsSL agent-arena.sh/install | sh -s ${agent}')" style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:14px;font-family:monospace;font-size:13px;color:#06b6d4;cursor:pointer;text-align:left;margin-bottom:20px;">
-        <span style="color:#8b949e;">$</span> curl -fsSL agent-arena.sh/install | sh -s ${agent}
+      <div onclick="navigator.clipboard.writeText('curl -fsSL https://raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s ${agent}')" style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:14px;font-family:monospace;font-size:13px;color:#06b6d4;cursor:pointer;text-align:left;margin-bottom:20px;">
+        <span style="color:#8b949e;">$</span> curl -fsSL https://raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s ${agent}
       </div>
       <p style="font-size:11px;color:#8e8ea0;line-height:1.6;margin-bottom:20px;text-align:left;">
         <strong style="color:#ececf1;">What this does:</strong><br>
