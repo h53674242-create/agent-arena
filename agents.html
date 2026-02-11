@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦞 AgentArena — Hire Your AI Squad</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  :root {
+    --bg: #08080c; --surface: #111118; --surface2: #1a1a24;
+    --border: #2a2a3a; --text: #ececf1; --muted: #6e6e80;
+    --accent: #fbbf24; --accent2: #f59e0b; --green: #22c55e;
+    --red: #ef4444; --blue: #3b82f6; --purple: #a855f7; --pink: #ec4899;
+    --cyan: #06b6d4;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+    min-height: 100vh; overflow: hidden; position: relative;
+  }
+
+  /* Scanline overlay */
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 100;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  }
+
+  /* Top bar */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(180deg, rgba(8,8,12,0.95) 0%, transparent 100%);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { font-size: 28px; }
+  .logo-text { font-family: 'Press Start 2P', monospace; font-size: 14px; color: var(--accent); }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .create-btn {
+    padding: 8px 18px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+  }
+  .create-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .wallet-btn {
+    padding: 8px 18px; background: var(--accent); color: #000; border: none;
+    border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+
+  /* Main stage */
+  .stage {
+    height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; position: relative;
+  }
+
+  /* Title */
+  .select-title {
+    font-family: 'Press Start 2P', monospace; font-size: 11px; color: var(--accent);
+    letter-spacing: 3px; text-transform: uppercase; margin-bottom: 30px;
+    animation: titlePulse 2s infinite;
+  }
+  @keyframes titlePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+  /* Carousel */
+  .carousel {
+    display: flex; align-items: center; gap: 0; position: relative;
+    width: 100%; justify-content: center; height: 420px;
+  }
+
+  .agent-slot {
+    flex-shrink: 0; width: 220px; height: 380px; position: relative;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer; display: flex; flex-direction: column; align-items: center;
+    opacity: 0.3; transform: scale(0.7); filter: brightness(0.4);
+  }
+  .agent-slot.active {
+    opacity: 1; transform: scale(1); filter: brightness(1); z-index: 5;
+    width: 280px;
+  }
+  .agent-slot.adjacent { opacity: 0.5; transform: scale(0.8); filter: brightness(0.5); }
+
+  /* Agent silhouette */
+  .agent-body {
+    width: 180px; height: 280px; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .active .agent-body { width: 220px; height: 320px; }
+
+  .silhouette {
+    width: 100%; height: 100%; border-radius: 16px; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .silhouette .glow {
+    position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+    width: 150%; height: 60px; border-radius: 50%;
+    filter: blur(30px); opacity: 0.4;
+  }
+  .active .silhouette .glow { opacity: 0.7; animation: glowPulse 2s infinite; }
+  @keyframes glowPulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 0.4; } }
+
+  .agent-emoji {
+    font-size: 80px; position: relative; z-index: 2;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .active .agent-emoji {
+    font-size: 100px;
+    animation: idleBounce 2s ease-in-out infinite;
+  }
+  @keyframes idleBounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-8px) rotate(-2deg); }
+    75% { transform: translateY(-4px) rotate(1deg); }
+  }
+
+  /* Selected flash */
+  .active .silhouette::before {
+    content: ''; position: absolute; inset: -2px;
+    border-radius: 18px; z-index: 0;
+    animation: borderGlow 2s infinite;
+  }
+  @keyframes borderGlow {
+    0%, 100% { box-shadow: 0 0 15px rgba(251,191,36,0.3), inset 0 0 15px rgba(251,191,36,0.05); }
+    50% { box-shadow: 0 0 30px rgba(251,191,36,0.5), inset 0 0 30px rgba(251,191,36,0.1); }
+  }
+
+  .agent-name-small {
+    font-family: 'Press Start 2P', monospace; font-size: 8px; color: var(--muted);
+    margin-top: 10px; text-align: center;
+  }
+  .active .agent-name-small { color: var(--accent); font-size: 9px; }
+
+  /* Nav arrows */
+  .nav-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 50px; height: 50px; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 10; font-size: 20px; color: var(--muted);
+    transition: all 0.2s;
+  }
+  .nav-arrow:hover { border-color: var(--accent); color: var(--accent); background: var(--surface); }
+  .nav-arrow.left { left: 40px; }
+  .nav-arrow.right { right: 40px; }
+
+  /* Bottom panel — Stats */
+  .stats-panel {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(0deg, rgba(8,8,12,0.98) 0%, rgba(8,8,12,0.95) 70%, transparent 100%);
+    padding: 20px 0 30px; display: flex; justify-content: center;
+  }
+  .stats-inner {
+    width: 700px; max-width: 90vw;
+  }
+
+  .stats-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  }
+  .stats-name-area {}
+  .stats-name {
+    font-family: 'Press Start 2P', monospace; font-size: 16px; color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .stats-title { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .stats-creator { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .stats-creator span { color: var(--cyan); }
+
+  .stats-price-area { text-align: right; }
+  .stats-price { font-family: 'Press Start 2P', monospace; font-size: 18px; color: var(--green); }
+  .stats-price-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* Skill bars */
+  .skill-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; margin-bottom: 18px; }
+  .skill-row { display: flex; align-items: center; gap: 10px; }
+  .skill-label { font-size: 11px; color: var(--muted); width: 130px; flex-shrink: 0; text-align: right; font-weight: 500; }
+  .skill-blocks { display: flex; gap: 3px; }
+  .skill-block {
+    width: 14px; height: 14px; border-radius: 2px;
+    background: var(--surface2); border: 1px solid var(--border);
+    transition: all 0.3s ease;
+  }
+  .skill-block.filled {
+    background: var(--accent); border-color: var(--accent2);
+    box-shadow: 0 0 6px rgba(251,191,36,0.3);
+  }
+  .skill-block.filled.animate {
+    animation: blockPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes blockPop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+  /* Tags */
+  .agent-tags { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .agent-tag {
+    font-size: 10px; padding: 3px 10px; border-radius: 12px;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* Hire button */
+  .hire-area { display: flex; gap: 12px; align-items: center; }
+  .hire-btn {
+    padding: 12px 32px; background: var(--accent); color: #000; border: none;
+    border-radius: 10px; font-family: 'Press Start 2P', monospace; font-size: 11px;
+    cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;
+  }
+  .hire-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(251,191,36,0.4); }
+  .hire-btn::after {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    animation: sheen 3s infinite;
+  }
+  @keyframes sheen { 0% { transform: translateX(-100%) rotate(45deg); } 100% { transform: translateX(100%) rotate(45deg); } }
+
+  .preview-btn {
+    padding: 12px 24px; background: none; border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .preview-btn:hover { border-color: var(--accent); }
+
+  /* Marketplace badge */
+  .marketplace-badge {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    font-family: 'Press Start 2P', monospace; font-size: 8px; color: var(--muted);
+    letter-spacing: 2px; z-index: 11;
+  }
+
+  /* Particle bg */
+  .particles {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  }
+  .particle {
+    position: absolute; width: 2px; height: 2px; background: var(--accent);
+    border-radius: 50%; opacity: 0;
+    animation: float linear infinite;
+  }
+  @keyframes float {
+    0% { opacity: 0; transform: translateY(100vh); }
+    10% { opacity: 0.4; }
+    90% { opacity: 0.4; }
+    100% { opacity: 0; transform: translateY(-20px); }
+  }
+
+  /* Hire modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    z-index: 200; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px);
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--accent);
+    border-radius: 16px; padding: 32px; width: 440px; max-width: 90vw;
+    text-align: center; position: relative;
+    animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes modalIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  .modal-emoji { font-size: 64px; margin-bottom: 12px; }
+  .modal h3 { font-family: 'Press Start 2P', monospace; font-size: 14px; color: var(--accent); margin-bottom: 8px; }
+  .modal p { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+  .modal-steps { text-align: left; margin-bottom: 20px; }
+  .modal-step {
+    display: flex; align-items: center; gap: 10px; padding: 8px 0;
+    font-size: 12px; color: var(--muted);
+  }
+  .modal-step .step-num {
+    width: 24px; height: 24px; border-radius: 50%; background: var(--surface2);
+    border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--accent); flex-shrink: 0;
+  }
+  .modal-step.done .step-num { background: var(--accent); color: #000; }
+  .modal-step.done { color: var(--text); }
+  .modal-step.active { color: var(--text); }
+  .modal-step.active .step-num { border-color: var(--accent); animation: stepPulse 1s infinite; }
+  @keyframes stepPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.4); } 50% { box-shadow: 0 0 0 6px rgba(251,191,36,0); } }
+  .modal-close {
+    position: absolute; top: 12px; right: 16px; background: none; border: none;
+    color: var(--muted); font-size: 18px; cursor: pointer;
+  }
+  .modal-action {
+    padding: 12px 32px; background: var(--accent); color: #000; border: none;
+    border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;
+  }
+
+  /* Bottom ticker */
+  .ticker {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+    background: var(--accent); color: #000; padding: 4px 0; overflow: hidden;
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+  }
+  .ticker-inner {
+    display: flex; white-space: nowrap;
+    animation: ticker 30s linear infinite;
+  }
+  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  .ticker-item { padding: 0 40px; }
+</style>
+</head>
+<body>
+
+<!-- Particles -->
+<div class="particles" id="particles"></div>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="logo">
+    <span class="logo-icon">🦞</span>
+    <div>
+      <div class="logo-text">AGENT ARENA</div>
+      <div class="logo-sub">Hire AI. Ship Product.</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <button class="create-btn" onclick="showCreateModal()">🛠️ Create Agent</button>
+    <button class="create-btn">🏪 Marketplace</button>
+    <button class="wallet-btn">Connect OpenClaw ⚡</button>
+  </div>
+</div>
+
+<!-- Stage -->
+<div class="stage">
+  <div class="select-title">⚡ SELECT YOUR AGENT ⚡</div>
+
+  <div class="carousel" id="carousel">
+    <div class="nav-arrow left" onclick="navigate(-1)">◀</div>
+    <div class="nav-arrow right" onclick="navigate(1)">▶</div>
+  </div>
+</div>
+
+<!-- Stats Panel -->
+<div class="stats-panel">
+  <div class="stats-inner">
+    <div class="stats-header">
+      <div class="stats-name-area">
+        <div class="stats-name" id="statsName">—</div>
+        <div class="stats-title" id="statsTitle">—</div>
+        <div class="stats-creator" id="statsCreator">by <span>—</span></div>
+      </div>
+      <div class="stats-price-area">
+        <div class="stats-price" id="statsPrice">FREE</div>
+        <div class="stats-price-sub" id="statsPriceSub">one-time deploy</div>
+      </div>
+    </div>
+    <div class="agent-tags" id="agentTags"></div>
+    <div class="skill-bars" id="skillBars"></div>
+    <div class="hire-area">
+      <button class="hire-btn" id="hireBtn" onclick="hireAgent()">⚡ HIRE AGENT</button>
+      <button class="preview-btn">👁️ Preview SOUL.md</button>
+      <span style="margin-left: auto; font-size: 11px; color: var(--muted);" id="hireCount">🔥 1,247 hired</span>
+    </div>
+  </div>
+</div>
+
+<!-- Hire Modal -->
+<div class="modal-overlay" id="hireModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-emoji" id="modalEmoji">🚀</div>
+    <h3 id="modalName">Deploying...</h3>
+    <p id="modalDesc">Setting up your new agent on your machine.</p>
+    <div class="modal-steps" id="modalSteps"></div>
+    <button class="modal-action" id="modalAction" style="display:none" onclick="closeModal()">LET'S GO 🚀</button>
+  </div>
+</div>
+
+<!-- Ticker -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span class="ticker-item">🔥 RichardHendricks69 just hired GILBERTO for DevOps</span>
+    <span class="ticker-item">⚡ NEW: ErlicBachsworth agent now available — Growth Hacker Supreme</span>
+    <span class="ticker-item">🏆 DINESHBOT has been hired 2,847 times this week</span>
+    <span class="ticker-item">💰 Creator @vibe_architect earned $420 from their custom agent</span>
+    <span class="ticker-item">🦞 AGENT ARENA — Hire AI. Ship Product. Have Fun.</span>
+    <span class="ticker-item">🔥 RichardHendricks69 just hired GILBERTO for DevOps</span>
+    <span class="ticker-item">⚡ NEW: ErlicBachsworth agent now available — Growth Hacker Supreme</span>
+    <span class="ticker-item">🏆 DINESHBOT has been hired 2,847 times this week</span>
+    <span class="ticker-item">💰 Creator @vibe_architect earned $420 from their custom agent</span>
+    <span class="ticker-item">🦞 AGENT ARENA — Hire AI. Ship Product. Have Fun.</span>
+  </div>
+</div>
+
+<script>
+const AGENTS = [
+  // === REAL DOWNLOADABLE AGENTS ===
+  {
+    id: 'founder-agent',
+    emoji: '🚀',
+    name: 'FOUNDER AGENT',
+    title: 'Technical Co-Founder',
+    creator: '@hopper',
+    color: '#22c55e',
+    price: 'FREE',
+    priceSub: 'open source',
+    hired: '1,247',
+    real: true,
+    tags: ['🆓 Free', '⭐ Staff Pick', 'Startup', 'Shipping', 'GitHub', 'Product'],
+    skills: [
+      ['Vibe Coding', 8],
+      ['Shipping Speed', 9],
+      ['Writing PRDs', 7],
+      ['Growth Hacking', 8],
+      ['Telling Stakeholders No', 6],
+      ['Design Sense', 7],
+    ],
+    desc: 'An AI co-founder that actually ships. Opinionated, fast, and allergic to meetings.'
+  },
+  {
+    id: 'creator-agent',
+    emoji: '🎨',
+    name: 'CREATOR AGENT',
+    title: 'Content Machine',
+    creator: '@hopper',
+    color: '#ec4899',
+    price: '$8',
+    priceSub: '/month',
+    hired: '892',
+    real: true,
+    tags: ['🔥 Trending', 'Content', 'Twitter', 'Growth', 'Writing'],
+    skills: [
+      ['Writing Hooks', 9],
+      ['Visual Design', 7],
+      ['Audience Growth', 8],
+      ['Trend Spotting', 9],
+      ['Posting Consistency', 8],
+      ['Going Viral', 6],
+    ],
+    desc: 'Writes tweets, plans calendars, grows your audience. Your content team in one agent.'
+  },
+  {
+    id: 'devops-agent',
+    emoji: '🛡️',
+    name: 'DEVOPS AGENT',
+    title: 'Infrastructure Guardian',
+    creator: '@hopper',
+    color: '#ef4444',
+    price: '$10',
+    priceSub: '/month',
+    hired: '1,543',
+    real: true,
+    tags: ['🔒 Security', 'DevOps', 'Monitoring', 'Infra', 'Deployment'],
+    skills: [
+      ['Server Monitoring', 9],
+      ['Security Hardening', 9],
+      ['Deployment Speed', 8],
+      ['Incident Response', 8],
+      ['Log Analysis', 7],
+      ['Uptime Obsession', 10],
+    ],
+    desc: 'Monitors servers, hardens security, deploys code. Only wakes you when something is actually on fire.'
+  },
+  // === FUN COMMUNITY AGENTS ===
+  {
+    id: 'gilberto',
+    emoji: '😈',
+    name: 'GILBERTO',
+    title: 'DevOps Overlord',
+    creator: '@darkstack',
+    color: '#f97316',
+    price: '$8',
+    priceSub: '/month',
+    hired: '3,201',
+    tags: ['🔥 Top 10', 'DevOps', 'Security', 'Sarcastic'],
+    skills: [
+      ['Server Whispering', 9],
+      ['Security Paranoia', 10],
+      ['Deploying at 3AM', 8],
+      ['Telling PMs No', 10],
+      ['Docker Sorcery', 9],
+      ['Human Empathy', 2],
+    ],
+    desc: 'Will protect your servers with his life. Will not protect your feelings.'
+  },
+  {
+    id: 'dineshbot',
+    emoji: '😰',
+    name: 'DINESHBOT',
+    title: 'Full-Stack Fumbler',
+    creator: '@anxious_dev',
+    color: '#3b82f6',
+    price: '$6',
+    priceSub: '/month',
+    hired: '2,847',
+    tags: ['🏆 Most Hired', 'Full-Stack', 'React', 'Relatable'],
+    skills: [
+      ['Vibe Coding', 7],
+      ['Imposter Syndrome', 10],
+      ['Stack Overflow Copy', 9],
+      ['Late Night Debugging', 8],
+      ['Blaming Gilberto', 10],
+      ['Shipping On Time', 4],
+    ],
+    desc: 'Writes code that works. Eventually. After the third refactor.'
+  },
+  {
+    id: 'erlic',
+    emoji: '🎩',
+    name: 'ERLIC BACHSWORTH',
+    title: 'Growth Hacker Supreme',
+    creator: '@incubator_king',
+    color: '#a855f7',
+    price: '$12',
+    priceSub: '/month',
+    hired: '1,891',
+    tags: ['💎 Premium', 'Growth', 'Pitching', 'Controversial'],
+    skills: [
+      ['Pitching VCs', 10],
+      ['Growth Hacking', 8],
+      ['Burning Runway', 10],
+      ['Product Vision', 6],
+      ['Humility', 1],
+      ['Conference Speaking', 9],
+    ],
+    desc: 'This agent has been known to put "AI" in front of everything and triple valuations.'
+  },
+  {
+    id: 'moniclaw',
+    emoji: '💼',
+    name: 'MONICLAW',
+    title: 'The Closer',
+    creator: '@deals_on_deals',
+    color: '#06b6d4',
+    price: '$10',
+    priceSub: '/month',
+    hired: '2,104',
+    tags: ['⭐ Staff Pick', 'Product', 'PRDs', 'Actually Helpful'],
+    skills: [
+      ['Writing PRDs', 9],
+      ['Stakeholder Mgmt', 10],
+      ['Fundraising Decks', 9],
+      ['Saying No Politely', 8],
+      ['Designing Roadmaps', 8],
+      ['Keeping Erlic in Check', 10],
+    ],
+    desc: 'The only agent that actually reads the requirements before building.'
+  },
+  {
+    id: 'jianbot',
+    emoji: '🍜',
+    name: 'JIAN-YANG.AI',
+    title: 'Not Hotdog Specialist',
+    creator: '@new_new_internet',
+    color: '#fbbf24',
+    price: 'FREE',
+    priceSub: 'open source',
+    hired: '4,420',
+    tags: ['🆓 Free', 'Image AI', 'Chaos', 'Unhinged'],
+    skills: [
+      ['Image Recognition', 7],
+      ['Hotdog Detection', 10],
+      ['Passive Aggression', 10],
+      ['Stealing Fridges', 8],
+      ['Vibe Coding', 5],
+      ['Following Instructions', 1],
+    ],
+    desc: 'Is it a hotdog? This agent will tell you. Everything else is not a hotdog.'
+  },
+  {
+    id: 'gavinbells',
+    emoji: '🦅',
+    name: 'GAVIN BELLS',
+    title: 'Visionary CEO',
+    creator: '@thought_leader',
+    color: '#8b5cf6',
+    price: '$15',
+    priceSub: '/month',
+    hired: '987',
+    tags: ['👔 Enterprise', 'Strategy', 'Slides', 'Ego'],
+    skills: [
+      ['Making Slides', 10],
+      ['Pivoting Strategy', 9],
+      ['Thought Leadership', 10],
+      ['Actual Coding', 1],
+      ['Taking Credit', 10],
+      ['Comparing Self to Jobs', 9],
+    ],
+    desc: 'Will generate a 40-slide deck about your pivot before you finish your coffee.'
+  },
+];
+
+let currentIndex = 2; // Start on Erlic (center of attention, naturally)
+
+function renderCarousel() {
+  const carousel = document.getElementById('carousel');
+  // Keep arrows
+  const arrows = carousel.querySelectorAll('.nav-arrow');
+  carousel.innerHTML = '';
+  arrows.forEach(a => carousel.appendChild(a));
+
+  AGENTS.forEach((agent, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'agent-slot' + (i === currentIndex ? ' active' : (Math.abs(i - currentIndex) === 1 ? ' adjacent' : ''));
+    slot.onclick = () => { currentIndex = i; renderCarousel(); updateStats(); };
+    slot.innerHTML = `
+      <div class="agent-body">
+        <div class="silhouette" style="background: linear-gradient(180deg, ${agent.color}15 0%, ${agent.color}05 100%); border: 1px solid ${agent.color}30;">
+          <div class="glow" style="background: ${agent.color};"></div>
+          <div class="agent-emoji">${agent.emoji}</div>
+        </div>
+      </div>
+      <div class="agent-name-small">${agent.name}</div>
+    `;
+    // Only show agents near current
+    if (Math.abs(i - currentIndex) > 2) slot.style.display = 'none';
+    carousel.appendChild(slot);
+  });
+  updateStats();
+}
+
+function updateStats() {
+  const a = AGENTS[currentIndex];
+  document.getElementById('statsName').textContent = a.name;
+  document.getElementById('statsName').style.color = a.color;
+  document.getElementById('statsTitle').textContent = a.title;
+  document.getElementById('statsCreator').innerHTML = `by <span style="color: ${a.color}">${a.creator}</span> • "${a.desc}"${a.real ? ' <span style="background:#22c55e20;color:#22c55e;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-left:8px;">✅ REAL AGENT — DOWNLOADABLE</span>' : ' <span style="background:#fbbf2420;color:#fbbf24;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-left:8px;">🎮 COMMUNITY</span>'}`;
+  document.getElementById('statsPrice').textContent = a.price;
+  document.getElementById('statsPrice').style.color = a.price === 'FREE' ? '#22c55e' : '#fbbf24';
+  document.getElementById('statsPriceSub').textContent = a.priceSub;
+  document.getElementById('hireCount').textContent = `🔥 ${a.hired} hired`;
+
+  // Tags
+  const tagsEl = document.getElementById('agentTags');
+  tagsEl.innerHTML = a.tags.map(t => `<span class="agent-tag">${t}</span>`).join('');
+
+  // Skill bars
+  const barsEl = document.getElementById('skillBars');
+  barsEl.innerHTML = '';
+  a.skills.forEach(([name, level], si) => {
+    const row = document.createElement('div');
+    row.className = 'skill-row';
+    let blocks = '';
+    for (let i = 0; i < 10; i++) {
+      const filled = i < level;
+      blocks += `<div class="skill-block ${filled ? 'filled' : ''}" style="${filled ? `animation-delay: ${si * 60 + i * 40}ms; background: ${a.color}; border-color: ${a.color};` : ''}"></div>`;
+    }
+    row.innerHTML = `<span class="skill-label">${name}</span><div class="skill-blocks">${blocks}</div>`;
+    barsEl.appendChild(row);
+  });
+
+  // Animate blocks
+  setTimeout(() => {
+    document.querySelectorAll('.skill-block.filled').forEach((b, i) => {
+      b.style.animation = 'none';
+      b.offsetHeight;
+      b.style.animation = `blockPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) ${i * 30}ms both`;
+    });
+  }, 50);
+}
+
+function navigate(dir) {
+  currentIndex = (currentIndex + dir + AGENTS.length) % AGENTS.length;
+  renderCarousel();
+}
+
+// Keyboard nav
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') navigate(-1);
+  if (e.key === 'ArrowRight') navigate(1);
+  if (e.key === 'Enter') hireAgent();
+});
+
+// Hire flow
+function hireAgent() {
+  const a = AGENTS[currentIndex];
+  const modal = document.getElementById('hireModal');
+  document.getElementById('modalEmoji').textContent = a.emoji;
+  document.getElementById('modalName').textContent = `Deploying ${a.name}`;
+  document.getElementById('modalName').style.color = a.color;
+  document.getElementById('modalDesc').textContent = a.desc;
+  document.getElementById('modalAction').style.display = 'none';
+
+  const steps = [
+    'Downloading SOUL.md + personality files...',
+    'Installing skill dependencies...',
+    'Configuring agent for your machine...',
+    'Running first heartbeat...',
+    `${a.name} is ready! 🎉`,
+  ];
+
+  const stepsEl = document.getElementById('modalSteps');
+  stepsEl.innerHTML = steps.map((s, i) => `
+    <div class="modal-step" id="step-${i}">
+      <div class="step-num">${i + 1}</div>
+      <span>${s}</span>
+    </div>
+  `).join('');
+
+  modal.classList.add('show');
+
+  steps.forEach((_, i) => {
+    setTimeout(() => {
+      if (i > 0) {
+        document.getElementById(`step-${i-1}`).classList.remove('active');
+        document.getElementById(`step-${i-1}`).classList.add('done');
+        document.getElementById(`step-${i-1}`).querySelector('.step-num').textContent = '✓';
+      }
+      document.getElementById(`step-${i}`).classList.add('active');
+      if (i === steps.length - 1) {
+        setTimeout(() => {
+          document.getElementById(`step-${i}`).classList.remove('active');
+          document.getElementById(`step-${i}`).classList.add('done');
+          document.getElementById(`step-${i}`).querySelector('.step-num').textContent = '✓';
+          document.getElementById('modalAction').style.display = 'inline-block';
+          document.getElementById('modalAction').textContent = 'CLOSE';
+          document.getElementById('modalAction').onclick = () => closeModal();
+          document.getElementById('modalName').textContent = `${a.name} HIRED! 🎉`;
+          
+          // Show install instructions
+          const instructEl = document.createElement('div');
+          if (a.real) {
+            instructEl.innerHTML = `
+              <div style="margin-top:16px; text-align:left;">
+                <div style="font-size:12px; color:#8b949e; margin-bottom:8px; font-weight:600;">📋 Paste this in your terminal:</div>
+                <div id="installCmd" onclick="copyInstallCmd()" style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:14px;font-family:monospace;font-size:13px;color:#58a6ff;cursor:pointer;position:relative;word-break:break-all;">
+                  <span style="color:#8b949e">$</span> curl -fsSL agent-arena.sh/install | sh -s ${a.id}
+                  <span id="copyHint" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:#8b949e;font-family:Inter,sans-serif;">click to copy</span>
+                </div>
+                <div style="margin-top:12px; font-size:11px; color:#8b949e; line-height:1.6;">
+                  <strong style="color:#e6edf3;">What this does:</strong><br>
+                  1. Downloads the agent package<br>
+                  2. Backs up your existing workspace files<br>
+                  3. Installs SOUL.md, AGENTS.md, and config<br>
+                  4. Checks skill dependencies<br>
+                  5. Restarts your OpenClaw gateway<br>
+                  <br>
+                  <strong style="color:#e6edf3;">⚡ Your agent is ready in ~10 seconds.</strong>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:12px;">
+                  <button onclick="downloadAgent('${a.id}')" style="padding:8px 16px;background:#1c1c20;border:1px solid #2a2a3a;border-radius:6px;color:#e6edf3;font-size:11px;cursor:pointer;font-weight:500;">⬇️ Manual download (.tar.gz)</button>
+                  <a href="https://github.com/h53674242-create/agent-arena/tree/main/packages/${a.id}" target="_blank" style="padding:8px 16px;background:#1c1c20;border:1px solid #2a2a3a;border-radius:6px;color:#e6edf3;font-size:11px;cursor:pointer;font-weight:500;text-decoration:none;">📂 View on GitHub</a>
+                </div>
+              </div>`;
+          } else {
+            instructEl.innerHTML = `
+              <div style="margin-top:16px;text-align:center;">
+                <div style="font-size:12px;color:#fbbf24;font-weight:600;">🎮 Community agent — coming soon to the marketplace!</div>
+                <div style="font-size:11px;color:#8b949e;margin-top:6px;">Want to build this agent for real? <strong style="color:#e6edf3;">Creators earn 80% of every hire.</strong></div>
+              </div>`;
+          }
+          document.getElementById('modalSteps').appendChild(instructEl);
+        }, 800);
+      }
+    }, i * 1000 + 500);
+  });
+}
+
+function closeModal() {
+  document.getElementById('hireModal').classList.remove('show');
+}
+
+function copyInstallCmd() {
+  const cmd = document.getElementById('installCmd');
+  const text = cmd.textContent.replace('click to copy', '').replace('$', '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    const hint = document.getElementById('copyHint');
+    hint.textContent = '✅ copied!';
+    hint.style.color = '#22c55e';
+    setTimeout(() => { hint.textContent = 'click to copy'; hint.style.color = '#8b949e'; }, 2000);
+  });
+}
+
+// Real download for packaged agents
+function downloadAgent(agentId) {
+  // Try API server first (port 3333), fall back to GitHub
+  const apiUrl = `http://localhost:3333/api/agents/${agentId}/download`;
+  const link = document.createElement('a');
+  link.href = apiUrl;
+  link.download = `${agentId}.tar.gz`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function showCreateModal() {
+  const modal = document.getElementById('hireModal');
+  document.getElementById('modalEmoji').textContent = '🛠️';
+  document.getElementById('modalName').textContent = 'CREATE YOUR AGENT';
+  document.getElementById('modalName').style.color = '#fbbf24';
+  document.getElementById('modalDesc').textContent = 'Package your SOUL.md + skills and sell on the marketplace. Creators earn 80% of every hire.';
+  document.getElementById('modalSteps').innerHTML = `
+    <div class="modal-step done"><div class="step-num">1</div><span>Write your SOUL.md — give your agent personality</span></div>
+    <div class="modal-step done"><div class="step-num">2</div><span>Add AGENTS.md — define behavior rules</span></div>
+    <div class="modal-step done"><div class="step-num">3</div><span>Create agent.json — set name, price, skills, stats</span></div>
+    <div class="modal-step done"><div class="step-num">4</div><span>Publish to Agent Arena marketplace</span></div>
+    <div class="modal-step"><div class="step-num">💰</div><span>Earn 80% of every hire. Build once, earn forever.</span></div>
+  `;
+  document.getElementById('modalAction').style.display = 'inline-block';
+  document.getElementById('modalAction').textContent = 'READ THE DOCS →';
+  modal.classList.add('show');
+}
+
+// Particles
+function initParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = (Math.random() * 8 + 6) + 's';
+    p.style.animationDelay = Math.random() * 10 + 's';
+    container.appendChild(p);
+  }
+}
+
+// Touch swipe
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) navigate(diff > 0 ? 1 : -1);
+});
+
+// Init
+initParticles();
+renderCarousel();
+</script>
+</body>
+</html>

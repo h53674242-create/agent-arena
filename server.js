@@ -97,9 +97,9 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Static files — serve from demo dir
-  let filePath = url.pathname === '/' ? '/agents.html' : url.pathname;
-  let fullPath = path.join(DEMO, filePath);
+  // Static files — serve from project dir first, then demo
+  let filePath = url.pathname === '/' ? '/index.html' : url.pathname;
+  let fullPath = path.join(BASE, filePath);
 
   if (!fs.existsSync(fullPath)) {
     fullPath = path.join(BASE, filePath);
