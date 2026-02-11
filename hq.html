@@ -354,7 +354,7 @@
   <div class="office-topbar">
     <h1>🦞 AGENT ARENA HQ</h1>
     <span class="squad-count">Squad: 3 agents</span>
-    <span id="connectionStatus" style="font-size:10px;color:#8e8ea0;padding:4px 10px;background:rgba(255,255,255,0.05);border-radius:12px;">⚪ Detecting OpenClaw...</span>
+    <span id="connectionStatus" onclick="showConnectModal()" style="font-size:10px;color:#8e8ea0;padding:4px 10px;background:rgba(255,255,255,0.05);border-radius:12px;cursor:pointer;" title="Click to connect/reconnect">⚪ Detecting OpenClaw...</span>
     <span class="time" id="clock"></span>
   </div>
   <div class="office" id="office">
@@ -481,6 +481,46 @@
       <div class="chat-input-wrap">
         <input type="text" placeholder="Message your agent..." id="chatInput" onkeydown="if(event.key==='Enter')sendMessage()">
         <button onclick="sendMessage()">↑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Connect Modal -->
+<div id="connectModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+  <div style="background:#111118;border:1px solid #fbbf24;border-radius:16px;padding:28px;width:420px;max-width:90vw;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="font-family:'Press Start 2P',monospace;font-size:11px;color:#fbbf24;">🔌 CONNECT TO OPENCLAW</h3>
+      <button onclick="document.getElementById('connectModal').style.display='none'" style="background:none;border:none;color:#8e8ea0;font-size:18px;cursor:pointer;">✕</button>
+    </div>
+    <div id="connectStatus" style="font-size:12px;color:#8e8ea0;margin-bottom:16px;"></div>
+
+    <div style="margin-bottom:16px;">
+      <label style="font-size:11px;color:#8e8ea0;display:block;margin-bottom:6px;">Gateway Token</label>
+      <input type="text" id="tokenInput" placeholder="Paste your gateway token here" 
+        style="width:100%;padding:10px 12px;background:#0d1117;border:1px solid #2a2a3a;border-radius:8px;color:#ececf1;font-size:13px;font-family:monospace;outline:none;"
+        value="">
+      <div style="font-size:10px;color:#6e6e80;margin-top:6px;line-height:1.5;">
+        Find it in your terminal:<br>
+        <code style="background:#0d1117;padding:2px 6px;border-radius:4px;color:#06b6d4;font-size:10px;">grep token ~/.openclaw/openclaw.json</code>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label style="font-size:11px;color:#8e8ea0;display:block;margin-bottom:6px;">Gateway Port</label>
+      <input type="text" id="portInput" placeholder="18789" value="18789"
+        style="width:100%;padding:10px 12px;background:#0d1117;border:1px solid #2a2a3a;border-radius:8px;color:#ececf1;font-size:13px;outline:none;">
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button onclick="tryConnect()" style="flex:1;padding:10px;background:#fbbf24;color:#000;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">⚡ Connect</button>
+      <button onclick="tryConnect(true)" style="flex:1;padding:10px;background:#1a1a24;border:1px solid #2a2a3a;border-radius:8px;color:#ececf1;font-size:13px;cursor:pointer;">🔄 Reconnect</button>
+    </div>
+
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid #2a2a3a;">
+      <div style="font-size:11px;color:#6e6e80;line-height:1.6;">
+        <strong style="color:#ececf1;">Don't have OpenClaw?</strong><br>
+        <a href="https://openclaw.ai" target="_blank" style="color:#fbbf24;">Install OpenClaw →</a> then come back and connect.
       </div>
     </div>
   </div>
@@ -883,6 +923,71 @@ function adjustForMobile() {
 }
 adjustForMobile();
 window.addEventListener('resize', adjustForMobile);
+
+function showConnectModal() {
+  const modal = document.getElementById('connectModal');
+  modal.style.display = 'flex';
+  const saved = localStorage.getItem('openclaw_token');
+  if (saved) document.getElementById('tokenInput').value = saved;
+  const savedPort = localStorage.getItem('openclaw_port');
+  if (savedPort) document.getElementById('portInput').value = savedPort;
+  document.getElementById('connectStatus').innerHTML = openclawConnected
+    ? '<span style="color:#22c55e;">● Connected</span> — click Reconnect to refresh'
+    : '<span style="color:#ef4444;">● Not connected</span> — enter your token and click Connect';
+}
+
+async function tryConnect(reconnect) {
+  const token = document.getElementById('tokenInput').value.trim();
+  const port = parseInt(document.getElementById('portInput').value) || 18789;
+  const status = document.getElementById('connectStatus');
+
+  if (token) localStorage.setItem('openclaw_token', token);
+  localStorage.setItem('openclaw_port', port.toString());
+
+  status.innerHTML = '<span style="color:#fbbf24;">⏳ Connecting...</span>';
+
+  // Disconnect existing
+  if (bridge) bridge.disconnect();
+
+  bridge = new OpenClawBridge({ port, token: token || null });
+
+  try {
+    await bridge.connect();
+    openclawConnected = true;
+    status.innerHTML = '<span style="color:#22c55e;">✅ Connected!</span>';
+    document.getElementById('connectionStatus').textContent = '🟢 OpenClaw Connected';
+    document.getElementById('connectionStatus').style.color = '#22c55e';
+
+    bridge.onMessage((data) => {
+      // Remove typing indicator
+      const typing = document.getElementById('typing-indicator');
+      if (typing) typing.remove();
+
+      if (data.params?.text || data.text) {
+        const text = data.params?.text || data.text;
+        const agentName = data.params?.agent || 'Agent';
+        addLiveMessage(agentName, text);
+      }
+    });
+
+    bridge.onStatus(({ connected }) => {
+      openclawConnected = connected;
+      const indicator = document.getElementById('connectionStatus');
+      indicator.textContent = connected ? '🟢 OpenClaw Connected' : '🔴 Disconnected (click to reconnect)';
+      indicator.style.color = connected ? '#22c55e' : '#ef4444';
+    });
+
+    // Close modal after short delay
+    setTimeout(() => {
+      document.getElementById('connectModal').style.display = 'none';
+    }, 1000);
+
+  } catch (e) {
+    status.innerHTML = `<span style="color:#ef4444;">❌ Failed: ${e.message}</span><br><span style="font-size:10px;color:#6e6e80;">Check your token and make sure OpenClaw gateway is running.</span>`;
+    document.getElementById('connectionStatus').textContent = '🔴 Disconnected (click to reconnect)';
+    document.getElementById('connectionStatus').style.color = '#ef4444';
+  }
+}
 
 // === OpenClaw Bridge ===
 let bridge = null;
