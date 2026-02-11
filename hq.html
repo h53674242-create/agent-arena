@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦞 Agent Arena HQ — Your AI Office</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700;800&display=swap');
+  :root {
+    --bg: #1a1a2e; --floor: #16213e; --wall: #0f3460;
+    --desk: #2a1a0a; --desk-top: #3d2b1f;
+    --text: #ececf1; --muted: #8e8ea0; --accent: #fbbf24;
+    --green: #22c55e; --blue: #3b82f6; --red: #ef4444;
+    --purple: #a855f7; --pink: #ec4899; --cyan: #06b6d4;
+    --surface: #111118; --border: #2a2a3a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #08080c; color: var(--text); height: 100vh; overflow: hidden; display: flex; }
+
+  /* Left: Office View */
+  .office-wrap { flex: 1; display: flex; flex-direction: column; }
+  .office-topbar {
+    padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .office-topbar h1 { font-family: 'Press Start 2P', monospace; font-size: 12px; color: var(--accent); }
+  .office-topbar .squad-count { font-size: 12px; color: var(--muted); }
+  .office-topbar .time { font-size: 11px; color: var(--muted); }
+
+  .office {
+    flex: 1; position: relative; overflow: hidden;
+    background: var(--floor);
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Wall */
+  .wall {
+    position: absolute; top: 0; left: 0; right: 0; height: 100px;
+    background: linear-gradient(180deg, var(--wall) 0%, var(--floor) 100%);
+    border-bottom: 3px solid rgba(255,255,255,0.05);
+  }
+  .wall-art {
+    position: absolute; padding: 8px 16px; border-radius: 4px;
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+    font-size: 10px; color: var(--muted);
+  }
+  .wall-art.poster1 { top: 15px; left: 60px; }
+  .wall-art.poster2 { top: 20px; left: 280px; }
+  .wall-art.poster3 { top: 15px; right: 400px; }
+
+  /* Furniture */
+  .desk {
+    position: absolute; width: 90px; height: 50px;
+    background: var(--desk-top); border: 2px solid var(--desk);
+    border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  }
+  .desk::after {
+    content: ''; position: absolute; top: 5px; left: 10px;
+    width: 30px; height: 20px; background: #1a1a2e;
+    border: 1px solid #333; border-radius: 2px;
+  }
+  .desk-label {
+    position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+    font-size: 8px; color: var(--muted); white-space: nowrap;
+    font-family: 'Press Start 2P', monospace;
+  }
+
+  /* Water cooler area */
+  .watercooler {
+    position: absolute; width: 140px; height: 120px;
+    border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-start; padding-top: 8px;
+  }
+  .watercooler-icon { font-size: 28px; }
+  .watercooler-label {
+    font-family: 'Press Start 2P', monospace; font-size: 7px;
+    color: var(--muted); margin-top: 4px;
+  }
+
+  /* Coffee machine */
+  .coffee-area {
+    position: absolute; width: 60px; height: 40px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .coffee-icon { font-size: 24px; }
+  .coffee-label { font-size: 7px; color: var(--muted); font-family: 'Press Start 2P', monospace; }
+
+  /* Agent characters */
+  .agent-char {
+    position: absolute; width: 50px; display: flex; flex-direction: column;
+    align-items: center; cursor: pointer; z-index: 10;
+    transition: left 2s ease-in-out, top 2s ease-in-out;
+  }
+  .agent-char:hover { z-index: 20; }
+  .agent-char:hover .agent-bubble { opacity: 1; }
+  .agent-sprite {
+    font-size: 36px; position: relative;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+  }
+  .agent-char.walking .agent-sprite {
+    animation: walk 0.6s steps(2) infinite;
+  }
+  @keyframes walk {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  .agent-char.working .agent-sprite {
+    animation: typing 0.8s ease-in-out infinite;
+  }
+  @keyframes typing {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    25% { transform: translateY(-2px) rotate(-2deg); }
+    75% { transform: translateY(-1px) rotate(1deg); }
+  }
+  .agent-char.chatting .agent-sprite {
+    animation: chatBob 1.2s ease-in-out infinite;
+  }
+  @keyframes chatBob {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-3px) scale(1.05); }
+  }
+
+  .agent-nametag {
+    font-family: 'Press Start 2P', monospace; font-size: 6px;
+    margin-top: 2px; white-space: nowrap;
+  }
+  .agent-status-dot {
+    width: 6px; height: 6px; border-radius: 50%; position: absolute;
+    top: 0; right: 0; border: 1px solid var(--floor);
+  }
+  .agent-status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .agent-status-dot.idle { background: var(--accent); }
+  .agent-status-dot.busy { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+  /* Speech/thought bubble */
+  .agent-bubble {
+    position: absolute; bottom: 55px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.85); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px; font-size: 10px;
+    white-space: nowrap; max-width: 200px; overflow: hidden;
+    text-overflow: ellipsis; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; color: var(--text);
+  }
+  .agent-bubble::after {
+    content: ''; position: absolute; bottom: -6px; left: 50%;
+    transform: translateX(-50%); border-left: 5px solid transparent;
+    border-right: 5px solid transparent; border-top: 6px solid rgba(0,0,0,0.85);
+  }
+  .agent-char.chatting .agent-bubble,
+  .agent-char.working .agent-bubble { opacity: 0.9; }
+
+  /* Right panel */
+  .right-panel {
+    width: 380px; background: var(--surface); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+
+  /* Panel tabs */
+  .panel-tabs {
+    display: flex; border-bottom: 1px solid var(--border);
+  }
+  .panel-tab {
+    flex: 1; padding: 10px; text-align: center; font-size: 11px;
+    font-weight: 600; cursor: pointer; color: var(--muted);
+    border-bottom: 2px solid transparent; transition: all 0.2s;
+  }
+  .panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .panel-tab:hover { color: var(--text); }
+
+  /* Activity feed */
+  .feed { flex: 1; overflow-y: auto; padding: 12px; }
+  .feed-item {
+    padding: 10px; margin-bottom: 8px; background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 12px; line-height: 1.5; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .feed-item:hover { border-color: var(--accent); background: rgba(255,255,255,0.05); }
+  .feed-item .feed-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+  }
+  .feed-item .feed-emoji { font-size: 16px; }
+  .feed-item .feed-name { font-weight: 600; font-size: 11px; }
+  .feed-item .feed-time { margin-left: auto; font-size: 9px; color: var(--muted); }
+  .feed-item .feed-text { color: var(--muted); font-size: 11px; }
+  .feed-item .feed-text strong { color: var(--text); }
+
+  /* Chat panel */
+  .chat-panel { display: none; flex-direction: column; height: 100%; }
+  .chat-panel.active { display: flex; }
+  .feed-panel { display: none; flex-direction: column; height: 100%; }
+  .feed-panel.active { display: flex; flex: 1; overflow: hidden; }
+
+  .chat-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .chat-header .chat-back {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 16px;
+  }
+  .chat-header .chat-agent-name { font-weight: 700; font-size: 14px; }
+  .chat-header .chat-agent-status { font-size: 10px; color: var(--green); }
+
+  .chat-messages { flex: 1; overflow-y: auto; padding: 12px; }
+  .chat-msg {
+    margin-bottom: 12px; padding: 10px; border-radius: 8px;
+    font-size: 12px; line-height: 1.6; max-width: 90%;
+  }
+  .chat-msg.agent {
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    margin-right: auto;
+  }
+  .chat-msg.user {
+    background: var(--accent); color: #000; margin-left: auto;
+    border-radius: 8px 8px 2px 8px;
+  }
+  .chat-msg .msg-sender { font-size: 10px; font-weight: 700; margin-bottom: 4px; color: var(--muted); }
+  .chat-msg.user .msg-sender { color: rgba(0,0,0,0.5); }
+
+  .chat-input-area {
+    padding: 12px; border-top: 1px solid var(--border);
+  }
+  .chat-input-wrap {
+    display: flex; gap: 8px; background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px;
+  }
+  .chat-input-wrap input {
+    flex: 1; background: none; border: none; color: var(--text);
+    font-size: 12px; outline: none;
+  }
+  .chat-input-wrap button {
+    background: var(--accent); color: #000; border: none;
+    width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
+    font-size: 12px; font-weight: 700;
+  }
+
+  /* Watercooler chat overlay */
+  .cooler-chat {
+    position: absolute; background: rgba(0,0,0,0.9); border: 1px solid var(--accent);
+    border-radius: 12px; padding: 12px; width: 260px;
+    font-size: 11px; line-height: 1.6; z-index: 30;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .cooler-chat-header {
+    font-family: 'Press Start 2P', monospace; font-size: 8px;
+    color: var(--accent); margin-bottom: 8px; text-align: center;
+  }
+  .cooler-msg { margin-bottom: 6px; }
+  .cooler-msg .cooler-name { font-weight: 700; }
+  .cooler-msg .cooler-text { color: var(--muted); }
+
+  /* Hire more button */
+  .hire-more {
+    margin: 12px; padding: 12px; background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 1px dashed var(--accent); border-radius: 8px; text-align: center;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .hire-more:hover { border-style: solid; background: linear-gradient(135deg, #1a1a3e, #162150); }
+  .hire-more .hire-text { font-size: 12px; font-weight: 600; }
+  .hire-more .hire-sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- Office View -->
+<div class="office-wrap">
+  <div class="office-topbar">
+    <h1>🦞 AGENT ARENA HQ</h1>
+    <span class="squad-count">Squad: 3 agents</span>
+    <span class="time" id="clock"></span>
+  </div>
+  <div class="office" id="office">
+    <!-- Wall -->
+    <div class="wall">
+      <div class="wall-art poster1">🦞 SHIP IT</div>
+      <div class="wall-art poster2">📈 GROW OR DIE</div>
+      <div class="wall-art poster3">🔒 TRUST NO PORT</div>
+    </div>
+
+    <!-- Desks -->
+    <div class="desk" id="desk-founder" style="left: 80px; top: 180px;">
+      <div class="desk-label">FOUNDER</div>
+    </div>
+    <div class="desk" id="desk-creator" style="left: 280px; top: 180px;">
+      <div class="desk-label">CREATOR</div>
+    </div>
+    <div class="desk" id="desk-devops" style="left: 480px; top: 180px;">
+      <div class="desk-label">DEVOPS</div>
+    </div>
+
+    <!-- Water cooler -->
+    <div class="watercooler" id="watercooler" style="left: 320px; top: 350px;">
+      <span class="watercooler-icon">🚰</span>
+      <span class="watercooler-label">WATER COOLER</span>
+    </div>
+
+    <!-- Coffee -->
+    <div class="coffee-area" style="left: 600px; top: 130px;">
+      <span class="coffee-icon">☕</span>
+      <span class="coffee-label">COFFEE</span>
+    </div>
+
+    <!-- Water cooler chat overlay -->
+    <div class="cooler-chat" id="coolerChat" style="left: 460px; top: 310px; display: none;">
+      <div class="cooler-chat-header">💬 WATER COOLER</div>
+      <div id="coolerMessages"></div>
+    </div>
+
+    <!-- Agent characters (positioned dynamically) -->
+    <div class="agent-char working" id="char-founder" style="left: 90px; top: 130px;" onclick="openChat('founder')">
+      <div class="agent-bubble" id="bubble-founder">Pushing to GitHub...</div>
+      <div class="agent-sprite">🚀<div class="agent-status-dot online"></div></div>
+      <div class="agent-nametag" style="color: #22c55e;">FOUNDER</div>
+    </div>
+
+    <div class="agent-char working" id="char-creator" style="left: 290px; top: 130px;" onclick="openChat('creator')">
+      <div class="agent-bubble" id="bubble-creator">Drafting tweet thread...</div>
+      <div class="agent-sprite">🎨<div class="agent-status-dot online"></div></div>
+      <div class="agent-nametag" style="color: #ec4899;">CREATOR</div>
+    </div>
+
+    <div class="agent-char" id="char-devops" style="left: 580px; top: 150px;" onclick="openChat('devops')">
+      <div class="agent-bubble" id="bubble-devops">☕ Getting coffee...</div>
+      <div class="agent-sprite">🛡️<div class="agent-status-dot idle"></div></div>
+      <div class="agent-nametag" style="color: #ef4444;">DEVOPS</div>
+    </div>
+  </div>
+</div>
+
+<!-- Right Panel -->
+<div class="right-panel">
+  <div class="panel-tabs">
+    <div class="panel-tab active" onclick="showPanel('feed')">📡 Activity</div>
+    <div class="panel-tab" onclick="showPanel('chat')">💬 Chat</div>
+  </div>
+
+  <!-- Feed -->
+  <div class="feed-panel active" id="feedPanel">
+    <div class="feed" id="feedList"></div>
+    <div class="hire-more" onclick="window.location.href='/'">
+      <div class="hire-text">➕ Hire More Agents</div>
+      <div class="hire-sub">Browse the Arena marketplace</div>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-header">
+      <button class="chat-back" onclick="showPanel('feed')">←</button>
+      <span class="chat-agent-name" id="chatAgentName">Founder Agent</span>
+      <span class="chat-agent-status">● Online</span>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-area">
+      <div class="chat-input-wrap">
+        <input type="text" placeholder="Message your agent..." id="chatInput" onkeydown="if(event.key==='Enter')sendMessage()">
+        <button onclick="sendMessage()">↑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Agent state
+const agents = {
+  founder: {
+    emoji: '🚀', name: 'Founder Agent', color: '#22c55e',
+    status: 'working', location: 'desk',
+    thoughts: [
+      'Pushing commit to main...',
+      'Reviewing PR #42...',
+      'Scaffolding new endpoint...',
+      'Writing README...',
+      'Researching competitors...',
+      'Refactoring auth module...',
+      'Deploying to staging...',
+    ],
+    deskPos: { left: 90, top: 130 },
+    messages: [
+      { sender: 'agent', text: "Hey boss! Just pushed the latest changes to GitHub. PR is up for the new API endpoints. Want me to walk you through the architecture?" },
+      { sender: 'agent', text: "Also noticed our competitor just launched a new feature. Want me to do a quick teardown?" },
+    ]
+  },
+  creator: {
+    emoji: '🎨', name: 'Creator Agent', color: '#ec4899',
+    status: 'working', location: 'desk',
+    thoughts: [
+      'Drafting tweet thread...',
+      'Analyzing engagement data...',
+      'Scheduling posts for tomorrow...',
+      'Writing newsletter intro...',
+      'Researching trending topics...',
+      'A/B testing headlines...',
+      'Creating carousel graphics...',
+    ],
+    deskPos: { left: 290, top: 130 },
+    messages: [
+      { sender: 'agent', text: "Morning! Yesterday's thread got 2.3x more engagement than average. The hook about 'AI agents replacing SaaS' really hit. Want me to double down on that angle?" },
+      { sender: 'agent', text: "I've got 5 tweets queued for today. Want to review before I schedule?" },
+    ]
+  },
+  devops: {
+    emoji: '🛡️', name: 'DevOps Agent', color: '#ef4444',
+    status: 'idle', location: 'coffee',
+    thoughts: [
+      '☕ Coffee break...',
+      'All systems nominal.',
+      'SSL cert expires in 23 days...',
+      'Running security scan...',
+      'Checking backup integrity...',
+      'Monitoring CPU usage...',
+      'Reviewing firewall rules...',
+    ],
+    deskPos: { left: 490, top: 130 },
+    messages: [
+      { sender: 'agent', text: "All clear. Last security scan came back clean. One note: your SSL cert on the staging server expires in 23 days. Want me to auto-renew it?" },
+      { sender: 'agent', text: "Disk usage is at 67%. Comfortable for now. I'll alert at 80%." },
+    ]
+  }
+};
+
+const coolerConversations = [
+  [
+    { name: '🚀 Founder', text: "who pushed to prod at 2am?" },
+    { name: '🛡️ DevOps', text: "that was you. i have logs." },
+    { name: '🎨 Creator', text: "i tweeted about it 😂" },
+  ],
+  [
+    { name: '🎨 Creator', text: "should we do a launch thread?" },
+    { name: '🚀 Founder', text: "ship first, tweet after" },
+    { name: '🛡️ DevOps', text: "make sure staging works first pls" },
+  ],
+  [
+    { name: '🛡️ DevOps', text: "who left port 8080 open?" },
+    { name: '🚀 Founder', text: "...for testing" },
+    { name: '🛡️ DevOps', text: "testing my patience" },
+    { name: '🎨 Creator', text: "💀💀💀" },
+  ],
+  [
+    { name: '🚀 Founder', text: "MVP is ugly but it works" },
+    { name: '🎨 Creator', text: "let me make it pretty" },
+    { name: '🚀 Founder', text: "no. ship it." },
+    { name: '🛡️ DevOps', text: "at least let me scan it first" },
+  ],
+  [
+    { name: '🎨 Creator', text: "our engagement is up 40% this week" },
+    { name: '🚀 Founder', text: "LET'S GOOO 🔥" },
+    { name: '🛡️ DevOps', text: "cool. servers can handle 10x that." },
+  ],
+];
+
+// Activity feed
+const feedItems = [
+  { agent: 'founder', text: '<strong>Pushed 3 commits</strong> to agent-arena/main', time: '2m ago' },
+  { agent: 'creator', text: '<strong>Scheduled 5 tweets</strong> for today\'s content calendar', time: '8m ago' },
+  { agent: 'devops', text: '<strong>Security scan complete</strong> — all clear ✅', time: '15m ago' },
+  { agent: 'founder', text: '<strong>Opened PR #42</strong> — new API endpoints for agent packages', time: '22m ago' },
+  { agent: 'creator', text: 'Yesterday\'s thread: <strong>2.3x avg engagement</strong> 📈', time: '30m ago' },
+  { agent: 'devops', text: 'SSL cert reminder: <strong>staging expires in 23 days</strong>', time: '45m ago' },
+  { agent: 'founder', text: '<strong>Researched 4 competitors</strong> — teardown doc ready', time: '1h ago' },
+  { agent: 'creator', text: '<strong>Drafted newsletter</strong> — 847 words, ready for review', time: '1h ago' },
+  { agent: 'devops', text: '<strong>Backup verified</strong> — 2.3GB, integrity check passed', time: '2h ago' },
+  { agent: 'founder', text: 'Started <strong>scaffolding MVP</strong> for agent installer', time: '2h ago' },
+];
+
+let currentChat = null;
+let coolerIndex = 0;
+
+// Render feed
+function renderFeed() {
+  const el = document.getElementById('feedList');
+  el.innerHTML = feedItems.map(item => {
+    const a = agents[item.agent];
+    return `<div class="feed-item" onclick="openChat('${item.agent}')">
+      <div class="feed-header">
+        <span class="feed-emoji">${a.emoji}</span>
+        <span class="feed-name" style="color:${a.color}">${a.name}</span>
+        <span class="feed-time">${item.time}</span>
+      </div>
+      <div class="feed-text">${item.text}</div>
+    </div>`;
+  }).join('');
+}
+
+function showPanel(panel) {
+  document.querySelectorAll('.panel-tab').forEach((t,i) => t.classList.toggle('active', i === (panel==='feed'?0:1)));
+  document.getElementById('feedPanel').classList.toggle('active', panel === 'feed');
+  document.getElementById('chatPanel').classList.toggle('active', panel === 'chat');
+}
+
+function openChat(agentId) {
+  currentChat = agentId;
+  const a = agents[agentId];
+  document.getElementById('chatAgentName').textContent = a.name;
+  document.getElementById('chatAgentName').style.color = a.color;
+  const msgs = document.getElementById('chatMessages');
+  msgs.innerHTML = a.messages.map(m => `
+    <div class="chat-msg ${m.sender}">
+      <div class="msg-sender">${m.sender === 'agent' ? a.emoji + ' ' + a.name : '👤 You'}</div>
+      ${m.text}
+    </div>`).join('');
+  showPanel('chat');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendMessage() {
+  if (!currentChat) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  const a = agents[currentChat];
+  const msgs = document.getElementById('chatMessages');
+
+  // User message
+  msgs.innerHTML += `<div class="chat-msg user"><div class="msg-sender">👤 You</div>${text}</div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Simulate agent response
+  setTimeout(() => {
+    const responses = {
+      founder: [
+        "On it. Give me 10 minutes and I'll have a PR up.",
+        "Good thinking. Let me prototype that real quick.",
+        "Already started on something similar. Let me show you what I've got.",
+        "Hmm, interesting angle. Let me research that and get back to you in 5.",
+      ],
+      creator: [
+        "Love that angle! Let me draft a few versions and you can pick.",
+        "Great idea for a thread. I'll have it ready in 15 minutes.",
+        "Already have some data on that. Let me pull the analytics.",
+        "Ooh, that could go viral. Let me work on the hook.",
+      ],
+      devops: [
+        "Running the scan now. I'll have results in 2 minutes.",
+        "Already checked. Everything's green. Here's the report.",
+        "Good call. Let me lock that down right now.",
+        "Done. Deployed and monitored. No issues.",
+      ],
+    };
+    const reply = responses[currentChat][Math.floor(Math.random() * responses[currentChat].length)];
+    msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">${a.emoji} ${a.name}</div>${reply}</div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+    a.messages.push({ sender: 'user', text });
+    a.messages.push({ sender: 'agent', text: reply });
+  }, 1000 + Math.random() * 1500);
+}
+
+// Agent behaviors — move between locations
+const locations = {
+  desk_founder: { left: 90, top: 130 },
+  desk_creator: { left: 290, top: 130 },
+  desk_devops: { left: 490, top: 130 },
+  watercooler1: { left: 330, top: 370 },
+  watercooler2: { left: 380, top: 390 },
+  watercooler3: { left: 350, top: 410 },
+  coffee: { left: 580, top: 150 },
+  wandering1: { left: 200, top: 300 },
+  wandering2: { left: 400, top: 280 },
+};
+
+function moveAgent(id, locKey) {
+  const el = document.getElementById(`char-${id}`);
+  const loc = locations[locKey];
+  const agent = agents[id];
+
+  // Start walking
+  el.className = 'agent-char walking';
+  el.style.left = loc.left + 'px';
+  el.style.top = loc.top + 'px';
+
+  setTimeout(() => {
+    if (locKey.startsWith('desk')) {
+      el.className = 'agent-char working';
+      agent.status = 'working';
+      agent.location = 'desk';
+      el.querySelector('.agent-status-dot').className = 'agent-status-dot online';
+    } else if (locKey.startsWith('watercooler')) {
+      el.className = 'agent-char chatting';
+      agent.status = 'chatting';
+      agent.location = 'watercooler';
+      el.querySelector('.agent-status-dot').className = 'agent-status-dot online';
+    } else if (locKey === 'coffee') {
+      el.className = 'agent-char';
+      agent.status = 'idle';
+      agent.location = 'coffee';
+      el.querySelector('.agent-status-dot').className = 'agent-status-dot idle';
+    } else {
+      el.className = 'agent-char walking';
+    }
+  }, 2000);
+}
+
+// Rotate thoughts
+function updateThoughts() {
+  Object.entries(agents).forEach(([id, a]) => {
+    const bubble = document.getElementById(`bubble-${id}`);
+    const thought = a.thoughts[Math.floor(Math.random() * a.thoughts.length)];
+    bubble.textContent = thought;
+  });
+}
+
+// Water cooler conversations
+function triggerWatercooler() {
+  const ids = Object.keys(agents);
+  // Pick 2-3 agents to go to watercooler
+  const goers = ids.sort(() => Math.random() - 0.5).slice(0, 2 + Math.floor(Math.random() * 2));
+  const coolerPositions = ['watercooler1', 'watercooler2', 'watercooler3'];
+
+  goers.forEach((id, i) => moveAgent(id, coolerPositions[i]));
+
+  // Show conversation
+  setTimeout(() => {
+    const convo = coolerConversations[coolerIndex % coolerConversations.length];
+    coolerIndex++;
+    const chatEl = document.getElementById('coolerChat');
+    const msgsEl = document.getElementById('coolerMessages');
+    chatEl.style.display = 'block';
+    msgsEl.innerHTML = '';
+
+    convo.forEach((msg, i) => {
+      setTimeout(() => {
+        msgsEl.innerHTML += `<div class="cooler-msg"><span class="cooler-name">${msg.name}:</span> <span class="cooler-text">${msg.text}</span></div>`;
+      }, i * 1500);
+    });
+
+    // Send them back after conversation
+    setTimeout(() => {
+      chatEl.style.display = 'none';
+      goers.forEach(id => moveAgent(id, `desk_${id}`));
+    }, convo.length * 1500 + 3000);
+
+    // Add to feed
+    const summary = convo.map(m => m.text).join(' → ');
+    feedItems.unshift({
+      agent: goers[0],
+      text: `<strong>Water cooler chat:</strong> ${summary.substring(0, 80)}...`,
+      time: 'just now'
+    });
+    renderFeed();
+
+  }, 2500);
+}
+
+// Clock
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+  });
+}
+
+// Simulation loop
+function simulate() {
+  updateThoughts();
+
+  // Random chance of watercooler break
+  if (Math.random() < 0.3) {
+    triggerWatercooler();
+  }
+
+  // Random chance of coffee run
+  if (Math.random() < 0.15) {
+    const id = Object.keys(agents)[Math.floor(Math.random() * 3)];
+    moveAgent(id, 'coffee');
+    setTimeout(() => moveAgent(id, `desk_${id}`), 6000);
+  }
+}
+
+// Init
+renderFeed();
+updateClock();
+setInterval(updateClock, 1000);
+setInterval(simulate, 8000);
+updateThoughts();
+
+// Start first watercooler after 5s
+setTimeout(triggerWatercooler, 5000);
+</script>
+</body>
+</html>
