@@ -135,6 +135,48 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API: collect email on hire
+  if (url.pathname === '/api/signup' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const { email, agent, timestamp } = JSON.parse(body);
+        if (!email || !email.includes('@')) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid email' }));
+          return;
+        }
+        // Append to signups file
+        const signupsFile = path.join(BASE, 'signups.jsonl');
+        const entry = JSON.stringify({ email, agent, timestamp: timestamp || new Date().toISOString(), ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress }) + '\n';
+        fs.appendFileSync(signupsFile, entry);
+        console.log(`  📧 New signup: ${email} → ${agent}`);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid request' }));
+      }
+    });
+    return;
+  }
+
+  // API: list signups (admin)
+  if (url.pathname === '/api/signups' && req.method === 'GET') {
+    const signupsFile = path.join(BASE, 'signups.jsonl');
+    if (fs.existsSync(signupsFile)) {
+      const lines = fs.readFileSync(signupsFile, 'utf8').trim().split('\n').filter(Boolean);
+      const signups = lines.map(l => JSON.parse(l));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ count: signups.length, signups }));
+    } else {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ count: 0, signups: [] }));
+    }
+    return;
+  }
+
   // (Chat handled via WebSocket below)
 
   // Static files — serve from project dir first, then demo
