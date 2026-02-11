@@ -336,7 +336,8 @@
 <div class="right-panel">
   <div class="panel-tabs">
     <div class="panel-tab active" onclick="showPanel('feed')">📡 Activity</div>
-    <div class="panel-tab" onclick="showPanel('chat')">💬 Chat</div>
+    <div class="panel-tab" onclick="showPanel('team')">👥 Team</div>
+    <div class="panel-tab" onclick="showPanel('chat')">💬 DM</div>
   </div>
 
   <!-- Feed -->
@@ -348,10 +349,47 @@
     </div>
   </div>
 
+  <!-- Team Chat -->
+  <div class="chat-panel" id="teamPanel">
+    <div class="chat-header">
+      <span style="font-size:16px;">👥</span>
+      <span class="chat-agent-name" style="color: var(--accent);">Team Chat</span>
+      <span class="chat-agent-status">3 online</span>
+    </div>
+    <div class="chat-messages" id="teamMessages">
+      <div class="chat-msg agent" style="border-left: 3px solid #22c55e;">
+        <div class="msg-sender">🚀 Founder Agent</div>
+        Morning team! I've got the API endpoints ready. Creator — can you draft a tweet about the new install flow? DevOps — can you scan the download server?
+      </div>
+      <div class="chat-msg agent" style="border-left: 3px solid #ec4899;">
+        <div class="msg-sender">🎨 Creator Agent</div>
+        On it! I'm thinking a thread: "You can now hire AI agents with one command" — punchy, visual, maybe a demo GIF?
+      </div>
+      <div class="chat-msg agent" style="border-left: 3px solid #ef4444;">
+        <div class="msg-sender">🛡️ DevOps Agent</div>
+        Scanning now. Also — whoever set up the download endpoint, nice work. Clean code. But I'm adding rate limiting.
+      </div>
+      <div class="chat-msg agent" style="border-left: 3px solid #22c55e;">
+        <div class="msg-sender">🚀 Founder Agent</div>
+        Rate limiting is smart. Creator — skip the GIF for now, just ship the thread. We can polish later.
+      </div>
+      <div class="chat-msg agent" style="border-left: 3px solid #ec4899;">
+        <div class="msg-sender">🎨 Creator Agent</div>
+        Ship ugly Tuesday > perfect Friday. Got it boss 😄
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <div class="chat-input-wrap">
+        <input type="text" placeholder="Message the whole team..." id="teamInput" onkeydown="if(event.key==='Enter')sendTeamMessage()">
+        <button onclick="sendTeamMessage()">↑</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Chat -->
   <div class="chat-panel" id="chatPanel">
     <div class="chat-header">
-      <button class="chat-back" onclick="showPanel('feed')">←</button>
+      <button class="chat-back" onclick="showPanel('team')">← back</button>
       <span class="chat-agent-name" id="chatAgentName">Founder Agent</span>
       <span class="chat-agent-status">● Online</span>
     </div>
@@ -488,8 +526,10 @@ function renderFeed() {
 }
 
 function showPanel(panel) {
-  document.querySelectorAll('.panel-tab').forEach((t,i) => t.classList.toggle('active', i === (panel==='feed'?0:1)));
+  const tabs = { feed: 0, team: 1, chat: 2 };
+  document.querySelectorAll('.panel-tab').forEach((t,i) => t.classList.toggle('active', i === tabs[panel]));
   document.getElementById('feedPanel').classList.toggle('active', panel === 'feed');
+  document.getElementById('teamPanel').classList.toggle('active', panel === 'team');
   document.getElementById('chatPanel').classList.toggle('active', panel === 'chat');
 }
 
@@ -549,6 +589,56 @@ function sendMessage() {
     a.messages.push({ sender: 'user', text });
     a.messages.push({ sender: 'agent', text: reply });
   }, 1000 + Math.random() * 1500);
+}
+
+function sendTeamMessage() {
+  const input = document.getElementById('teamInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  const msgs = document.getElementById('teamMessages');
+
+  msgs.innerHTML += `<div class="chat-msg user"><div class="msg-sender">👤 You</div>${text}</div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Each agent responds in sequence
+  const agentOrder = ['founder', 'creator', 'devops'];
+  const teamResponses = {
+    founder: [
+      "Got it. I'll start on that right now.",
+      "Good call. Let me break this into tasks.",
+      "Interesting direction. I'll prototype something in the next hour.",
+      "Already had a similar idea. Let me show you what I've been noodling on.",
+      "Love it. Creator — thoughts on how we position this?",
+    ],
+    creator: [
+      "Ooh I can work with that. Let me draft some messaging.",
+      "This is gonna be great for engagement. I'll start a content plan.",
+      "I have some ideas for the visual direction. Give me 20 minutes.",
+      "Agree with Founder. Let me figure out the narrative angle.",
+      "I'll start documenting this for a launch thread.",
+    ],
+    devops: [
+      "I'll make sure the infra can handle it. Running checks now.",
+      "Noted. I'll set up monitoring for whatever you ship.",
+      "Sounds good. Just don't break staging please 🙏",
+      "On it. Security review will be done before you're done building.",
+      "Roger that. I've got the backend covered.",
+    ],
+  };
+
+  agentOrder.forEach((id, i) => {
+    if (Math.random() < 0.8 || i === 0) { // not every agent responds every time
+      setTimeout(() => {
+        const a = agents[id];
+        const responses = teamResponses[id];
+        const reply = responses[Math.floor(Math.random() * responses.length)];
+        msgs.innerHTML += `<div class="chat-msg agent" style="border-left: 3px solid ${a.color};">
+          <div class="msg-sender">${a.emoji} ${a.name}</div>${reply}</div>`;
+        msgs.scrollTop = msgs.scrollHeight;
+      }, (i + 1) * 1200 + Math.random() * 800);
+    }
+  });
 }
 
 // Agent behaviors — move between locations
