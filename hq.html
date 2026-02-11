@@ -263,9 +263,91 @@
   .hire-more:hover { border-style: solid; background: linear-gradient(135deg, #1a1a3e, #162150); }
   .hire-more .hire-text { font-size: 12px; font-weight: 600; }
   .hire-more .hire-sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+  /* Nav bar */
+  .site-nav {
+    padding: 10px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .site-nav .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .site-nav .nav-logo span { font-size: 20px; }
+  .site-nav .nav-logo strong { font-family: 'Press Start 2P', monospace; font-size: 10px; color: var(--accent); }
+  .site-nav .nav-links { display: flex; gap: 16px; align-items: center; }
+  .site-nav .nav-links a {
+    color: var(--muted); font-size: 12px; font-weight: 500; text-decoration: none;
+    padding: 6px 12px; border-radius: 6px; transition: all 0.2s;
+  }
+  .site-nav .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .site-nav .nav-links a.active { color: var(--accent); background: rgba(251,191,36,0.1); }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    body { flex-direction: column; overflow: auto; height: auto; min-height: 100vh; }
+    .office-wrap { flex: none; height: auto; }
+    .office {
+      height: 250px; flex: none;
+      overflow-x: auto; overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .office-topbar { padding: 8px 12px; }
+    .office-topbar h1 { font-size: 9px; }
+    .right-panel {
+      width: 100%; border-left: none; border-top: 1px solid var(--border);
+      flex: 1; min-height: 50vh;
+    }
+    .panel-tab { padding: 12px 8px; font-size: 12px; min-height: 44px; }
+    .chat-input-wrap { padding: 10px 14px; }
+    .chat-input-wrap input { font-size: 16px; /* prevent iOS zoom */ }
+
+    /* Smaller agents on mobile */
+    .agent-sprite { font-size: 24px; }
+    .agent-nametag { font-size: 5px; }
+    .agent-char { width: 40px; }
+    .agent-bubble { font-size: 8px; bottom: 40px; max-width: 120px; padding: 4px 6px; }
+
+    /* Smaller furniture */
+    .desk { width: 65px; height: 36px; }
+    .desk::after { width: 22px; height: 14px; top: 4px; left: 6px; }
+    .desk-label { font-size: 6px; bottom: -14px; }
+    .wall { height: 60px; }
+    .wall-art { font-size: 8px; padding: 4px 8px; }
+    .wall-art.poster1 { left: 20px; top: 10px; }
+    .wall-art.poster2 { left: 160px; top: 12px; }
+    .wall-art.poster3 { right: 140px; top: 10px; }
+    .watercooler { width: 90px; height: 70px; }
+    .watercooler-icon { font-size: 20px; }
+    .watercooler-label { font-size: 5px; }
+    .coffee-icon { font-size: 18px; }
+    .coffee-label { font-size: 5px; }
+    .cooler-chat { width: 180px; font-size: 9px; padding: 8px; }
+    .cooler-chat-header { font-size: 6px; }
+
+    /* Feed items */
+    .feed-item { font-size: 11px; padding: 8px; }
+    .feed-item .feed-name { font-size: 10px; }
+
+    /* Chat messages */
+    .chat-msg { font-size: 13px; max-width: 95%; }
+    .chat-header { padding: 10px 12px; }
+
+    /* Hire more */
+    .hire-more { margin: 8px; padding: 10px; }
+
+    .site-nav .nav-links a { font-size: 11px; padding: 6px 8px; }
+  }
 </style>
 </head>
 <body>
+
+<!-- Nav -->
+<div class="site-nav">
+  <a href="index.html" class="nav-logo"><span>🦞</span><strong>AGENT ARENA</strong></a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="agents.html">Agents</a>
+    <a href="hq.html" class="active">HQ</a>
+  </div>
+</div>
 
 <!-- Office View -->
 <div class="office-wrap">
@@ -761,6 +843,44 @@ function simulate() {
     setTimeout(() => moveAgent(id, `desk_${id}`), 6000);
   }
 }
+
+// Mobile layout adjustments
+function adjustForMobile() {
+  if (window.innerWidth < 768) {
+    // Reposition desks closer together
+    document.getElementById('desk-founder').style.cssText = 'left:30px;top:110px;';
+    document.getElementById('desk-creator').style.cssText = 'left:160px;top:110px;';
+    document.getElementById('desk-devops').style.cssText = 'left:290px;top:110px;';
+    // Reposition agents
+    document.getElementById('char-founder').style.left = '35px';
+    document.getElementById('char-founder').style.top = '68px';
+    document.getElementById('char-creator').style.left = '165px';
+    document.getElementById('char-creator').style.top = '68px';
+    document.getElementById('char-devops').style.left = '350px';
+    document.getElementById('char-devops').style.top = '90px';
+    // Watercooler
+    document.getElementById('watercooler').style.cssText = 'left:190px;top:185px;';
+    // Coffee
+    document.querySelector('.coffee-area').style.cssText = 'left:370px;top:75px;';
+    // Cooler chat
+    document.getElementById('coolerChat').style.left = '280px';
+    document.getElementById('coolerChat').style.top = '160px';
+    // Update desk positions in locations
+    locations.desk_founder = { left: 35, top: 68 };
+    locations.desk_creator = { left: 165, top: 68 };
+    locations.desk_devops = { left: 295, top: 68 };
+    locations.watercooler1 = { left: 195, top: 200 };
+    locations.watercooler2 = { left: 230, top: 210 };
+    locations.watercooler3 = { left: 210, top: 220 };
+    locations.coffee = { left: 350, top: 90 };
+    // Update agent deskPos
+    agents.founder.deskPos = { left: 35, top: 68 };
+    agents.creator.deskPos = { left: 165, top: 68 };
+    agents.devops.deskPos = { left: 295, top: 68 };
+  }
+}
+adjustForMobile();
+window.addEventListener('resize', adjustForMobile);
 
 // Init
 renderFeed();

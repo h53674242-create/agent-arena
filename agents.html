@@ -295,9 +295,91 @@
   }
   @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
   .ticker-item { padding: 0 40px; }
+
+  /* Nav bar */
+  .site-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    padding: 10px 20px; background: rgba(8,8,12,0.95); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .site-nav .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .site-nav .nav-logo span { font-size: 20px; }
+  .site-nav .nav-logo strong { font-family: 'Press Start 2P', monospace; font-size: 10px; color: var(--accent); }
+  .site-nav .nav-links { display: flex; gap: 16px; align-items: center; }
+  .site-nav .nav-links a {
+    color: var(--muted); font-size: 12px; font-weight: 500; text-decoration: none;
+    padding: 6px 12px; border-radius: 6px; transition: all 0.2s;
+  }
+  .site-nav .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .site-nav .nav-links a.active { color: var(--accent); background: rgba(251,191,36,0.1); }
+
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    body { overflow-y: auto; overflow-x: hidden; }
+    .topbar { display: none; }
+    .site-nav { padding: 8px 12px; }
+    .site-nav .nav-links a { font-size: 11px; padding: 6px 8px; }
+
+    .stage { height: auto; min-height: auto; padding: 60px 0 0; }
+    .select-title { font-size: 9px; margin-bottom: 16px; margin-top: 10px; }
+
+    .carousel { height: 300px; }
+    .agent-slot { width: 160px; height: 260px; }
+    .agent-slot.active { width: 200px; }
+    .agent-body { width: 140px; height: 220px; }
+    .active .agent-body { width: 170px; height: 260px; }
+    .agent-emoji { font-size: 56px; }
+    .active .agent-emoji { font-size: 72px; }
+    .agent-name-small { font-size: 7px; }
+    .active .agent-name-small { font-size: 8px; }
+
+    .nav-arrow { width: 40px; height: 40px; font-size: 16px; }
+    .nav-arrow.left { left: 8px; }
+    .nav-arrow.right { right: 8px; }
+
+    .stats-panel {
+      position: relative; padding: 16px 0 60px;
+      background: var(--bg);
+    }
+    .stats-inner { padding: 0 16px; }
+    .stats-name { font-size: 12px; }
+    .stats-title { font-size: 12px; }
+    .stats-creator { font-size: 10px; }
+    .stats-price { font-size: 14px; }
+
+    .skill-bars { grid-template-columns: 1fr; gap: 6px; }
+    .skill-label { width: 100px; font-size: 10px; }
+    .skill-block { width: 10px; height: 10px; }
+
+    .agent-tags { gap: 4px; }
+    .agent-tag { font-size: 9px; padding: 2px 8px; }
+
+    .hire-area { flex-wrap: wrap; }
+    .hire-btn { width: 100%; padding: 14px; font-size: 12px; min-height: 48px; }
+    .preview-btn { flex: 1; min-height: 44px; }
+
+    .modal { padding: 20px; width: 95vw; }
+    .modal-emoji { font-size: 48px; }
+    .modal h3 { font-size: 11px; }
+    .modal p { font-size: 12px; }
+    .modal-step { font-size: 11px; }
+
+    .ticker { font-size: 7px; }
+  }
 </style>
 </head>
 <body>
+
+<!-- Nav -->
+<div class="site-nav">
+  <a href="index.html" class="nav-logo"><span>🦞</span><strong>AGENT ARENA</strong></a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="agents.html" class="active">Agents</a>
+    <a href="hq.html">HQ</a>
+  </div>
+</div>
 
 <!-- Particles -->
 <div class="particles" id="particles"></div>
