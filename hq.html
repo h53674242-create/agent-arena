@@ -354,6 +354,7 @@
   <div class="office-topbar">
     <h1>🦞 AGENT ARENA HQ</h1>
     <span class="squad-count">Squad: 3 agents</span>
+    <span id="connectionStatus" style="font-size:10px;color:#8e8ea0;padding:4px 10px;background:rgba(255,255,255,0.05);border-radius:12px;">⚪ Detecting OpenClaw...</span>
     <span class="time" id="clock"></span>
   </div>
   <div class="office" id="office">
@@ -485,6 +486,7 @@
   </div>
 </div>
 
+<script src="openclaw-bridge.js"></script>
 <script>
 // Agent state
 const agents = {
@@ -882,6 +884,132 @@ function adjustForMobile() {
 adjustForMobile();
 window.addEventListener('resize', adjustForMobile);
 
+// === OpenClaw Bridge ===
+let bridge = null;
+let openclawConnected = false;
+
+async function initBridge() {
+  if (typeof OpenClawBridge === 'undefined') return;
+  bridge = new OpenClawBridge();
+
+  const detected = await bridge.detect();
+  const indicator = document.getElementById('connectionStatus');
+
+  if (detected) {
+    try {
+      // Try to get token from localStorage or URL params
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token') || localStorage.getItem('openclaw_token');
+      if (token) {
+        bridge.token = token;
+        localStorage.setItem('openclaw_token', token);
+      }
+
+      await bridge.connect();
+      openclawConnected = true;
+      if (indicator) {
+        indicator.textContent = '🟢 OpenClaw Connected';
+        indicator.style.color = '#22c55e';
+      }
+
+      // Listen for real agent messages
+      bridge.onMessage((data) => {
+        if (data.params?.text || data.text) {
+          const text = data.params?.text || data.text;
+          const agentName = data.params?.agent || 'Agent';
+          addLiveMessage(agentName, text);
+        }
+      });
+
+      bridge.onStatus(({ connected }) => {
+        openclawConnected = connected;
+        if (indicator) {
+          indicator.textContent = connected ? '🟢 OpenClaw Connected' : '🔴 Disconnected';
+          indicator.style.color = connected ? '#22c55e' : '#ef4444';
+        }
+      });
+
+    } catch (e) {
+      console.log('Bridge connection failed:', e.message);
+      if (indicator) {
+        indicator.textContent = '🟡 OpenClaw detected (auth needed)';
+        indicator.style.color = '#fbbf24';
+      }
+    }
+  } else {
+    if (indicator) {
+      indicator.textContent = '⚪ OpenClaw not detected';
+      indicator.style.color = '#8e8ea0';
+    }
+  }
+}
+
+function addLiveMessage(agentName, text) {
+  // Add to team chat
+  const msgs = document.getElementById('teamMessages');
+  if (msgs) {
+    const agentColors = { founder: '#22c55e', creator: '#ec4899', devops: '#ef4444' };
+    const color = agentColors[agentName.toLowerCase()] || '#fbbf24';
+    msgs.innerHTML += `<div class="chat-msg agent" style="border-left: 3px solid ${color};">
+      <div class="msg-sender">🤖 ${agentName}</div>${text}</div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  // Add to feed
+  feedItems.unshift({
+    agent: 'founder',
+    text: `<strong>Live:</strong> ${text.substring(0, 80)}...`,
+    time: 'just now'
+  });
+  renderFeed();
+}
+
+// Override sendMessage to use real bridge when connected
+const _origSendMessage = sendMessage;
+sendMessage = function() {
+  if (openclawConnected && bridge && currentChat) {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    const a = agents[currentChat];
+    const msgs = document.getElementById('chatMessages');
+    msgs.innerHTML += `<div class="chat-msg user"><div class="msg-sender">👤 You</div>${text}</div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+
+    // Send to real OpenClaw
+    bridge.sendMessage(text);
+
+    // Show typing indicator
+    msgs.innerHTML += `<div class="chat-msg agent" id="typing-indicator">
+      <div class="msg-sender">${a.emoji} ${a.name}</div>
+      <span style="color:var(--muted)">typing...</span></div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+  } else {
+    _origSendMessage();
+  }
+};
+
+const _origSendTeamMessage = sendTeamMessage;
+sendTeamMessage = function() {
+  if (openclawConnected && bridge) {
+    const input = document.getElementById('teamInput');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    const msgs = document.getElementById('teamMessages');
+    msgs.innerHTML += `<div class="chat-msg user"><div class="msg-sender">👤 You</div>${text}</div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+
+    // Send to real OpenClaw
+    bridge.sendMessage(text);
+  } else {
+    _origSendTeamMessage();
+  }
+};
+
 // Init
 renderFeed();
 updateClock();
@@ -891,6 +1019,9 @@ updateThoughts();
 
 // Start first watercooler after 5s
 setTimeout(triggerWatercooler, 5000);
+
+// Init bridge
+initBridge();
 </script>
 </body>
 </html>
