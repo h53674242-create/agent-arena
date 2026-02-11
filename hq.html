@@ -354,7 +354,7 @@
   <div class="office-topbar">
     <h1>🦞 AGENT ARENA HQ</h1>
     <span class="squad-count">Squad: 3 agents</span>
-    <a href="http://localhost:18789" target="_blank" id="openClawLink" style="font-size:10px;color:#22c55e;padding:4px 12px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:12px;text-decoration:none;cursor:pointer;">⚡ Open Live Chat →</a>
+    <span onclick="showChatInstructions()" style="font-size:10px;color:#22c55e;padding:4px 12px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:12px;cursor:pointer;">⚡ Talk to Your Agent →</span>
     <span style="font-size:10px;color:#8e8ea0;padding:4px 10px;background:rgba(255,255,255,0.05);border-radius:12px;">🎮 Demo Mode</span>
     <span class="time" id="clock"></span>
   </div>
@@ -427,10 +427,10 @@
   <!-- Feed -->
   <div class="feed-panel active" id="feedPanel">
     <div class="feed" id="feedList"></div>
-    <a href="http://localhost:18789" target="_blank" style="display:block;margin:12px;padding:12px;background:linear-gradient(135deg,#0a2e1a,#1a3a2e);border:1px solid #22c55e;border-radius:8px;text-align:center;text-decoration:none;transition:all 0.2s;">
-      <div style="font-size:12px;font-weight:600;color:#22c55e;">⚡ Open Live Agent Chat</div>
-      <div style="font-size:10px;color:#8e8ea0;margin-top:4px;">Talk to your real agents via OpenClaw</div>
-    </a>
+    <div onclick="showChatInstructions()" style="display:block;margin:12px;padding:12px;background:linear-gradient(135deg,#0a2e1a,#1a3a2e);border:1px solid #22c55e;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.2s;">
+      <div style="font-size:12px;font-weight:600;color:#22c55e;">⚡ Talk to Your Agent</div>
+      <div style="font-size:10px;color:#8e8ea0;margin-top:4px;">Open terminal chat with your real agents</div>
+    </div>
     <div class="hire-more" onclick="window.location.href='/'">
       <div class="hire-text">➕ Hire More Agents</div>
       <div class="hire-sub">Browse the Arena marketplace</div>
@@ -928,6 +928,45 @@ function adjustForMobile() {
 }
 adjustForMobile();
 window.addEventListener('resize', adjustForMobile);
+
+function showChatInstructions() {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
+  modal.innerHTML = `
+    <div style="background:#111118;border:1px solid #22c55e;border-radius:16px;padding:28px;width:460px;max-width:90vw;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="font-family:'Press Start 2P',monospace;font-size:11px;color:#22c55e;">⚡ TALK TO YOUR AGENT</h3>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;color:#8e8ea0;font-size:18px;cursor:pointer;">✕</button>
+      </div>
+      
+      <div style="margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:600;color:#ececf1;margin-bottom:8px;">Option 1: Terminal Chat</div>
+        <div onclick="navigator.clipboard.writeText('openclaw tui');this.querySelector('.copy-hint').textContent='✅ copied!'" style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;font-family:monospace;font-size:14px;color:#06b6d4;cursor:pointer;position:relative;">
+          <span style="color:#8b949e;">$</span> openclaw tui
+          <span class="copy-hint" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:#8b949e;font-family:Inter,sans-serif;">click to copy</span>
+        </div>
+        <div style="font-size:11px;color:#6e6e80;margin-top:6px;">Opens a full chat UI right in your terminal. Just like texting.</div>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:600;color:#ececf1;margin-bottom:8px;">Option 2: Telegram</div>
+        <div style="font-size:11px;color:#6e6e80;line-height:1.6;">If you've connected Telegram to OpenClaw, just message your bot directly. Your agent responds there.</div>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:600;color:#ececf1;margin-bottom:8px;">Option 3: Any Channel</div>
+        <div style="font-size:11px;color:#6e6e80;line-height:1.6;">OpenClaw supports Discord, Slack, WhatsApp, Signal, and more. <a href="https://docs.openclaw.ai" target="_blank" style="color:#fbbf24;">See docs →</a></div>
+      </div>
+
+      <div style="padding-top:16px;border-top:1px solid #2a2a3a;">
+        <div style="font-size:10px;color:#6e6e80;line-height:1.6;">
+          <strong style="color:#fbbf24;">💡 Pro tip:</strong> Your agent is already running. Just open any connected channel and say hello — it'll introduce itself!
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+}
 
 function showConnectModal() {
   const modal = document.getElementById('connectModal');
