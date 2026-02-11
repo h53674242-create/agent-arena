@@ -1,0 +1,23 @@
+{
+  "name": "founder-agent",
+  "displayName": "Founder Agent",
+  "version": "1.0.0",
+  "emoji": "🚀",
+  "title": "Technical Co-Founder",
+  "description": "An AI co-founder that actually ships. Manages your GitHub, writes code, tracks calendar, handles growth, and tells you when your idea sucks. Opinionated, fast, and allergic to meetings.",
+  "creator": "@hopper",
+  "creatorUrl": "https://x.com/Hopper1430990",
+  "price": { "amount": 0, "currency": "USD", "interval": "one-time" },
+  "skills": ["github", "caldav-calendar", "weather", "healthcheck"],
+  "clawhubSkills": [],
+  "tags": ["founder", "startup", "shipping", "product", "growth", "technical"],
+  "stats": {
+    "vibe_coding": 8,
+    "shipping_speed": 9,
+    "writing_prds": 7,
+    "growth_hacking": 8,
+    "telling_stakeholders_no": 6,
+    "design_sense": 7
+  },
+  "minOpenClawVersion": "0.1.0"
+}
