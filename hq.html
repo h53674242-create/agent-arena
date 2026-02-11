@@ -354,7 +354,8 @@
   <div class="office-topbar">
     <h1>🦞 AGENT ARENA HQ</h1>
     <span class="squad-count">Squad: 3 agents</span>
-    <span id="connectionStatus" onclick="showConnectModal()" style="font-size:10px;color:#8e8ea0;padding:4px 10px;background:rgba(255,255,255,0.05);border-radius:12px;cursor:pointer;" title="Click to connect/reconnect">⚪ Detecting OpenClaw...</span>
+    <a href="http://localhost:18789" target="_blank" id="openClawLink" style="font-size:10px;color:#22c55e;padding:4px 12px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:12px;text-decoration:none;cursor:pointer;">⚡ Open Live Chat →</a>
+    <span style="font-size:10px;color:#8e8ea0;padding:4px 10px;background:rgba(255,255,255,0.05);border-radius:12px;">🎮 Demo Mode</span>
     <span class="time" id="clock"></span>
   </div>
   <div class="office" id="office">
@@ -426,6 +427,10 @@
   <!-- Feed -->
   <div class="feed-panel active" id="feedPanel">
     <div class="feed" id="feedList"></div>
+    <a href="http://localhost:18789" target="_blank" style="display:block;margin:12px;padding:12px;background:linear-gradient(135deg,#0a2e1a,#1a3a2e);border:1px solid #22c55e;border-radius:8px;text-align:center;text-decoration:none;transition:all 0.2s;">
+      <div style="font-size:12px;font-weight:600;color:#22c55e;">⚡ Open Live Agent Chat</div>
+      <div style="font-size:10px;color:#8e8ea0;margin-top:4px;">Talk to your real agents via OpenClaw</div>
+    </a>
     <div class="hire-more" onclick="window.location.href='/'">
       <div class="hire-text">➕ Hire More Agents</div>
       <div class="hire-sub">Browse the Arena marketplace</div>
