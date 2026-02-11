@@ -6,6 +6,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const WebSocket = require('ws');
 
 const PORT = 3333;
 const BASE = __dirname;
@@ -134,66 +135,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // API: chat with agent via OpenClaw gateway
-  if (url.pathname === '/api/chat' && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => body += chunk);
-    req.on('end', () => {
-      try {
-        const { message, port, token } = JSON.parse(body);
-        const WebSocket = require('ws');
-        const wsUrl = `ws://127.0.0.1:${port || 18789}/`;
-        const ws = new WebSocket(wsUrl);
-
-        ws.on('open', () => {
-          // Authenticate
-          if (token) {
-            ws.send(JSON.stringify({
-              id: 1,
-              method: 'connect',
-              params: { auth: { token } }
-            }));
-          }
-          // Send message
-          ws.send(JSON.stringify({
-            id: 2,
-            method: 'chat.send',
-            params: { message }
-          }));
-        });
-
-        let response = '';
-        ws.on('message', (data) => {
-          try {
-            const msg = JSON.parse(data.toString());
-            if (msg.params?.text) response += msg.params.text;
-            if (msg.result?.status === 'ok' || msg.type === 'chat.done') {
-              ws.close();
-              res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ ok: true, response }));
-            }
-          } catch (e) {}
-        });
-
-        ws.on('error', () => {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Could not connect to OpenClaw gateway' }));
-        });
-
-        setTimeout(() => {
-          if (!res.writableEnded) {
-            ws.close();
-            res.writeHead(504, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Timeout waiting for response' }));
-          }
-        }, 30000);
-      } catch (e) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Invalid request' }));
-      }
-    });
-    return;
-  }
+  // (Chat handled via WebSocket below)
 
   // Static files — serve from project dir first, then demo
   let filePath = url.pathname === '/' ? '/index.html' : url.pathname;
@@ -214,6 +156,129 @@ const server = http.createServer((req, res) => {
 
 process.on('uncaughtException', (e) => { console.error('Uncaught:', e.message); });
 process.on('unhandledRejection', (e) => { console.error('Unhandled:', e); });
+
+// === WebSocket server for real-time agent chat ===
+const wss = new WebSocket.Server({ server });
+
+// Read gateway token
+let GATEWAY_TOKEN = null;
+try {
+  const config = JSON.parse(fs.readFileSync(path.join(require('os').homedir(), '.openclaw/openclaw.json'), 'utf8'));
+  GATEWAY_TOKEN = config.gateway?.auth?.token;
+  if (GATEWAY_TOKEN) console.log('  ✅ Gateway token loaded');
+} catch (e) {
+  console.log('  ⚠️  Could not read gateway token — chat proxy disabled');
+}
+
+// Active agent sessions: { clientId: { gw: WebSocket, sessionKey: string } }
+const sessions = {};
+let clientIdCounter = 0;
+
+wss.on('connection', (clientWs) => {
+  const clientId = ++clientIdCounter;
+  console.log(`  [ws] Client ${clientId} connected`);
+
+  clientWs.on('message', (raw) => {
+    try {
+      const msg = JSON.parse(raw.toString());
+
+      // Hire: spawn agent
+      if (msg.type === 'hire') {
+        const pkgDir = path.join(PACKAGES, msg.agentPkg);
+        if (!fs.existsSync(path.join(pkgDir, 'agent.json'))) {
+          clientWs.send(JSON.stringify({ type: 'error', error: 'Agent not found' }));
+          return;
+        }
+
+        const soul = fs.readFileSync(path.join(pkgDir, 'SOUL.md'), 'utf8');
+        const bootstrap = fs.existsSync(path.join(pkgDir, 'BOOTSTRAP.md'))
+          ? fs.readFileSync(path.join(pkgDir, 'BOOTSTRAP.md'), 'utf8')
+          : '';
+        const manifest = JSON.parse(fs.readFileSync(path.join(pkgDir, 'agent.json'), 'utf8'));
+
+        // Connect to OpenClaw gateway
+        const gw = new WebSocket(`ws://127.0.0.1:18789/`);
+
+        gw.on('open', () => {
+          console.log(`  [ws] Client ${clientId}: connected to gateway for ${msg.agentPkg}`);
+
+          // Send the agent's personality as first message
+          const bootMessage = `You are now acting as a different agent. Completely adopt this new persona:\n\n${soul}\n\n---\n\n${bootstrap}\n\nIMPORTANT: You are NOT Hopper. You are the ${manifest.displayName}. Stay completely in character as described in the SOUL.md above. This is your first boot — follow the bootstrap instructions. Introduce yourself and ask what to work on.`;
+
+          gw.send(JSON.stringify({
+            id: 1,
+            method: 'chat.send',
+            params: {
+              message: bootMessage,
+              ...(GATEWAY_TOKEN ? {} : {})
+            }
+          }));
+
+          sessions[clientId] = { gw, manifest };
+        });
+
+        gw.on('message', (data) => {
+          try {
+            const gwMsg = JSON.parse(data.toString());
+
+            // Forward chat events to client
+            if (gwMsg.type === 'chat' || gwMsg.method === 'chat' || gwMsg.event === 'chat') {
+              clientWs.send(JSON.stringify({
+                type: 'agent-message',
+                data: gwMsg
+              }));
+            }
+
+            // Forward RPC responses
+            if (gwMsg.id && gwMsg.result) {
+              clientWs.send(JSON.stringify({
+                type: 'rpc-response',
+                data: gwMsg
+              }));
+            }
+          } catch (e) {}
+        });
+
+        gw.on('error', (e) => {
+          console.error(`  [ws] Gateway error for client ${clientId}:`, e.message);
+          clientWs.send(JSON.stringify({ type: 'error', error: 'Gateway connection failed: ' + e.message }));
+        });
+
+        gw.on('close', () => {
+          console.log(`  [ws] Gateway closed for client ${clientId}`);
+        });
+
+        clientWs.send(JSON.stringify({ type: 'hire-ok', agent: manifest.displayName }));
+      }
+
+      // Chat: send message to agent
+      if (msg.type === 'chat') {
+        const session = sessions[clientId];
+        if (!session || !session.gw || session.gw.readyState !== WebSocket.OPEN) {
+          clientWs.send(JSON.stringify({ type: 'error', error: 'No active agent session. Hire an agent first.' }));
+          return;
+        }
+
+        session.gw.send(JSON.stringify({
+          id: Date.now(),
+          method: 'chat.send',
+          params: { message: msg.message }
+        }));
+      }
+
+    } catch (e) {
+      console.error(`  [ws] Parse error:`, e.message);
+    }
+  });
+
+  clientWs.on('close', () => {
+    console.log(`  [ws] Client ${clientId} disconnected`);
+    if (sessions[clientId]?.gw) {
+      sessions[clientId].gw.close();
+      delete sessions[clientId];
+    }
+  });
+});
 
 server.listen(PORT, () => {
   console.log(`\n  🦞 Agent Arena server running on http://localhost:${PORT}\n`);

@@ -535,7 +535,14 @@ function send() {
     </div>`;
   scrollChat();
 
-  // Response
+  // If agent is live, send via WebSocket to real OpenClaw
+  if (agentLive && ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'chat', message: text }));
+    // Response comes via WebSocket handler (handleAgentText)
+    return;
+  }
+
+  // Fallback: demo response
   setTimeout(() => {
     document.getElementById(typingId)?.remove();
     const reply = a.responses[Math.floor(Math.random() * a.responses.length)];
@@ -588,29 +595,27 @@ async function hireAndChat(agentId) {
     scrollChat();
   }
 
-  // Fetch agent data from our API
+  // Hire via WebSocket
   try {
-    const resp = await fetch(`/api/agents/${a.pkg}/hire`, { method: 'POST' });
-    const data = await resp.json();
+    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error('Not connected to server');
 
-    if (data.ok) {
-      await new Promise(r => setTimeout(r, 500));
-      statusEl.innerHTML = steps.map(s => `<div style="color:var(--green);">✅ ${s}</div>`).join('') +
-        `<div style="color:var(--green);font-weight:700;margin-top:8px;">🎉 ${a.name} is live!</div>`;
-      scrollChat();
+    ws.send(JSON.stringify({ type: 'hire', agentPkg: a.pkg }));
+    agentLive = true;
 
-      // Now show the agent's real greeting
-      await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 1500));
+    statusEl.innerHTML = steps.map(s => `<div style="color:var(--green);">✅ ${s}</div>`).join('') +
+      `<div style="color:var(--green);font-weight:700;margin-top:8px;">🎉 ${a.name} is live! Waiting for first message...</div>`;
+    scrollChat();
+
+    // The agent's response will come through the WebSocket handler automatically
+    // Remove the hire progress after a moment
+    setTimeout(() => {
       document.getElementById('hire-progress')?.remove();
+    }, 3000);
 
-      // Switch to "live" mode for this agent
-      a._live = true;
-      a._prompt = data.prompt;
-      renderChat(); // Re-render with fresh greeting
-    }
   } catch (e) {
-    statusEl.innerHTML = `<div style="color:var(--red);">❌ Could not connect to local server. Make sure the Agent Arena server is running.</div>
-    <div style="margin-top:8px;font-size:12px;color:var(--muted);">Run: <code style="background:#0d1117;padding:2px 6px;border-radius:4px;color:#06b6d4;">cd agent-arena && node server.js</code></div>`;
+    statusEl.innerHTML = `<div style="color:var(--red);">❌ ${e.message}</div>
+    <div style="margin-top:8px;font-size:12px;color:var(--muted);">Make sure the Agent Arena server is running: <code style="background:#0d1117;padding:2px 6px;border-radius:4px;color:#06b6d4;">cd agent-arena && node server.js</code></div>`;
   }
 }
 
@@ -672,7 +677,116 @@ document.getElementById('activateModal').addEventListener('click', function(e) {
   if (e.target === this) this.classList.remove('show');
 });
 
+// === Real-time WebSocket connection ===
+let ws = null;
+let agentLive = false;
+
+function connectWS() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${protocol}//${location.host}`);
+
+  ws.onopen = () => console.log('[ws] Connected to Arena server');
+
+  ws.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+
+    if (msg.type === 'hire-ok') {
+      console.log('[ws] Agent hired:', msg.agent);
+    }
+
+    if (msg.type === 'agent-message') {
+      // Extract text from various OpenClaw event formats
+      const data = msg.data;
+      let text = null;
+
+      // Try different message formats
+      if (data.params?.delta) text = data.params.delta;
+      if (data.params?.text) text = data.params.text;
+      if (data.params?.content) text = data.params.content;
+      if (data.result?.text) text = data.result.text;
+
+      if (text) {
+        handleAgentText(text, data);
+      }
+    }
+
+    if (msg.type === 'error') {
+      const chat = document.getElementById('chat');
+      chat.innerHTML += `
+        <div class="msg">
+          <div class="msg-avatar" style="background:#ef444420;">⚠️</div>
+          <div class="msg-body">
+            <div class="msg-name" style="color:#ef4444;">System</div>
+            <div class="msg-text">${msg.error}</div>
+          </div>
+        </div>`;
+      scrollChat();
+    }
+  };
+
+  ws.onclose = () => {
+    console.log('[ws] Disconnected, reconnecting in 3s...');
+    setTimeout(connectWS, 3000);
+  };
+
+  ws.onerror = () => {};
+}
+
+// Buffer for streaming text
+let streamBuffer = '';
+let streamMsgEl = null;
+let streamTimer = null;
+
+function handleAgentText(text, data) {
+  const a = currentAgent;
+  if (!a) return;
+
+  const chat = document.getElementById('chat');
+
+  // Remove typing indicator
+  document.querySelectorAll('[id^="typing-"]').forEach(el => el.remove());
+
+  // If this is a delta (streaming), append to current message
+  if (data.params?.delta) {
+    if (!streamMsgEl) {
+      // Create new message element
+      const id = 'stream-' + Date.now();
+      chat.innerHTML += `
+        <div class="msg" id="${id}">
+          <div class="msg-avatar" style="background:${a.color}20;">${a.emoji}</div>
+          <div class="msg-body">
+            <div class="msg-name" style="color:${a.color}">${a.name}</div>
+            <div class="msg-text" id="${id}-text"></div>
+          </div>
+        </div>`;
+      streamMsgEl = document.getElementById(`${id}-text`);
+      streamBuffer = '';
+    }
+    streamBuffer += text;
+    streamMsgEl.innerHTML = streamBuffer.replace(/\n/g, '<br>');
+    scrollChat();
+
+    // Reset finish timer
+    clearTimeout(streamTimer);
+    streamTimer = setTimeout(() => { streamMsgEl = null; streamBuffer = ''; }, 5000);
+  } else {
+    // Complete message
+    streamMsgEl = null;
+    streamBuffer = '';
+    chat.innerHTML += `
+      <div class="msg">
+        <div class="msg-avatar" style="background:${a.color}20;">${a.emoji}</div>
+        <div class="msg-body">
+          <div class="msg-name" style="color:${a.color}">${a.name}</div>
+          <div class="msg-text">${text.replace(/\n/g, '<br>')}</div>
+        </div>
+      </div>`;
+    scrollChat();
+  }
+}
+
 // Init
+connectWS();
 selectAgent('founder');
 renderSidebar();
 </script>
