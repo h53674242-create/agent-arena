@@ -677,7 +677,11 @@ function openChat(agentId) {
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-function sendMessage() {
+// Map HQ agent ids to package names
+const agentPkgMap = { founder: 'founder-agent', creator: 'creator-agent', devops: 'devops-agent' };
+const chatSessionIds = {}; // per-agent session tracking
+
+async function sendMessage() {
   if (!currentChat) return;
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
@@ -690,37 +694,52 @@ function sendMessage() {
   msgs.innerHTML += `<div class="chat-msg user"><div class="msg-sender">👤 You</div>${text}</div>`;
   msgs.scrollTop = msgs.scrollHeight;
 
-  // Simulate agent response
-  setTimeout(() => {
-    const responses = {
-      founder: [
-        "On it. Give me 10 minutes and I'll have a PR up.",
-        "Good thinking. Let me prototype that real quick.",
-        "Already started on something similar. Let me show you what I've got.",
-        "Hmm, interesting angle. Let me research that and get back to you in 5.",
-      ],
-      creator: [
-        "Love that angle! Let me draft a few versions and you can pick.",
-        "Great idea for a thread. I'll have it ready in 15 minutes.",
-        "Already have some data on that. Let me pull the analytics.",
-        "Ooh, that could go viral. Let me work on the hook.",
-      ],
-      devops: [
-        "Running the scan now. I'll have results in 2 minutes.",
-        "Already checked. Everything's green. Here's the report.",
-        "Good call. Let me lock that down right now.",
-        "Done. Deployed and monitored. No issues.",
-      ],
-    };
-    const reply = responses[currentChat][Math.floor(Math.random() * responses[currentChat].length)];
-    msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">${a.emoji} ${a.name}</div>${reply}</div>`;
-    msgs.scrollTop = msgs.scrollHeight;
-    a.messages.push({ sender: 'user', text });
-    a.messages.push({ sender: 'agent', text: reply });
-  }, 1000 + Math.random() * 1500);
+  // Show typing indicator
+  const typingId = 'typing-' + Date.now();
+  msgs.innerHTML += `<div class="chat-msg agent" id="${typingId}"><div class="msg-sender">${a.emoji} ${a.name}</div><em style="color:#8e8ea0;">typing...</em></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: chatSessionIds[currentChat] || null,
+        agentPkg: agentPkgMap[currentChat] || 'founder-agent',
+        message: text,
+      }),
+    });
+    const data = await resp.json();
+
+    // Remove typing indicator
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+
+    if (data.ok) {
+      chatSessionIds[currentChat] = data.sessionId;
+      // Simple markdown: bold, italic, code, newlines
+      const rendered = data.reply
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code style="background:#1a1a2e;padding:2px 4px;border-radius:3px;">$1</code>')
+        .replace(/\n/g, '<br>');
+      msgs.innerHTML += `<div class="chat-msg agent" style="border-left: 3px solid ${a.color};"><div class="msg-sender">${a.emoji} ${a.name}</div>${rendered}</div>`;
+    } else {
+      msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>Error: ${data.error || 'Unknown error'}</div>`;
+    }
+  } catch (e) {
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+    msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>Connection error. Make sure the local server is running on localhost:3333</div>`;
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+  a.messages.push({ sender: 'user', text });
 }
 
-function sendTeamMessage() {
+let teamSessionId = null;
+
+async function sendTeamMessage() {
   const input = document.getElementById('teamInput');
   const text = input.value.trim();
   if (!text) return;
@@ -730,44 +749,43 @@ function sendTeamMessage() {
   msgs.innerHTML += `<div class="chat-msg user"><div class="msg-sender">👤 You</div>${text}</div>`;
   msgs.scrollTop = msgs.scrollHeight;
 
-  // Each agent responds in sequence
-  const agentOrder = ['founder', 'creator', 'devops'];
-  const teamResponses = {
-    founder: [
-      "Got it. I'll start on that right now.",
-      "Good call. Let me break this into tasks.",
-      "Interesting direction. I'll prototype something in the next hour.",
-      "Already had a similar idea. Let me show you what I've been noodling on.",
-      "Love it. Creator — thoughts on how we position this?",
-    ],
-    creator: [
-      "Ooh I can work with that. Let me draft some messaging.",
-      "This is gonna be great for engagement. I'll start a content plan.",
-      "I have some ideas for the visual direction. Give me 20 minutes.",
-      "Agree with Founder. Let me figure out the narrative angle.",
-      "I'll start documenting this for a launch thread.",
-    ],
-    devops: [
-      "I'll make sure the infra can handle it. Running checks now.",
-      "Noted. I'll set up monitoring for whatever you ship.",
-      "Sounds good. Just don't break staging please 🙏",
-      "On it. Security review will be done before you're done building.",
-      "Roger that. I've got the backend covered.",
-    ],
-  };
+  // Send to founder agent with team context — it responds as the team lead
+  const typingId = 'team-typing-' + Date.now();
+  msgs.innerHTML += `<div class="chat-msg agent" id="${typingId}" style="border-left: 3px solid #22c55e;"><div class="msg-sender">🚀 Founder Agent</div><em style="color:#8e8ea0;">typing...</em></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
 
-  agentOrder.forEach((id, i) => {
-    if (Math.random() < 0.8 || i === 0) { // not every agent responds every time
-      setTimeout(() => {
-        const a = agents[id];
-        const responses = teamResponses[id];
-        const reply = responses[Math.floor(Math.random() * responses.length)];
-        msgs.innerHTML += `<div class="chat-msg agent" style="border-left: 3px solid ${a.color};">
-          <div class="msg-sender">${a.emoji} ${a.name}</div>${reply}</div>`;
-        msgs.scrollTop = msgs.scrollHeight;
-      }, (i + 1) * 1200 + Math.random() * 800);
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: teamSessionId,
+        agentPkg: 'founder-agent',
+        message: `[Team Chat] ${text}`,
+      }),
+    });
+    const data = await resp.json();
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+
+    if (data.ok) {
+      teamSessionId = data.sessionId;
+      const rendered = data.reply
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code style="background:#1a1a2e;padding:2px 4px;border-radius:3px;">$1</code>')
+        .replace(/\n/g, '<br>');
+      msgs.innerHTML += `<div class="chat-msg agent" style="border-left: 3px solid #22c55e;"><div class="msg-sender">🚀 Founder Agent</div>${rendered}</div>`;
+    } else {
+      msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>${data.error}</div>`;
     }
-  });
+  } catch (e) {
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+    msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>Connection error — is localhost:3333 running?</div>`;
+  }
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
 // Agent behaviors — move between locations
