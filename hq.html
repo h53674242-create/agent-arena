@@ -535,7 +535,6 @@
   </div>
 </div>
 
-<script src="openclaw-bridge.js"></script>
 <script>
 // Agent state
 const agents = {
@@ -686,8 +685,8 @@ function openChat(agentId) {
 
 // Map HQ agent ids to package names
 const agentPkgMap = { founder: 'founder-agent', creator: 'creator-agent', devops: 'devops-agent' };
-const chatSessionIds = {}; // per-agent session tracking
 const hatchedAgents = {}; // track which agents have been hatched
+const streamBuffers = {}; // runId -> accumulated text for streaming
 
 function renderMarkdown(text) {
   return text
@@ -698,33 +697,253 @@ function renderMarkdown(text) {
     .replace(/\n/g, '<br>');
 }
 
+// ============================================================
+// WebSocket connection to server (which bridges to gateway)
+// ============================================================
+
+let ws = null;
+let wsConnected = false;
+
+function connectWS() {
+  ws = new WebSocket(`ws://${location.host}/`);
+  
+  ws.onopen = () => {
+    console.log('🔌 Connected to Arena server');
+    const dot = document.getElementById('gwStatus');
+    if (dot) { dot.style.background = '#fbbf24'; dot.title = 'Connected to server'; }
+  };
+  
+  ws.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      handleWSMessage(msg);
+    } catch (err) { console.error('WS parse error:', err); }
+  };
+  
+  ws.onclose = () => {
+    console.log('🔌 Disconnected from Arena server');
+    wsConnected = false;
+    const dot = document.getElementById('gwStatus');
+    if (dot) { dot.style.background = '#ef4444'; dot.title = 'Disconnected'; }
+    // Reconnect after 3s
+    setTimeout(connectWS, 3000);
+  };
+  
+  ws.onerror = () => {};
+}
+
+function handleWSMessage(msg) {
+  // Gateway connection status
+  if (msg.type === 'status') {
+    wsConnected = msg.connected;
+    const dot = document.getElementById('gwStatus');
+    if (dot) {
+      dot.style.background = msg.connected ? '#22c55e' : '#fbbf24';
+      dot.title = msg.connected ? 'Gateway connected' : 'Waiting for gateway...';
+    }
+  }
+
+  // Hatch confirmed
+  if (msg.type === 'hatch-ok') {
+    const agentId = Object.entries(agentPkgMap).find(([k,v]) => v === msg.agentPkg)?.[0];
+    if (agentId) {
+      hatchedAgents[agentId] = { sessionKey: msg.sessionKey, agent: msg.agent };
+      console.log(`🐣 ${msg.agent.displayName} hatched! Session: ${msg.sessionKey}`);
+    }
+  }
+
+  // Streaming delta — real-time text as agent types
+  if (msg.type === 'chat-delta') {
+    const agentId = Object.entries(agentPkgMap).find(([k,v]) => v === msg.agentPkg)?.[0];
+    if (!agentId) return;
+    const a = agents[agentId];
+    
+    // Extract text from message
+    let deltaText = '';
+    if (typeof msg.message === 'string') {
+      deltaText = msg.message;
+    } else if (Array.isArray(msg.message)) {
+      for (const part of msg.message) {
+        if (part.type === 'text' && part.text) deltaText += part.text;
+      }
+    } else if (msg.message?.text) {
+      deltaText = msg.message.text;
+    }
+    
+    if (!deltaText) return;
+    
+    // Accumulate in buffer
+    if (!streamBuffers[msg.runId]) streamBuffers[msg.runId] = '';
+    streamBuffers[msg.runId] += deltaText;
+    
+    // Update or create the streaming message element
+    const msgs = document.getElementById('chatMessages');
+    let streamEl = document.getElementById(`stream-${msg.runId}`);
+    
+    // Remove typing indicator if present
+    const typingEl = document.querySelector('.typing-indicator');
+    if (typingEl) typingEl.remove();
+    
+    if (!streamEl) {
+      streamEl = document.createElement('div');
+      streamEl.id = `stream-${msg.runId}`;
+      streamEl.className = 'chat-msg agent';
+      streamEl.style.borderLeft = `3px solid ${a.color}`;
+      streamEl.innerHTML = `<div class="msg-sender">${a.emoji} ${a.name}</div><span class="stream-text"></span>`;
+      msgs.appendChild(streamEl);
+    }
+    
+    streamEl.querySelector('.stream-text').innerHTML = renderMarkdown(streamBuffers[msg.runId]);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  // Final message — streaming complete
+  if (msg.type === 'chat-final') {
+    const agentId = Object.entries(agentPkgMap).find(([k,v]) => v === msg.agentPkg)?.[0];
+    if (!agentId) return;
+    const a = agents[agentId];
+    const msgs = document.getElementById('chatMessages');
+    
+    // Remove typing indicator
+    const typingEl = document.querySelector('.typing-indicator');
+    if (typingEl) typingEl.remove();
+    
+    // Extract final text
+    let finalText = '';
+    if (typeof msg.message === 'string') {
+      finalText = msg.message;
+    } else if (Array.isArray(msg.message)) {
+      for (const part of msg.message) {
+        if (part.type === 'text' && part.text) finalText += part.text;
+      }
+    } else if (msg.message?.text) {
+      finalText = msg.message.text;
+    }
+    
+    // Replace stream element with final or create new
+    let streamEl = document.getElementById(`stream-${msg.runId}`);
+    if (streamEl && finalText) {
+      streamEl.querySelector('.stream-text').innerHTML = renderMarkdown(finalText);
+    } else if (finalText) {
+      msgs.innerHTML += `<div class="chat-msg agent" style="border-left: 3px solid ${a.color};"><div class="msg-sender">${a.emoji} ${a.name}</div><span class="stream-text">${renderMarkdown(finalText)}</span></div>`;
+    }
+    
+    // If this was a hatch, show the input area
+    if (!document.querySelector('#chatPanel .chat-input-area')?.style.display !== 'none') {
+      const inputArea = document.querySelector('#chatPanel .chat-input-area');
+      if (inputArea) inputArea.style.display = '';
+    }
+    
+    // Clean up buffer
+    delete streamBuffers[msg.runId];
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  // Agent events — streaming text + tool calls
+  if (msg.type === 'agent-event') {
+    const agentId = Object.entries(agentPkgMap).find(([k,v]) => v === msg.agentPkg)?.[0];
+    if (!agentId) return;
+    const a = agents[agentId];
+    const payload = msg.payload;
+    const runId = payload.runId;
+    
+    // Streaming assistant text
+    if (payload.stream === 'assistant' && payload.data?.text) {
+      const msgs = document.getElementById('chatMessages');
+      
+      // Remove typing indicator
+      const typingEl = document.querySelector('.typing-indicator');
+      if (typingEl) typingEl.remove();
+      
+      // Create or update stream element
+      let streamEl = document.getElementById(`stream-${runId}`);
+      if (!streamEl) {
+        streamEl = document.createElement('div');
+        streamEl.id = `stream-${runId}`;
+        streamEl.className = 'chat-msg agent';
+        streamEl.style.borderLeft = `3px solid ${a.color}`;
+        streamEl.innerHTML = `<div class="msg-sender">${a.emoji} ${a.name}</div><span class="stream-text"></span>`;
+        msgs.appendChild(streamEl);
+      }
+      
+      streamEl.querySelector('.stream-text').innerHTML = renderMarkdown(payload.data.text);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+    
+    // Tool calls
+    if (payload.stream === 'tool' && payload.data) {
+      const toolName = payload.data.name || payload.data.tool || 'tool';
+      const msgs = document.getElementById('chatMessages');
+      
+      // Only show tool-start, not every update
+      if (payload.data.phase === 'start' || (!payload.data.phase && !document.getElementById(`tool-${runId}-${toolName}`))) {
+        const toolEl = document.createElement('div');
+        toolEl.id = `tool-${runId}-${toolName}`;
+        toolEl.className = 'chat-msg agent';
+        toolEl.style.borderLeft = `3px solid ${a.color}`;
+        toolEl.style.opacity = '0.7';
+        toolEl.style.fontSize = '11px';
+        toolEl.innerHTML = `<div class="msg-sender">🔧 ${a.name}</div>Using <strong>${toolName}</strong>...`;
+        msgs.appendChild(toolEl);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+    }
+    
+    // Lifecycle end — agent finished
+    if (payload.stream === 'lifecycle' && payload.data?.phase === 'end') {
+      const inputArea = document.querySelector('#chatPanel .chat-input-area');
+      if (inputArea) inputArea.style.display = '';
+    }
+  }
+
+  // Error
+  if (msg.type === 'error') {
+    console.error('Server error:', msg.error);
+    const msgs = document.getElementById('chatMessages');
+    if (msgs) {
+      // Remove typing indicator
+      const typingEl = document.querySelector('.typing-indicator');
+      if (typingEl) typingEl.remove();
+      msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>${msg.error}</div>`;
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+  }
+}
+
+// Connect on page load
+connectWS();
+
+// ============================================================
+// Hatch & Chat UI
+// ============================================================
+
 function showHatchScreen(agentId) {
   const a = agents[agentId];
   const msgs = document.getElementById('chatMessages');
   const inputArea = document.querySelector('#chatPanel .chat-input-area');
-  inputArea.style.display = 'none'; // hide input until hatched
+  inputArea.style.display = 'none';
 
   msgs.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:24px;">
       <div style="font-size:64px;margin-bottom:16px;animation:pulse 2s infinite;">🥚</div>
       <div style="font-family:'Press Start 2P',monospace;font-size:12px;color:${a.color};margin-bottom:8px;">${a.name}</div>
       <div style="font-size:13px;color:#8e8ea0;margin-bottom:24px;max-width:300px;line-height:1.6;">
-        This agent is ready to hatch. Once activated, it'll wake up as a real AI with its own personality and memory.
+        This agent is ready to hatch. Once activated, it'll wake up as a <strong>real AI sub-agent</strong> with full tool access — web search, code execution, file management, and more.
       </div>
       <button onclick="hatchAgent('${agentId}')" id="hatchBtn" style="padding:14px 32px;background:linear-gradient(135deg,${a.color},${a.color}cc);color:#000;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;font-family:'Press Start 2P',monospace;transition:all 0.3s;box-shadow:0 0 20px ${a.color}44;">
         🐣 HATCH AGENT
       </button>
-      <div style="font-size:10px;color:#6e6e80;margin-top:12px;">Requires local server on localhost:3333</div>
+      <div id="gwStatus" style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;margin-top:12px;" title="Gateway connected"></div>
+      <div style="font-size:10px;color:#6e6e80;margin-top:4px;">Real AI · Full tool access · localhost:3333</div>
     </div>
   `;
 }
 
-async function hatchAgent(agentId) {
+function hatchAgent(agentId) {
   const a = agents[agentId];
   const msgs = document.getElementById('chatMessages');
   const btn = document.getElementById('hatchBtn');
   
-  // Hatching animation
   btn.disabled = true;
   btn.innerHTML = '🥚 HATCHING...';
   btn.style.opacity = '0.7';
@@ -732,60 +951,53 @@ async function hatchAgent(agentId) {
   msgs.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:24px;">
       <div style="font-size:64px;margin-bottom:16px;" id="hatchEgg">🥚</div>
-      <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:${a.color};" id="hatchStatus">Initializing agent...</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:${a.color};" id="hatchStatus">Connecting to gateway...</div>
     </div>
   `;
 
-  // Egg crack animation
   const egg = document.getElementById('hatchEgg');
   const status = document.getElementById('hatchStatus');
-  setTimeout(() => { egg.textContent = '🐣'; status.textContent = 'Agent waking up...'; }, 1500);
+  
+  setTimeout(() => { 
+    egg.textContent = '🐣'; 
+    status.textContent = 'Spawning sub-agent...'; 
+  }, 1000);
 
-  try {
-    const resp = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        agentPkg: agentPkgMap[agentId],
-        message: 'This is your first boot. You just got hired! Introduce yourself — who you are, what you can do, and ask what we should work on today. Be punchy, be excited. Keep it to 3-5 sentences max.',
-      }),
-    });
-    const data = await resp.json();
+  setTimeout(() => { 
+    status.textContent = 'Agent waking up...'; 
+  }, 2500);
 
-    if (data.ok) {
-      chatSessionIds[agentId] = data.sessionId;
+  // Send hatch command via WebSocket
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'hatch', agentPkg: agentPkgMap[agentId] }));
+    
+    // Transition to chat view after a beat (agent response will stream in)
+    setTimeout(() => {
       hatchedAgents[agentId] = true;
+      egg.textContent = '🐥';
+      status.textContent = `${a.name} is alive!`;
       
-      // Show the hatched state
       setTimeout(() => {
-        egg.textContent = '🐥';
-        status.textContent = `${a.name} is alive!`;
-        
-        setTimeout(() => {
-          // Transition to chat view
-          const inputArea = document.querySelector('#chatPanel .chat-input-area');
-          inputArea.style.display = '';
-          msgs.innerHTML = `
-            <div style="text-align:center;padding:12px;margin-bottom:8px;">
-              <span style="font-size:10px;color:#6e6e80;background:#1a1a2e;padding:4px 12px;border-radius:12px;">🐣 ${a.name} hatched</span>
-            </div>
-            <div class="chat-msg agent" style="border-left: 3px solid ${a.color};">
-              <div class="msg-sender">${a.emoji} ${a.name}</div>
-              ${renderMarkdown(data.reply)}
-            </div>
-          `;
-          msgs.scrollTop = msgs.scrollHeight;
-        }, 1000);
-      }, 500);
-    } else {
-      msgs.innerHTML = `<div style="text-align:center;padding:24px;color:#ef4444;">❌ Hatch failed: ${data.error}<br><br><button onclick="showHatchScreen('${agentId}')" style="padding:8px 16px;background:#1a1a2e;border:1px solid #2a2a3a;color:#ececf1;border-radius:8px;cursor:pointer;">Try Again</button></div>`;
-    }
-  } catch (e) {
-    msgs.innerHTML = `<div style="text-align:center;padding:24px;color:#ef4444;">❌ Connection failed. Is localhost:3333 running?<br><br><button onclick="showHatchScreen('${agentId}')" style="padding:8px 16px;background:#1a1a2e;border:1px solid #2a2a3a;color:#ececf1;border-radius:8px;cursor:pointer;">Try Again</button></div>`;
+        const inputArea = document.querySelector('#chatPanel .chat-input-area');
+        inputArea.style.display = '';
+        msgs.innerHTML = `
+          <div style="text-align:center;padding:12px;margin-bottom:8px;">
+            <span style="font-size:10px;color:#6e6e80;background:#1a1a2e;padding:4px 12px;border-radius:12px;">🐣 ${a.name} hatched · real sub-agent with tool access</span>
+          </div>
+          <div class="chat-msg agent typing-indicator" style="border-left: 3px solid ${a.color};">
+            <div class="msg-sender">${a.emoji} ${a.name}</div>
+            <em style="color:#8e8ea0;">waking up...</em>
+          </div>
+        `;
+        msgs.scrollTop = msgs.scrollHeight;
+      }, 1200);
+    }, 3000);
+  } else {
+    msgs.innerHTML = `<div style="text-align:center;padding:24px;color:#ef4444;">❌ Not connected to server. Is localhost:3333 running?<br><br><button onclick="showHatchScreen('${agentId}')" style="padding:8px 16px;background:#1a1a2e;border:1px solid #2a2a3a;color:#ececf1;border-radius:8px;cursor:pointer;">Try Again</button></div>`;
   }
 }
 
-async function sendMessage() {
+function sendMessage() {
   if (!currentChat) return;
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
@@ -796,47 +1008,27 @@ async function sendMessage() {
 
   // User message
   msgs.innerHTML += `<div class="chat-msg user"><div class="msg-sender">👤 You</div>${text}</div>`;
+  
+  // Typing indicator
+  msgs.innerHTML += `<div class="chat-msg agent typing-indicator" style="border-left: 3px solid ${a.color};"><div class="msg-sender">${a.emoji} ${a.name}</div><em style="color:#8e8ea0;">thinking...</em></div>`;
   msgs.scrollTop = msgs.scrollHeight;
 
-  // Show typing indicator
-  const typingId = 'typing-' + Date.now();
-  msgs.innerHTML += `<div class="chat-msg agent" id="${typingId}"><div class="msg-sender">${a.emoji} ${a.name}</div><em style="color:#8e8ea0;">typing...</em></div>`;
-  msgs.scrollTop = msgs.scrollHeight;
-
-  try {
-    const resp = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: chatSessionIds[currentChat] || null,
-        agentPkg: agentPkgMap[currentChat] || 'founder-agent',
-        message: text,
-      }),
-    });
-    const data = await resp.json();
-
-    // Remove typing indicator
-    const typingEl = document.getElementById(typingId);
+  // Send via WebSocket
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ 
+      type: 'chat', 
+      agentPkg: agentPkgMap[currentChat],
+      message: text,
+    }));
+  } else {
+    const typingEl = document.querySelector('.typing-indicator');
     if (typingEl) typingEl.remove();
-
-    if (data.ok) {
-      chatSessionIds[currentChat] = data.sessionId;
-      msgs.innerHTML += `<div class="chat-msg agent" style="border-left: 3px solid ${a.color};"><div class="msg-sender">${a.emoji} ${a.name}</div>${renderMarkdown(data.reply)}</div>`;
-    } else {
-      msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>Error: ${data.error || 'Unknown error'}</div>`;
-    }
-  } catch (e) {
-    const typingEl = document.getElementById(typingId);
-    if (typingEl) typingEl.remove();
-    msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>Connection error. Make sure the local server is running on localhost:3333</div>`;
+    msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>Not connected. Is localhost:3333 running?</div>`;
+    msgs.scrollTop = msgs.scrollHeight;
   }
-  msgs.scrollTop = msgs.scrollHeight;
-  a.messages.push({ sender: 'user', text });
 }
 
-let teamSessionId = null;
-
-async function sendTeamMessage() {
+function sendTeamMessage() {
   const input = document.getElementById('teamInput');
   const text = input.value.trim();
   if (!text) return;
@@ -846,41 +1038,18 @@ async function sendTeamMessage() {
   msgs.innerHTML += `<div class="chat-msg user"><div class="msg-sender">👤 You</div>${text}</div>`;
   msgs.scrollTop = msgs.scrollHeight;
 
-  // Send to founder agent with team context — it responds as the team lead
-  const typingId = 'team-typing-' + Date.now();
-  msgs.innerHTML += `<div class="chat-msg agent" id="${typingId}" style="border-left: 3px solid #22c55e;"><div class="msg-sender">🚀 Founder Agent</div><em style="color:#8e8ea0;">typing...</em></div>`;
-  msgs.scrollTop = msgs.scrollHeight;
-
-  try {
-    const resp = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: teamSessionId,
-        agentPkg: 'founder-agent',
-        message: `[Team Chat] ${text}`,
-      }),
-    });
-    const data = await resp.json();
-    const typingEl = document.getElementById(typingId);
-    if (typingEl) typingEl.remove();
-
-    if (data.ok) {
-      teamSessionId = data.sessionId;
-      const rendered = data.reply
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/`([^`]+)`/g, '<code style="background:#1a1a2e;padding:2px 4px;border-radius:3px;">$1</code>')
-        .replace(/\n/g, '<br>');
-      msgs.innerHTML += `<div class="chat-msg agent" style="border-left: 3px solid #22c55e;"><div class="msg-sender">🚀 Founder Agent</div>${rendered}</div>`;
-    } else {
-      msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>${data.error}</div>`;
-    }
-  } catch (e) {
-    const typingEl = document.getElementById(typingId);
-    if (typingEl) typingEl.remove();
-    msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>Connection error — is localhost:3333 running?</div>`;
+  // Send to founder agent via WebSocket (team lead)
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    msgs.innerHTML += `<div class="chat-msg agent typing-indicator" style="border-left: 3px solid #22c55e;"><div class="msg-sender">🚀 Founder Agent</div><em style="color:#8e8ea0;">thinking...</em></div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+    
+    ws.send(JSON.stringify({
+      type: 'chat',
+      agentPkg: 'founder-agent',
+      message: `[Team Chat] ${text}`,
+    }));
+  } else {
+    msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>Not connected — is localhost:3333 running?</div>`;
   }
   msgs.scrollTop = msgs.scrollHeight;
 }
