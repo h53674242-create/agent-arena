@@ -322,7 +322,9 @@ async function init() {
     ]);
     const registered=await regRes.json(), packages=await pkgRes.json(), sessions=await sessRes.json();
     const pkgMap={}; packages.forEach(p=>pkgMap[p.name]=p);
-    const sessionMap={}; sessions.forEach(s=>{if(s.agentId&&s.key?.endsWith(':main'))sessionMap[s.agentId]=s;});
+    // Don't reuse :main sessions — those go through webchat, not the WS bridge
+    // Let the server auto-create arena sessions that route through our bridge
+    const sessionMap={};
     const savedKeys=loadKeys();
 
     const desksEl=document.getElementById('desks'), charsEl=document.getElementById('chars');
