@@ -285,6 +285,7 @@ function handleMsg(msg) {
       // Add final message
       el.innerHTML += `<div class="msg agent"><div class="sender" style="color:${a?.color || '#fbbf24'}">${a?.emoji || '🤖'} ${a?.displayName || id}</div>${esc(text)}</div>`;
       el.scrollTop = el.scrollHeight;
+      saveChat();
       // Update office bubble
       const bubble = document.getElementById('bubble-' + id);
       if (bubble) { bubble.textContent = 'Done'; setTimeout(() => { bubble.style.opacity = ''; bubble.textContent = 'Click to chat'; }, 3000); }
@@ -360,6 +361,7 @@ function send() {
   const el = document.getElementById('messages');
   el.innerHTML += `<div class="msg user">${esc(text)}</div>`;
   el.scrollTop = el.scrollHeight;
+  saveChat();
 
   // Send to ALL agents
   for (const [id, a] of Object.entries(agentData)) {
@@ -392,13 +394,24 @@ function updateClock() {
   document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', timeZoneName:'short' });
 }
 
-// Clear old session keys on fresh load
-localStorage.removeItem('hq-sessions');
+// Persist chat messages + session keys across refresh
+function saveChat() {
+  localStorage.setItem('hq-messages', document.getElementById('messages').innerHTML);
+  const sk = {}; for (const [id,k] of Object.entries(sessions)) if(k) sk[id]=k;
+  localStorage.setItem('hq-sessions', JSON.stringify(sk));
+}
+function loadChat() {
+  const saved = localStorage.getItem('hq-messages');
+  if (saved) document.getElementById('messages').innerHTML = saved;
+  try { const sk = JSON.parse(localStorage.getItem('hq-sessions')||'{}'); Object.assign(sessions, sk); } catch{}
+}
 
 init();
 connectWS();
 updateClock();
 setInterval(updateClock, 1000);
+// Load saved chat after a tick (so DOM is ready)
+setTimeout(loadChat, 100);
 </script>
 </body>
 </html>
