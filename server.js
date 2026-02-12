@@ -478,6 +478,27 @@ wss.on('connection', (clientWs) => {
 
         let sessionKey = agentSessions[msg.agentPkg] || msg.sessionKey;
         
+        // If we have a sessionKey but haven't subscribed to events yet, do it now
+        if (sessionKey && !agentSessions[msg.agentPkg]) {
+          agentSessions[msg.agentPkg] = sessionKey;
+          const cleanup = gateway.on('chat', (payload) => {
+            if (payload.sessionKey !== sessionKey) return;
+            if (payload.state === 'delta') {
+              clientWs.send(JSON.stringify({ type: 'chat-delta', agentPkg: msg.agentPkg, runId: payload.runId, message: payload.message, sessionKey }));
+            }
+            if (payload.state === 'final') {
+              clientWs.send(JSON.stringify({ type: 'chat-final', agentPkg: msg.agentPkg, runId: payload.runId, message: payload.message, sessionKey }));
+            }
+          });
+          eventCleanups.push(cleanup);
+          const agentCleanup = gateway.on('agent', (payload) => {
+            if (payload.sessionKey !== sessionKey) return;
+            clientWs.send(JSON.stringify({ type: 'agent-event', agentPkg: msg.agentPkg, payload }));
+          });
+          eventCleanups.push(agentCleanup);
+          console.log(`  🔗 [${clientId}] Subscribed to existing session ${sessionKey}`);
+        }
+
         // If no session exists yet, create one for this agent
         if (!sessionKey) {
           const agentId = msg.agentPkg?.replace(/-agent$/, '') || 'main';

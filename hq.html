@@ -117,6 +117,18 @@ let agentData = {};    // agentId -> { emoji, displayName, role, pkgName, online
 let chatState = {};    // agentId -> { messages:[], hatched, sessionKey }
 let streamBuffers = {};
 
+// ---- Session persistence ----
+function saveSessionKeys() {
+  const keys = {};
+  for (const [id, st] of Object.entries(chatState)) {
+    if (st.sessionKey) keys[id] = st.sessionKey;
+  }
+  localStorage.setItem('hq-sessions', JSON.stringify(keys));
+}
+function loadSessionKeys() {
+  try { return JSON.parse(localStorage.getItem('hq-sessions') || '{}'); } catch { return {}; }
+}
+
 // ---- WebSocket ----
 function connectWS() {
   ws = new WebSocket(WS_URL);
@@ -137,7 +149,7 @@ function handleMsg(msg) {
   if (msg.type === 'hatch-ok') {
     const id = pkgToId(msg.agentPkg);
     const st = chatState[id];
-    if (st) { st.hatched = true; st.sessionKey = msg.sessionKey; }
+    if (st) { st.hatched = true; st.sessionKey = msg.sessionKey; saveSessionKeys(); }
     if (agentData[id]) agentData[id].online = true;
     updateAgentDot(id);
     if (selectedAgent === id) renderChat();
@@ -156,10 +168,29 @@ function handleMsg(msg) {
     const id = pkgToId(msg.agentPkg);
     const st = chatState[id];
     if (!st) return;
+    if (msg.sessionKey && !st.sessionKey) { st.sessionKey = msg.sessionKey; saveSessionKeys(); }
     let text = streamBuffers[msg.runId] || extractText(msg.message);
     delete streamBuffers[msg.runId];
     if (text) st.messages.push({ role:'agent', text });
     if (selectedAgent === id) renderChat();
+  }
+
+  if (msg.type === 'history') {
+    const id = pkgToId(msg.agentPkg);
+    const st = chatState[id];
+    if (!st || !msg.messages) return;
+    // Parse history messages into our format
+    const parsed = [];
+    for (const m of msg.messages) {
+      const role = m.role === 'assistant' ? 'agent' : m.role === 'user' ? 'user' : null;
+      if (!role) continue;
+      const text = extractText(m.content || m.message || m.text || '');
+      if (text) parsed.push({ role, text });
+    }
+    if (parsed.length > 0) {
+      st.messages = parsed;
+      if (selectedAgent === id) renderChat();
+    }
   }
 
   if (msg.type === 'error') console.error('Server:', msg.error);
@@ -199,6 +230,7 @@ async function init() {
       }
     });
 
+    const savedKeys = loadSessionKeys();
     const list = document.getElementById('agentList');
     if (registered.length === 0) return;
     list.innerHTML = '';
@@ -220,8 +252,8 @@ async function init() {
 
       chatState[id] = chatState[id] || {
         messages: [],
-        hatched: true,  // all registered agents are ready to chat (server auto-creates session)
-        sessionKey: session?.key || null,
+        hatched: true,
+        sessionKey: session?.key || savedKeys[id] || null,
       };
 
       const card = document.createElement('div');
@@ -255,6 +287,11 @@ function selectAgent(id) {
   selectedAgent = id;
   document.querySelectorAll('.agent-card').forEach(c => c.classList.toggle('active', c.id === 'card-' + id));
   renderChatArea();
+  // Load history if we have a session and no messages yet
+  const st = chatState[id];
+  if (st && st.messages.length === 0 && st.sessionKey && ws?.readyState === 1) {
+    ws.send(JSON.stringify({ type: 'history', agentPkg: agentData[id].pkgName, sessionKey: st.sessionKey }));
+  }
 }
 
 function renderChatArea() {
