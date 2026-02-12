@@ -9,12 +9,11 @@
   :root {
     --bg: #0d0d14; --surface: #16161e; --border: #2a2a3a;
     --text: #e4e4e7; --muted: #71717a; --accent: #fbbf24;
-    --green: #22c55e; --red: #ef4444; --blue: #3b82f6;
+    --green: #22c55e; --red: #ef4444;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
 
-  /* Nav */
   nav { padding:10px 20px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px; flex-shrink:0; }
   nav .logo { font-family:'Press Start 2P',monospace; font-size:11px; color:var(--accent); }
   nav a { color:var(--muted); text-decoration:none; font-size:13px; }
@@ -26,7 +25,7 @@
 
   .main { flex:1; display:flex; overflow:hidden; }
 
-  /* === OFFICE (left) === */
+  /* Office */
   .office-wrap { flex:1; display:flex; flex-direction:column; border-right:1px solid var(--border); }
   .office-topbar { padding:10px 16px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
   .office-topbar h2 { font-family:'Press Start 2P',monospace; font-size:10px; color:var(--accent); }
@@ -37,7 +36,6 @@
     flex:1; position:relative; overflow:hidden;
     background: linear-gradient(170deg, #2a2540 0%, #1e1b30 40%, #231f35 100%);
   }
-  /* Wall */
   .wall { position:absolute; top:0; left:0; right:0; height:100px;
     background: linear-gradient(180deg, #4a3f6b 0%, #3d3355 50%, #2a2540 100%);
     border-bottom: 3px solid rgba(251,191,36,0.08);
@@ -51,7 +49,6 @@
   .poster.p2 { top:16px; left:200px; border-color:rgba(251,191,36,0.3); }
   .poster.p3 { top:12px; right:40px; border-color:rgba(239,68,68,0.3); }
 
-  /* Furniture */
   .desk { position:absolute; width:120px; height:50px; z-index:3;
     background: linear-gradient(135deg, #8b6842, #5c3d1e);
     border-radius:4px; border:1px solid rgba(255,255,255,0.05);
@@ -70,41 +67,29 @@
   .coffee-station { position:absolute; z-index:2; text-align:center; font-size:9px; color:var(--muted); }
   .coffee-station .icon { font-size:18px; }
 
-  /* Agent characters */
-  .agent-char { position:absolute; z-index:10; cursor:pointer; text-align:center;
-    transition: left 2s ease, top 2s ease; }
+  .agent-char { position:absolute; z-index:10; cursor:pointer; text-align:center; transition: left 2s ease, top 2s ease; }
   .agent-char:hover { z-index:20; }
   .agent-char:hover .bubble { opacity:1 !important; }
+  .agent-char.selected .bubble { opacity:1 !important; }
+  .agent-char.selected { filter: drop-shadow(0 0 8px rgba(251,191,36,0.6)); }
   .agent-sprite { font-size:28px; position:relative; }
-  .agent-sprite .dot { position:absolute; bottom:0; right:-2px; width:8px; height:8px;
-    border-radius:50%; border:2px solid var(--bg); }
+  .agent-sprite .dot { position:absolute; bottom:0; right:-2px; width:8px; height:8px; border-radius:50%; border:2px solid var(--bg); }
   .dot.on { background:var(--green); box-shadow:0 0 6px rgba(34,197,94,0.5); }
-  .dot.off { background:var(--muted); }
   .nametag { font-family:'Press Start 2P',monospace; font-size:5px; margin-top:2px; }
   .bubble { position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
     background:rgba(0,0,0,0.7); color:var(--text); font-size:9px; padding:4px 8px;
-    border-radius:8px; white-space:nowrap; opacity:0; transition:opacity 0.2s;
-    pointer-events:none; margin-bottom:4px; }
+    border-radius:8px; white-space:nowrap; opacity:0; transition:opacity 0.2s; pointer-events:none; margin-bottom:4px; }
 
-  /* === CHAT (right) === */
-  .chat-wrap { width:380px; display:flex; flex-direction:column; }
-  .chat-tabs { display:flex; border-bottom:1px solid var(--border); background:var(--surface); }
-  .chat-tab { flex:1; padding:10px; text-align:center; font-size:12px; color:var(--muted);
-    cursor:pointer; border-bottom:2px solid transparent; }
-  .chat-tab:hover { color:var(--text); }
-  .chat-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-
-  .chat-panel { flex:1; display:none; flex-direction:column; overflow:hidden; }
-  .chat-panel.active { display:flex; }
-
-  .chat-header { padding:10px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
-  .chat-header .name { font-weight:600; font-size:13px; }
-  .chat-header .meta { font-size:10px; color:var(--green); }
-  .chat-header .back { background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px; }
+  /* Chat */
+  .chat-wrap { width:400px; display:flex; flex-direction:column; }
+  .chat-header { padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+  .chat-header h2 { font-family:'Press Start 2P',monospace; font-size:10px; color:var(--accent); }
+  .chat-header .online { font-size:11px; color:var(--green); }
 
   .messages { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
   .msg { max-width:85%; padding:8px 12px; border-radius:10px; font-size:12px; line-height:1.5; word-wrap:break-word; }
   .msg.agent { background:var(--surface); border:1px solid var(--border); align-self:flex-start; }
+  .msg .sender { font-size:10px; font-weight:700; margin-bottom:4px; }
   .msg.user { background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.2); align-self:flex-end; }
   .msg.system { align-self:center; color:var(--muted); font-size:10px; background:none; border:none; }
 
@@ -115,12 +100,9 @@
   .chat-input button { padding:8px 14px; background:var(--accent); color:#000; border:none;
     border-radius:6px; font-weight:600; cursor:pointer; font-size:12px; }
 
-  .no-chat { flex:1; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:12px; }
-
-  /* Mobile */
   @media(max-width:768px) {
     .main { flex-direction:column; }
-    .office-wrap { height:40vh; border-right:none; border-bottom:1px solid var(--border); }
+    .office-wrap { height:35vh; border-right:none; border-bottom:1px solid var(--border); }
     .chat-wrap { width:100%; flex:1; }
   }
 </style>
@@ -137,7 +119,6 @@
 </nav>
 
 <div class="main">
-  <!-- Office -->
   <div class="office-wrap">
     <div class="office-topbar">
       <h2>🏢 THE OFFICE</h2>
@@ -150,59 +131,26 @@
         <div class="poster p2">📈 GROW OR DIE</div>
         <div class="poster p3">🔒 TRUST NO PORT</div>
       </div>
-
-      <!-- Furniture (static) -->
       <div class="plant" style="left:20px;top:120px;">🪴</div>
       <div class="plant" style="right:20px;top:130px;">🌿</div>
       <div class="couch" style="left:30px;bottom:40px;">🛋️ chill zone</div>
-      <div class="coffee-station" style="right:30px;top:120px;">
-        <div class="icon">☕</div>COFFEE
-      </div>
-
-      <!-- Desks rendered dynamically -->
+      <div class="coffee-station" style="right:30px;top:120px;"><div class="icon">☕</div>COFFEE</div>
       <div id="desks"></div>
-      <!-- Agent chars rendered dynamically -->
       <div id="chars"></div>
     </div>
   </div>
 
-  <!-- Chat -->
   <div class="chat-wrap">
-    <div class="chat-tabs">
-      <div class="chat-tab active" onclick="showTab('team')">👥 Team</div>
-      <div class="chat-tab" onclick="showTab('dm')">💬 DM</div>
+    <div class="chat-header">
+      <h2>💬 GROUP CHAT</h2>
+      <span class="online" id="onlineCount">0 online</span>
     </div>
-
-    <!-- Team Chat -->
-    <div class="chat-panel active" id="teamPanel">
-      <div class="chat-header">
-        <span style="font-size:16px">👥</span>
-        <span class="name">Team Chat</span>
-        <span class="meta" id="teamOnline">0 online</span>
-      </div>
-      <div class="messages" id="teamMessages">
-        <div class="msg system">Send a message to the whole team</div>
-      </div>
-      <div class="chat-input">
-        <input type="text" id="teamInput" placeholder="Message the team..." onkeydown="if(event.key==='Enter')sendTeam()">
-        <button onclick="sendTeam()">Send</button>
-      </div>
+    <div class="messages" id="messages">
+      <div class="msg system">Message your team — all agents respond here</div>
     </div>
-
-    <!-- DM Chat -->
-    <div class="chat-panel" id="dmPanel">
-      <div class="chat-header" id="dmHeader">
-        <button class="back" onclick="showTab('team')">← back</button>
-        <span class="name" id="dmName">Agent</span>
-        <span class="meta">● Online</span>
-      </div>
-      <div class="messages" id="dmMessages">
-        <div class="msg system">Send a message to start chatting</div>
-      </div>
-      <div class="chat-input">
-        <input type="text" id="dmInput" placeholder="Message agent..." onkeydown="if(event.key==='Enter')sendDM()">
-        <button onclick="sendDM()">Send</button>
-      </div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Message your team..." onkeydown="if(event.key==='Enter')send()">
+      <button onclick="send()">Send</button>
     </div>
   </div>
 </div>
@@ -210,239 +158,159 @@
 <script>
 const WS_URL = `ws://${location.host}`;
 let ws = null;
-let selectedAgent = null;
-let agentData = {};
-let chatState = {};
+let agentData = {};   // id -> {emoji, displayName, pkgName, ...}
+let sessions = {};    // id -> sessionKey (for the arena session)
 let streamBuffers = {};
-let teamPending = new Set(); // agentIds with pending team responses
+let pendingAgents = new Set(); // agents we're waiting on a response from
 
-// Session persistence
-function saveKeys() { const k={}; for(const[id,s]of Object.entries(chatState)) if(s.sessionKey) k[id]=s.sessionKey; localStorage.setItem('hq-sessions',JSON.stringify(k)); }
-function loadKeys() { try{return JSON.parse(localStorage.getItem('hq-sessions')||'{}')}catch{return{}} }
-
-// Desk positions
-const deskSlots = [
-  { left:80, top:160 },
-  { left:260, top:160 },
-  { left:440, top:160 },
-  { left:170, top:280 },
-  { left:350, top:280 },
-];
-
-// WebSocket
 function connectWS() {
   ws = new WebSocket(WS_URL);
   ws.onopen = () => updateGW(true);
-  ws.onclose = () => { updateGW(false); setTimeout(connectWS,3000); };
-  ws.onmessage = e => { try{handleMsg(JSON.parse(e.data))}catch(err){console.error(err)} };
+  ws.onclose = () => { updateGW(false); setTimeout(connectWS, 3000); };
+  ws.onmessage = e => { try { handleMsg(JSON.parse(e.data)); } catch(err) { console.error(err); } };
 }
 
 function updateGW(on) {
-  const el=document.getElementById('gwStatus');
-  el.textContent=on?'● Connected':'● Disconnected';
-  el.className='status '+(on?'online':'offline');
+  const el = document.getElementById('gwStatus');
+  el.textContent = on ? '● Connected' : '● Disconnected';
+  el.className = 'status ' + (on ? 'online' : 'offline');
 }
 
 function handleMsg(msg) {
-  if(msg.type==='status') updateGW(msg.connected);
+  if (msg.type === 'status') updateGW(msg.connected);
 
-  if(msg.type==='hatch-ok') {
-    const id=pkgToId(msg.agentPkg), st=chatState[id];
-    if(st){st.hatched=true;st.sessionKey=msg.sessionKey;saveKeys();}
-    if(selectedAgent===id) renderDM();
-  }
-
-  if(msg.type==='chat-delta') {
-    const id=pkgToId(msg.agentPkg);
-    if(!chatState[id]) return;
-    const text=extractText(msg.message);
-    if(text) streamBuffers[msg.runId]=text;
-    if(selectedAgent===id) updateStream(msg.runId,streamBuffers[msg.runId]||'');
-    // Stream in team panel too
-    if(teamPending.has(id) && text) {
-      const a=agentData[id];
-      const el=document.getElementById('teamMessages');
-      let s=document.getElementById('team-stream-'+id);
-      if(!s){s=document.createElement('div');s.id='team-stream-'+id;s.className='msg agent';el.appendChild(s);}
-      s.innerHTML=`<strong>${a?.emoji||'🤖'} ${a?.displayName||id}:</strong><br>${esc(text)}`;
-      el.scrollTop=el.scrollHeight;
+  if (msg.type === 'chat-delta') {
+    const id = pkgToId(msg.agentPkg);
+    const text = extractText(msg.message);
+    if (text) streamBuffers[msg.runId] = text;
+    // Save session key
+    if (msg.sessionKey && !sessions[id]) sessions[id] = msg.sessionKey;
+    // Update streaming bubble in chat
+    if (pendingAgents.has(id) && text) {
+      const a = agentData[id];
+      const el = document.getElementById('messages');
+      let s = document.getElementById('stream-' + id);
+      if (!s) { s = document.createElement('div'); s.id = 'stream-' + id; s.className = 'msg agent'; el.appendChild(s); }
+      s.innerHTML = `<div class="sender" style="color:${a?.color || '#fbbf24'}">${a?.emoji || '🤖'} ${a?.displayName || id}</div>${esc(streamBuffers[msg.runId])}`;
+      el.scrollTop = el.scrollHeight;
+      // Update office bubble
+      const bubble = document.getElementById('bubble-' + id);
+      if (bubble) { bubble.textContent = 'Typing...'; bubble.style.opacity = '0.9'; }
     }
   }
 
-  if(msg.type==='chat-final') {
-    const id=pkgToId(msg.agentPkg), st=chatState[id];
-    if(!st) return;
-    if(msg.sessionKey&&!st.sessionKey){st.sessionKey=msg.sessionKey;saveKeys();}
-    let text=streamBuffers[msg.runId]||extractText(msg.message);
+  if (msg.type === 'chat-final') {
+    const id = pkgToId(msg.agentPkg);
+    if (msg.sessionKey) sessions[id] = msg.sessionKey;
+    let text = streamBuffers[msg.runId] || extractText(msg.message);
     delete streamBuffers[msg.runId];
-    if(text) st.messages.push({role:'agent',text});
-    if(selectedAgent===id) renderDM();
-    // If this was a team message response, show in team panel too
-    if(text && teamPending.has(id)) {
-      teamPending.delete(id);
-      const a=agentData[id];
-      const el=document.getElementById('teamMessages');
-      const streamEl=document.getElementById('team-stream-'+id);
-      if(streamEl) streamEl.remove();
-      el.innerHTML+=`<div class="msg agent"><strong>${a?.emoji||'🤖'} ${a?.displayName||id}:</strong><br>${esc(text)}</div>`;
-      el.scrollTop=el.scrollHeight;
+    if (pendingAgents.has(id) && text) {
+      pendingAgents.delete(id);
+      const a = agentData[id];
+      const el = document.getElementById('messages');
+      // Remove stream element
+      const s = document.getElementById('stream-' + id);
+      if (s) s.remove();
+      // Add final message
+      el.innerHTML += `<div class="msg agent"><div class="sender" style="color:${a?.color || '#fbbf24'}">${a?.emoji || '🤖'} ${a?.displayName || id}</div>${esc(text)}</div>`;
+      el.scrollTop = el.scrollHeight;
+      // Update office bubble
+      const bubble = document.getElementById('bubble-' + id);
+      if (bubble) { bubble.textContent = 'Done'; setTimeout(() => { bubble.style.opacity = ''; bubble.textContent = 'Click to chat'; }, 3000); }
     }
   }
 
-  if(msg.type==='history') {
-    const id=pkgToId(msg.agentPkg), st=chatState[id];
-    if(!st||!msg.messages) return;
-    const parsed=[];
-    for(const m of msg.messages){
-      const role=m.role==='assistant'?'agent':m.role==='user'?'user':null;
-      if(!role)continue;
-      const text=extractText(m.content||m.message||m.text||'');
-      if(text) parsed.push({role,text});
-    }
-    if(parsed.length>0){st.messages=parsed;if(selectedAgent===id)renderDM();}
-  }
-
-  if(msg.type==='error') console.error('Server:',msg.error);
+  if (msg.type === 'error') console.error('Server:', msg.error);
 }
 
 function extractText(m) {
-  if(typeof m==='string') return m;
-  if(Array.isArray(m)) return m.filter(p=>p.type==='text').map(p=>p.text).join('');
-  if(m?.content) return extractText(m.content);
-  return m?.text||'';
+  if (typeof m === 'string') return m;
+  if (Array.isArray(m)) return m.filter(p => p.type === 'text').map(p => p.text).join('');
+  if (m?.content) return extractText(m.content);
+  return m?.text || '';
 }
-function pkgToId(pkg){return pkg?.replace(/-agent$/,'')||pkg;}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+function pkgToId(pkg) { return pkg?.replace(/-agent$/, '') || pkg; }
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
 
-// Load agents
+const deskSlots = [
+  { left: 80, top: 160 }, { left: 260, top: 160 }, { left: 440, top: 160 },
+  { left: 170, top: 280 }, { left: 350, top: 280 },
+];
+
 async function init() {
   try {
-    const [regRes,pkgRes,sessRes]=await Promise.all([
-      fetch('/api/agents/registered'),fetch('/api/agents'),fetch('/api/sessions')
-    ]);
-    const registered=await regRes.json(), packages=await pkgRes.json(), sessions=await sessRes.json();
-    const pkgMap={}; packages.forEach(p=>pkgMap[p.name]=p);
-    // Don't reuse :main sessions — those go through webchat, not the WS bridge
-    // Let the server auto-create arena sessions that route through our bridge
-    const sessionMap={};
-    const savedKeys=loadKeys();
+    const [regRes, pkgRes] = await Promise.all([fetch('/api/agents/registered'), fetch('/api/agents')]);
+    const registered = await regRes.json(), packages = await pkgRes.json();
+    const pkgMap = {}; packages.forEach(p => pkgMap[p.name] = p);
+    const desksEl = document.getElementById('desks'), charsEl = document.getElementById('chars');
+    let count = 0;
 
-    const desksEl=document.getElementById('desks'), charsEl=document.getElementById('chars');
-    let count=0;
+    registered.forEach((a, i) => {
+      const id = a.id, pkg = pkgMap[id + '-agent'] || pkgMap[id] || {};
+      const slot = deskSlots[i % deskSlots.length];
+      const color = pkg.color || ['#22c55e', '#ec4899', '#ef4444', '#3b82f6', '#a855f7'][i % 5];
 
-    registered.forEach((a,i) => {
-      const id=a.id, pkg=pkgMap[id+'-agent']||pkgMap[id]||{};
-      const session=sessionMap[id];
-      const slot=deskSlots[i%deskSlots.length];
-
-      agentData[id]={
-        emoji:pkg.emoji||'🤖', displayName:pkg.displayName||a.name||id,
-        role:pkg.tagline||id, pkgName:pkg.name||id+'-agent',
-        online:true, slot,
+      agentData[id] = {
+        emoji: pkg.emoji || '🤖', displayName: pkg.displayName || a.name || id,
+        pkgName: pkg.name || id + '-agent', color, slot,
       };
-      chatState[id]=chatState[id]||{messages:[],hatched:true,sessionKey:session?.key||savedKeys[id]||null};
 
-      // Desk
-      desksEl.innerHTML+=`<div class="desk" style="left:${slot.left}px;top:${slot.top}px;">
-        <div class="desk-label">${(a.name||id).toUpperCase()}</div></div>`;
+      desksEl.innerHTML += `<div class="desk" style="left:${slot.left}px;top:${slot.top}px;">
+        <div class="desk-label">${(a.name || id).toUpperCase()}</div></div>`;
 
-      // Agent character
-      charsEl.innerHTML+=`<div class="agent-char" id="char-${id}" style="left:${slot.left+45}px;top:${slot.top-45}px;" onclick="openDM('${id}')">
+      charsEl.innerHTML += `<div class="agent-char" id="char-${id}" style="left:${slot.left + 45}px;top:${slot.top - 45}px;" onclick="clickAgent('${id}')">
         <div class="bubble" id="bubble-${id}">Click to chat</div>
         <div class="agent-sprite">${agentData[id].emoji}<div class="dot on"></div></div>
-        <div class="nametag" style="color:${pkg.color||'var(--accent)'}">${(a.name||id).toUpperCase()}</div>
+        <div class="nametag" style="color:${color}">${(a.name || id).toUpperCase()}</div>
       </div>`;
       count++;
     });
 
-    document.getElementById('squadCount').textContent=count+' agent'+(count!==1?'s':'');
-    document.getElementById('teamOnline').textContent=count+' online';
-  } catch(e) { console.error('Init failed:',e); }
+    document.getElementById('squadCount').textContent = count + ' agent' + (count !== 1 ? 's' : '');
+    document.getElementById('onlineCount').textContent = count + ' online';
+  } catch(e) { console.error('Init failed:', e); }
 }
 
-// Tabs
-function showTab(tab) {
-  document.querySelectorAll('.chat-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='team'?0:1)));
-  document.getElementById('teamPanel').classList.toggle('active',tab==='team');
-  document.getElementById('dmPanel').classList.toggle('active',tab==='dm');
+function clickAgent(id) {
+  // Highlight in office
+  document.querySelectorAll('.agent-char').forEach(c => c.classList.remove('selected'));
+  document.getElementById('char-' + id)?.classList.add('selected');
+  // Focus input
+  document.getElementById('chatInput').focus();
 }
 
-// DM
-function openDM(id) {
-  selectedAgent=id;
-  const a=agentData[id];
-  showTab('dm');
-  document.getElementById('dmName').textContent=a.emoji+' '+a.displayName;
-  document.getElementById('dmInput').placeholder='Message '+a.displayName+'...';
+function send() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || !ws || ws.readyState !== 1) return;
+  input.value = '';
 
-  // Highlight char
-  document.querySelectorAll('.agent-char').forEach(c=>c.style.filter='');
-  const char=document.getElementById('char-'+id);
-  if(char) char.style.filter='drop-shadow(0 0 8px rgba(251,191,36,0.6))';
+  // Show user message
+  const el = document.getElementById('messages');
+  el.innerHTML += `<div class="msg user">${esc(text)}</div>`;
+  el.scrollTop = el.scrollHeight;
 
-  renderDM();
-  // Load history
-  const st=chatState[id];
-  if(st&&st.messages.length===0&&st.sessionKey&&ws?.readyState===1){
-    ws.send(JSON.stringify({type:'history',agentPkg:agentData[id].pkgName,sessionKey:st.sessionKey}));
+  // Send to ALL agents
+  for (const [id, a] of Object.entries(agentData)) {
+    pendingAgents.add(id);
+    ws.send(JSON.stringify({
+      type: 'chat', agentPkg: a.pkgName,
+      message: text, sessionKey: sessions[id] || null,
+    }));
   }
 }
 
-function renderDM() {
-  if(!selectedAgent) return;
-  const st=chatState[selectedAgent], el=document.getElementById('dmMessages');
-  if(st.messages.length===0){el.innerHTML='<div class="msg system">Send a message to start chatting</div>';return;}
-  el.innerHTML=st.messages.map(m=>`<div class="msg ${m.role}">${esc(m.text)}</div>`).join('');
-  el.scrollTop=el.scrollHeight;
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', timeZoneName:'short' });
 }
 
-function updateStream(runId,text) {
-  const el=document.getElementById('dmMessages');
-  if(!el) return;
-  let s=document.getElementById('stream-'+runId);
-  if(!s){s=document.createElement('div');s.id='stream-'+runId;s.className='msg agent';el.appendChild(s);}
-  s.innerHTML=esc(text);
-  el.scrollTop=el.scrollHeight;
-}
+// Clear old session keys on fresh load
+localStorage.removeItem('hq-sessions');
 
-function sendDM() {
-  const input=document.getElementById('dmInput');
-  if(!input) return;
-  const text=input.value.trim();
-  if(!text||!selectedAgent) return;
-  input.value='';
-  const st=chatState[selectedAgent], a=agentData[selectedAgent];
-  st.messages.push({role:'user',text});
-  renderDM();
-  ws.send(JSON.stringify({type:'chat',agentPkg:a.pkgName,message:text,sessionKey:st.sessionKey}));
-}
-
-function sendTeam() {
-  const input=document.getElementById('teamInput');
-  if(!input) return;
-  const text=input.value.trim();
-  if(!text) return;
-  input.value='';
-  const el=document.getElementById('teamMessages');
-  el.innerHTML+=`<div class="msg user">${esc(text)}</div>`;
-  el.scrollTop=el.scrollHeight;
-  // Send to all agents and mark as pending team responses
-  for(const[id,a]of Object.entries(agentData)){
-    teamPending.add(id);
-    ws.send(JSON.stringify({type:'chat',agentPkg:a.pkgName,message:'[Team Chat] '+text,sessionKey:chatState[id]?.sessionKey}));
-  }
-}
-
-// Clock
-function updateClock(){
-  document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
-}
-
-// Init
 init();
 connectWS();
 updateClock();
-setInterval(updateClock,1000);
+setInterval(updateClock, 1000);
 </script>
 </body>
 </html>
