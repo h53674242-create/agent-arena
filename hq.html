@@ -187,13 +187,12 @@ async function init() {
     const pkgMap = {};
     packages.forEach(p => pkgMap[p.name] = p);
 
-    // Build active session map: agentId -> most recent main session
+    // Build active session map: agentId -> main session only (not subagents)
     const sessionMap = {};
     sessions.forEach(s => {
       if (!s.agentId) return;
-      // Prefer main sessions (agent:X:main) over subagent sessions
-      const isMain = s.key?.endsWith(':main');
-      if (!sessionMap[s.agentId] || isMain) {
+      // Only use main sessions (agent:X:main) — subagent sessions are one-shot and finished
+      if (s.key?.endsWith(':main')) {
         sessionMap[s.agentId] = s;
       }
     });
@@ -219,7 +218,7 @@ async function init() {
 
       chatState[id] = chatState[id] || {
         messages: [],
-        hatched: online,  // already running = already hatched
+        hatched: true,  // all registered agents are ready to chat (server auto-creates session)
         sessionKey: session?.key || null,
       };
 
@@ -233,7 +232,7 @@ async function init() {
             <div class="agent-name">${agentData[id].displayName}</div>
             <div class="agent-role">${agentData[id].role}</div>
           </div>
-          <div class="agent-dot ${online ? 'online' : 'offline'}" id="dot-${id}"></div>
+          <div class="agent-dot online" id="dot-${id}"></div>
         </div>`;
       card.onclick = () => selectAgent(id);
       list.appendChild(card);
@@ -263,16 +262,14 @@ function renderChatArea() {
   const st = chatState[id];
   const area = document.getElementById('chatArea');
 
-  const isOnline = a.online || st.hatched;
   area.innerHTML = `
     <div class="chat-header">
       <span style="font-size:24px">${a.emoji}</span>
       <span class="name">${a.displayName}</span>
-      <span class="meta ${isOnline ? 'online' : ''}">${isOnline ? '● Online' : '○ Offline'}</span>
-      ${!isOnline ? `<button class="hatch-btn" id="hatchBtn" onclick="hatchAgent('${id}')">🥚 Hatch</button>` : ''}
+      <span class="meta online">● Ready</span>
     </div>
     <div class="messages" id="messages"></div>
-    <div class="chat-input" id="chatInput" style="${isOnline ? '' : 'display:none'}">
+    <div class="chat-input">
       <input type="text" id="msgInput" placeholder="Message ${a.displayName}..." onkeydown="if(event.key==='Enter')sendMsg()">
       <button onclick="sendMsg()">Send</button>
     </div>`;
@@ -287,12 +284,7 @@ function renderChat() {
   if (!msgs) return;
   const a = agentData[selectedAgent];
 
-  if (st.messages.length === 0 && !st.hatched && !a.online) {
-    msgs.innerHTML = '<div class="msg system">Click "Hatch" to wake this agent up</div>';
-    return;
-  }
-
-  if (st.messages.length === 0 && (st.hatched || a.online)) {
+  if (st.messages.length === 0) {
     msgs.innerHTML = '<div class="msg system">Send a message to start chatting</div>';
   } else {
     msgs.innerHTML = st.messages.map(m =>
