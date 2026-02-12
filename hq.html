@@ -3,1153 +3,326 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🦞 Agent Arena HQ — Your AI Office</title>
+<title>🦞 Agent Arena HQ</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap');
   :root {
-    --bg: #1a1a2e; --floor: #16213e; --wall: #0f3460;
-    --desk: #2a1a0a; --desk-top: #3d2b1f;
-    --text: #ececf1; --muted: #8e8ea0; --accent: #fbbf24;
-    --green: #22c55e; --blue: #3b82f6; --red: #ef4444;
-    --purple: #a855f7; --pink: #ec4899; --cyan: #06b6d4;
-    --surface: #111118; --border: #2a2a3a;
+    --bg: #0d0d14; --surface: #16161e; --border: #2a2a3a;
+    --text: #e4e4e7; --muted: #71717a; --accent: #fbbf24;
+    --green: #22c55e; --red: #ef4444; --blue: #3b82f6;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', sans-serif; background: #08080c; color: var(--text); height: 100vh; overflow: hidden; display: flex; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column; }
 
-  /* Left: Office View */
-  .office-wrap { flex: 1; display: flex; flex-direction: column; }
-  .office-topbar {
-    padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .office-topbar h1 { font-family: 'Press Start 2P', monospace; font-size: 12px; color: var(--accent); }
-  .office-topbar .squad-count { font-size: 12px; color: var(--muted); }
-  .office-topbar .time { font-size: 11px; color: var(--muted); }
+  /* Nav */
+  nav { padding:10px 20px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px; }
+  nav .logo { font-family:'Press Start 2P',monospace; font-size:11px; color:var(--accent); }
+  nav a { color:var(--muted); text-decoration:none; font-size:13px; }
+  nav a:hover, nav a.active { color:var(--text); }
+  nav .spacer { flex:1; }
+  nav .status { font-size:11px; padding:4px 10px; border-radius:10px; }
+  nav .status.online { color:var(--green); background:rgba(34,197,94,0.1); }
+  nav .status.offline { color:var(--red); background:rgba(239,68,68,0.1); }
 
-  .office {
-    flex: 1; position: relative; overflow: hidden;
-    background: var(--floor);
-    background-image:
-      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: 40px 40px;
-  }
+  /* Main layout */
+  .main { flex:1; display:flex; overflow:hidden; }
 
-  /* Wall */
-  .wall {
-    position: absolute; top: 0; left: 0; right: 0; height: 100px;
-    background: linear-gradient(180deg, var(--wall) 0%, var(--floor) 100%);
-    border-bottom: 3px solid rgba(255,255,255,0.05);
-  }
-  .wall-art {
-    position: absolute; padding: 8px 16px; border-radius: 4px;
-    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
-    font-size: 10px; color: var(--muted);
-  }
-  .wall-art.poster1 { top: 15px; left: 60px; }
-  .wall-art.poster2 { top: 20px; left: 280px; }
-  .wall-art.poster3 { top: 15px; right: 400px; }
+  /* Agent list (left) */
+  .agents-panel { width:280px; border-right:1px solid var(--border); display:flex; flex-direction:column; }
+  .agents-header { padding:14px 16px; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); }
+  .agents-list { flex:1; overflow-y:auto; }
+  .agent-card { padding:14px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background 0.15s; }
+  .agent-card:hover { background:rgba(255,255,255,0.03); }
+  .agent-card.active { background:rgba(251,191,36,0.06); border-left:3px solid var(--accent); }
+  .agent-card .agent-top { display:flex; align-items:center; gap:10px; }
+  .agent-card .agent-emoji { font-size:24px; }
+  .agent-card .agent-info { flex:1; }
+  .agent-card .agent-name { font-size:13px; font-weight:600; }
+  .agent-card .agent-role { font-size:11px; color:var(--muted); margin-top:2px; }
+  .agent-card .agent-dot { width:8px; height:8px; border-radius:50%; }
+  .agent-card .agent-dot.online { background:var(--green); box-shadow:0 0 6px rgba(34,197,94,0.4); }
+  .agent-card .agent-dot.offline { background:var(--muted); }
+  .empty-agents { padding:40px 20px; text-align:center; color:var(--muted); font-size:13px; line-height:1.6; }
+  .empty-agents a { color:var(--accent); text-decoration:none; }
 
-  /* Furniture */
-  .desk {
-    position: absolute; width: 90px; height: 50px;
-    background: var(--desk-top); border: 2px solid var(--desk);
-    border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-  }
-  .desk::after {
-    content: ''; position: absolute; top: 5px; left: 10px;
-    width: 30px; height: 20px; background: #1a1a2e;
-    border: 1px solid #333; border-radius: 2px;
-  }
-  .desk-label {
-    position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
-    font-size: 8px; color: var(--muted); white-space: nowrap;
-    font-family: 'Press Start 2P', monospace;
-  }
+  /* Chat area (right) */
+  .chat-area { flex:1; display:flex; flex-direction:column; }
+  .chat-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
+  .chat-header .name { font-weight:600; font-size:14px; }
+  .chat-header .meta { font-size:11px; color:var(--muted); }
+  .chat-header .hatch-btn { margin-left:auto; padding:6px 14px; background:var(--accent); color:#000; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; }
+  .chat-header .hatch-btn:hover { filter:brightness(1.1); }
+  .chat-header .hatch-btn:disabled { opacity:0.5; cursor:default; }
 
-  /* Water cooler area */
-  .watercooler {
-    position: absolute; width: 140px; height: 120px;
-    border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px;
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: flex-start; padding-top: 8px;
-  }
-  .watercooler-icon { font-size: 28px; }
-  .watercooler-label {
-    font-family: 'Press Start 2P', monospace; font-size: 7px;
-    color: var(--muted); margin-top: 4px;
-  }
+  .messages { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; }
+  .msg { max-width:75%; padding:10px 14px; border-radius:12px; font-size:13px; line-height:1.5; word-wrap:break-word; }
+  .msg.agent { background:var(--surface); border:1px solid var(--border); align-self:flex-start; }
+  .msg.user { background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.2); align-self:flex-end; }
+  .msg.system { align-self:center; color:var(--muted); font-size:11px; background:none; border:none; padding:4px; }
+  .msg code { background:rgba(255,255,255,0.06); padding:1px 4px; border-radius:3px; font-size:12px; }
+  .msg pre { background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; overflow-x:auto; margin:6px 0; font-size:12px; }
+  .typing { align-self:flex-start; color:var(--muted); font-size:12px; padding:8px 14px; }
+  .typing span { animation:blink 1.4s infinite; }
+  .typing span:nth-child(2) { animation-delay:0.2s; }
+  .typing span:nth-child(3) { animation-delay:0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
 
-  /* Coffee machine */
-  .coffee-area {
-    position: absolute; width: 60px; height: 40px;
-    display: flex; flex-direction: column; align-items: center;
-  }
-  .coffee-icon { font-size: 24px; }
-  .coffee-label { font-size: 7px; color: var(--muted); font-family: 'Press Start 2P', monospace; }
+  .no-chat { flex:1; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:13px; }
 
-  /* Agent characters */
-  .agent-char {
-    position: absolute; width: 50px; display: flex; flex-direction: column;
-    align-items: center; cursor: pointer; z-index: 10;
-    transition: left 2s ease-in-out, top 2s ease-in-out;
-  }
-  .agent-char:hover { z-index: 20; }
-  .agent-char:hover .agent-bubble { opacity: 1; }
-  .agent-sprite {
-    font-size: 36px; position: relative;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
-  }
-  .agent-char.walking .agent-sprite {
-    animation: walk 0.6s steps(2) infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-  }
-  @keyframes walk {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
-  }
-  .agent-char.working .agent-sprite {
-    animation: typing 0.8s ease-in-out infinite;
-  }
-  @keyframes typing {
-    0%, 100% { transform: translateY(0) rotate(0); }
-    25% { transform: translateY(-2px) rotate(-2deg); }
-    75% { transform: translateY(-1px) rotate(1deg); }
-  }
-  .agent-char.chatting .agent-sprite {
-    animation: chatBob 1.2s ease-in-out infinite;
-  }
-  @keyframes chatBob {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-3px) scale(1.05); }
-  }
+  .chat-input { padding:12px 20px; border-top:1px solid var(--border); display:flex; gap:8px; }
+  .chat-input input { flex:1; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:13px; outline:none; }
+  .chat-input input:focus { border-color:var(--accent); }
+  .chat-input button { padding:10px 16px; background:var(--accent); color:#000; border:none; border-radius:8px; font-weight:600; cursor:pointer; font-size:13px; }
+  .chat-input button:disabled { opacity:0.4; cursor:default; }
 
-  .agent-nametag {
-    font-family: 'Press Start 2P', monospace; font-size: 6px;
-    margin-top: 2px; white-space: nowrap;
-  }
-  .agent-status-dot {
-    width: 6px; height: 6px; border-radius: 50%; position: absolute;
-    top: 0; right: 0; border: 1px solid var(--floor);
-  }
-  .agent-status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
-  .agent-status-dot.idle { background: var(--accent); }
-  .agent-status-dot.busy { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  /* Hatch animation */
+  .hatch-anim { text-align:center; padding:60px 20px; }
+  .hatch-anim .egg { font-size:64px; animation:wobble 0.5s ease-in-out infinite; }
+  .hatch-anim .status-text { margin-top:12px; color:var(--muted); font-size:12px; }
+  @keyframes wobble { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-5deg)} 75%{transform:rotate(5deg)} }
 
-  /* Speech/thought bubble */
-  .agent-bubble {
-    position: absolute; bottom: 55px; left: 50%; transform: translateX(-50%);
-    background: rgba(0,0,0,0.85); border: 1px solid var(--border);
-    border-radius: 8px; padding: 6px 10px; font-size: 10px;
-    white-space: nowrap; max-width: 200px; overflow: hidden;
-    text-overflow: ellipsis; opacity: 0; transition: opacity 0.3s;
-    pointer-events: none; color: var(--text);
-  }
-  .agent-bubble::after {
-    content: ''; position: absolute; bottom: -6px; left: 50%;
-    transform: translateX(-50%); border-left: 5px solid transparent;
-    border-right: 5px solid transparent; border-top: 6px solid rgba(0,0,0,0.85);
-  }
-  .agent-char.chatting .agent-bubble,
-  .agent-char.working .agent-bubble { opacity: 0.9; }
-
-  /* Right panel */
-  .right-panel {
-    width: 380px; background: var(--surface); border-left: 1px solid var(--border);
-    display: flex; flex-direction: column;
-  }
-
-  /* Panel tabs */
-  .panel-tabs {
-    display: flex; border-bottom: 1px solid var(--border);
-  }
-  .panel-tab {
-    flex: 1; padding: 10px; text-align: center; font-size: 11px;
-    font-weight: 600; cursor: pointer; color: var(--muted);
-    border-bottom: 2px solid transparent; transition: all 0.2s;
-  }
-  .panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .panel-tab:hover { color: var(--text); }
-
-  /* Activity feed */
-  .feed { flex: 1; overflow-y: auto; padding: 12px; }
-  .feed-item {
-    padding: 10px; margin-bottom: 8px; background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border); border-radius: 8px;
-    font-size: 12px; line-height: 1.5; cursor: pointer;
-    transition: all 0.15s;
-  }
-  .feed-item:hover { border-color: var(--accent); background: rgba(255,255,255,0.05); }
-  .feed-item .feed-header {
-    display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
-  }
-  .feed-item .feed-emoji { font-size: 16px; }
-  .feed-item .feed-name { font-weight: 600; font-size: 11px; }
-  .feed-item .feed-time { margin-left: auto; font-size: 9px; color: var(--muted); }
-  .feed-item .feed-text { color: var(--muted); font-size: 11px; }
-  .feed-item .feed-text strong { color: var(--text); }
-
-  /* Chat panel */
-  .chat-panel { display: none; flex-direction: column; height: 100%; }
-  .chat-panel.active { display: flex; }
-  .feed-panel { display: none; flex-direction: column; height: 100%; }
-  .feed-panel.active { display: flex; flex: 1; overflow: hidden; }
-
-  .chat-header {
-    padding: 12px 16px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 10px;
-  }
-  .chat-header .chat-back {
-    background: none; border: none; color: var(--muted);
-    cursor: pointer; font-size: 16px;
-  }
-  .chat-header .chat-agent-name { font-weight: 700; font-size: 14px; }
-  .chat-header .chat-agent-status { font-size: 10px; color: var(--green); }
-
-  .chat-messages { flex: 1; overflow-y: auto; padding: 12px; }
-  .chat-msg {
-    margin-bottom: 12px; padding: 10px; border-radius: 8px;
-    font-size: 12px; line-height: 1.6; max-width: 90%;
-  }
-  .chat-msg.agent {
-    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
-    margin-right: auto;
-  }
-  .chat-msg.user {
-    background: var(--accent); color: #000; margin-left: auto;
-    border-radius: 8px 8px 2px 8px;
-  }
-  .chat-msg .msg-sender { font-size: 10px; font-weight: 700; margin-bottom: 4px; color: var(--muted); }
-  .chat-msg.user .msg-sender { color: rgba(0,0,0,0.5); }
-
-  .chat-input-area {
-    padding: 12px; border-top: 1px solid var(--border);
-  }
-  .chat-input-wrap {
-    display: flex; gap: 8px; background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px;
-  }
-  .chat-input-wrap input {
-    flex: 1; background: none; border: none; color: var(--text);
-    font-size: 12px; outline: none;
-  }
-  .chat-input-wrap button {
-    background: var(--accent); color: #000; border: none;
-    width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
-    font-size: 12px; font-weight: 700;
-  }
-
-  /* Watercooler chat overlay */
-  .cooler-chat {
-    position: absolute; background: rgba(0,0,0,0.9); border: 1px solid var(--accent);
-    border-radius: 12px; padding: 12px; width: 260px;
-    font-size: 11px; line-height: 1.6; z-index: 30;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  }
-  .cooler-chat-header {
-    font-family: 'Press Start 2P', monospace; font-size: 8px;
-    color: var(--accent); margin-bottom: 8px; text-align: center;
-  }
-  .cooler-msg { margin-bottom: 6px; }
-  .cooler-msg .cooler-name { font-weight: 700; }
-  .cooler-msg .cooler-text { color: var(--muted); }
-
-  /* Hire more button */
-  .hire-more {
-    margin: 12px; padding: 12px; background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border: 1px dashed var(--accent); border-radius: 8px; text-align: center;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .hire-more:hover { border-style: solid; background: linear-gradient(135deg, #1a1a3e, #162150); }
-  .hire-more .hire-text { font-size: 12px; font-weight: 600; }
-  .hire-more .hire-sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
-
-  /* Nav bar */
-  .site-nav {
-    padding: 10px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .site-nav .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
-  .site-nav .nav-logo span { font-size: 20px; }
-  .site-nav .nav-logo strong { font-family: 'Press Start 2P', monospace; font-size: 10px; color: var(--accent); }
-  .site-nav .nav-links { display: flex; gap: 16px; align-items: center; }
-  .site-nav .nav-links a {
-    color: var(--muted); font-size: 12px; font-weight: 500; text-decoration: none;
-    padding: 6px 12px; border-radius: 6px; transition: all 0.2s;
-  }
-  .site-nav .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-  .site-nav .nav-links a.active { color: var(--accent); background: rgba(251,191,36,0.1); }
-
-  /* Mobile responsive */
-  @media (max-width: 768px) {
-    body { flex-direction: column; overflow: auto; height: auto; min-height: 100vh; }
-    .office-wrap { flex: none; height: auto; }
-    .office {
-      height: 250px; flex: none;
-      overflow-x: auto; overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-    }
-    .office-topbar { padding: 8px 12px; }
-    .office-topbar h1 { font-size: 9px; }
-    .right-panel {
-      width: 100%; border-left: none; border-top: 1px solid var(--border);
-      flex: 1; min-height: 50vh;
-    }
-    .panel-tab { padding: 12px 8px; font-size: 12px; min-height: 44px; }
-    .chat-input-wrap { padding: 10px 14px; }
-    .chat-input-wrap input { font-size: 16px; /* prevent iOS zoom */ }
-
-    /* Smaller agents on mobile */
-    .agent-sprite { font-size: 24px; }
-    .agent-nametag { font-size: 5px; }
-    .agent-char { width: 40px; }
-    .agent-bubble { font-size: 8px; bottom: 40px; max-width: 120px; padding: 4px 6px; }
-
-    /* Smaller furniture */
-    .desk { width: 65px; height: 36px; }
-    .desk::after { width: 22px; height: 14px; top: 4px; left: 6px; }
-    .desk-label { font-size: 6px; bottom: -14px; }
-    .wall { height: 60px; }
-    .wall-art { font-size: 8px; padding: 4px 8px; }
-    .wall-art.poster1 { left: 20px; top: 10px; }
-    .wall-art.poster2 { left: 160px; top: 12px; }
-    .wall-art.poster3 { right: 140px; top: 10px; }
-    .watercooler { width: 90px; height: 70px; }
-    .watercooler-icon { font-size: 20px; }
-    .watercooler-label { font-size: 5px; }
-    .coffee-icon { font-size: 18px; }
-    .coffee-label { font-size: 5px; }
-    .cooler-chat { width: 180px; font-size: 9px; padding: 8px; }
-    .cooler-chat-header { font-size: 6px; }
-
-    /* Feed items */
-    .feed-item { font-size: 11px; padding: 8px; }
-    .feed-item .feed-name { font-size: 10px; }
-
-    /* Chat messages */
-    .chat-msg { font-size: 13px; max-width: 95%; }
-    .chat-header { padding: 10px 12px; }
-
-    /* Hire more */
-    .hire-more { margin: 8px; padding: 10px; }
-
-    .site-nav .nav-links a { font-size: 11px; padding: 6px 8px; }
+  /* Mobile */
+  @media(max-width:640px) {
+    .agents-panel { width:100%; border-right:none; border-bottom:1px solid var(--border); max-height:40vh; }
+    .main { flex-direction:column; }
+    .msg { max-width:90%; }
   }
 </style>
 </head>
 <body>
 
-<!-- Nav -->
-<div class="site-nav">
-  <a href="index.html" class="nav-logo"><span>🦞</span><strong>AGENT ARENA</strong></a>
-  <div class="nav-links">
-    <a href="index.html">Home</a>
-    <a href="agents.html">Agents</a>
-    <a href="hq.html" class="active">HQ</a>
-  </div>
-</div>
+<nav>
+  <span class="logo">🦞 AGENT ARENA</span>
+  <a href="index.html">Home</a>
+  <a href="agents.html">Agents</a>
+  <a href="hq.html" class="active">HQ</a>
+  <span class="spacer"></span>
+  <span class="status offline" id="gwStatus">● Disconnected</span>
+</nav>
 
-<!-- Office View -->
-<div class="office-wrap">
-  <div class="office-topbar">
-    <h1>🦞 AGENT ARENA HQ</h1>
-    <span class="squad-count" id="squadCount">Squad: 0 agents</span>
-    <span class="time" id="clock"></span>
-  </div>
-  <div class="office" id="office">
-    <!-- Wall -->
-    <div class="wall">
-      <div class="wall-art poster1">🦞 SHIP IT</div>
-      <div class="wall-art poster2">📈 GROW OR DIE</div>
-      <div class="wall-art poster3">🔒 TRUST NO PORT</div>
-    </div>
-
-    <!-- Empty office - agents added dynamically -->
-    <div id="agentChars"></div>
-    <div id="emptyOffice" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;z-index:10;">
-      <div style="font-size:48px;margin-bottom:12px;">🏢</div>
-      <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:var(--accent);margin-bottom:8px;">EMPTY OFFICE</div>
-      <div style="font-size:12px;color:var(--muted);">Install agents to fill this space</div>
-      <a href="agents.html" style="display:inline-block;margin-top:12px;padding:8px 16px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;color:var(--accent);font-size:11px;text-decoration:none;">Browse Agents →</a>
-    </div>
-  </div>
-</div>
-
-<!-- Right Panel -->
-<div class="right-panel">
-  <div class="panel-tabs">
-    <div class="panel-tab active" onclick="showPanel('feed')">📡 Activity</div>
-    <div class="panel-tab" onclick="showPanel('team')">👥 Team</div>
-    <div class="panel-tab" onclick="showPanel('chat')">💬 DM</div>
-  </div>
-
-  <!-- Feed -->
-  <div class="feed-panel active" id="feedPanel">
-    <div class="feed" id="feedList"></div>
-    <div onclick="showChatInstructions()" style="display:block;margin:12px;padding:12px;background:linear-gradient(135deg,#0a2e1a,#1a3a2e);border:1px solid #22c55e;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.2s;">
-      <div style="font-size:12px;font-weight:600;color:#22c55e;">⚡ Talk to Your Agent</div>
-      <div style="font-size:10px;color:#8e8ea0;margin-top:4px;">Open terminal chat with your real agents</div>
-    </div>
-    <div class="hire-more" onclick="window.location.href='/'">
-      <div class="hire-text">➕ Hire More Agents</div>
-      <div class="hire-sub">Browse the Arena marketplace</div>
-    </div>
-  </div>
-
-  <!-- Team Chat -->
-  <div class="chat-panel" id="teamPanel">
-    <div class="chat-header">
-      <span style="font-size:16px;">👥</span>
-      <span class="chat-agent-name" style="color: var(--accent);">Team Chat</span>
-      <span class="chat-agent-status">0 online</span>
-    </div>
-    <div class="chat-messages" id="teamMessages">
-      <div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">No agents online yet</div>
-    </div>
-    <div class="chat-input-area">
-      <div class="chat-input-wrap">
-        <input type="text" placeholder="Message the whole team..." id="teamInput" onkeydown="if(event.key==='Enter')sendTeamMessage()">
-        <button onclick="sendTeamMessage()">↑</button>
+<div class="main">
+  <div class="agents-panel">
+    <div class="agents-header">Your Agents</div>
+    <div class="agents-list" id="agentList">
+      <div class="empty-agents">
+        No agents installed yet.<br>
+        <a href="agents.html">Browse the Arena →</a>
       </div>
     </div>
   </div>
 
-  <!-- Chat -->
-  <div class="chat-panel" id="chatPanel">
-    <div class="chat-header">
-      <button class="chat-back" onclick="showPanel('team')">← back</button>
-      <span class="chat-agent-name" id="chatAgentName">Founder Agent</span>
-      <span class="chat-agent-status">● Online</span>
-    </div>
-    <div class="chat-messages" id="chatMessages"></div>
-    <div class="chat-input-area">
-      <div class="chat-input-wrap">
-        <input type="text" placeholder="Message your agent..." id="chatInput" onkeydown="if(event.key==='Enter')sendMessage()">
-        <button onclick="sendMessage()">↑</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Connect Modal -->
-<div id="connectModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
-  <div style="background:#111118;border:1px solid #fbbf24;border-radius:16px;padding:28px;width:420px;max-width:90vw;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h3 style="font-family:'Press Start 2P',monospace;font-size:11px;color:#fbbf24;">🔌 CONNECT TO OPENCLAW</h3>
-      <button onclick="document.getElementById('connectModal').style.display='none'" style="background:none;border:none;color:#8e8ea0;font-size:18px;cursor:pointer;">✕</button>
-    </div>
-    <div id="connectStatus" style="font-size:12px;color:#8e8ea0;margin-bottom:16px;"></div>
-
-    <div style="margin-bottom:16px;">
-      <label style="font-size:11px;color:#8e8ea0;display:block;margin-bottom:6px;">Gateway Token</label>
-      <input type="text" id="tokenInput" placeholder="Paste your gateway token here" 
-        style="width:100%;padding:10px 12px;background:#0d1117;border:1px solid #2a2a3a;border-radius:8px;color:#ececf1;font-size:13px;font-family:monospace;outline:none;"
-        value="">
-      <div style="font-size:10px;color:#6e6e80;margin-top:6px;line-height:1.5;">
-        Find it in your terminal:<br>
-        <code style="background:#0d1117;padding:2px 6px;border-radius:4px;color:#06b6d4;font-size:10px;">grep token ~/.openclaw/openclaw.json</code>
-      </div>
-    </div>
-
-    <div style="margin-bottom:16px;">
-      <label style="font-size:11px;color:#8e8ea0;display:block;margin-bottom:6px;">Gateway Port</label>
-      <input type="text" id="portInput" placeholder="18789" value="18789"
-        style="width:100%;padding:10px 12px;background:#0d1117;border:1px solid #2a2a3a;border-radius:8px;color:#ececf1;font-size:13px;outline:none;">
-    </div>
-
-    <div style="display:flex;gap:8px;">
-      <button onclick="tryConnect()" style="flex:1;padding:10px;background:#fbbf24;color:#000;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">⚡ Connect</button>
-      <button onclick="tryConnect(true)" style="flex:1;padding:10px;background:#1a1a24;border:1px solid #2a2a3a;border-radius:8px;color:#ececf1;font-size:13px;cursor:pointer;">🔄 Reconnect</button>
-    </div>
-
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid #2a2a3a;">
-      <div style="font-size:11px;color:#6e6e80;line-height:1.6;">
-        <strong style="color:#ececf1;">Don't have OpenClaw?</strong><br>
-        <a href="https://openclaw.ai" target="_blank" style="color:#fbbf24;">Install OpenClaw →</a> then come back and connect.
-      </div>
-    </div>
+  <div class="chat-area" id="chatArea">
+    <div class="no-chat" id="noChat">← Select an agent to chat</div>
   </div>
 </div>
 
 <script>
-// Agent state — populated as real agents are added
-const agents = {};
-const feedItems = [];
-
-let currentChat = null;
-
-// Render feed
-function renderFeed() {
-  const el = document.getElementById('feedList');
-  if (feedItems.length === 0) {
-    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">No activity yet. Install agents to get started.</div>';
-    return;
-  }
-  el.innerHTML = feedItems.map(item => {
-    const a = agents[item.agent] || { emoji: '🤖', name: item.agent, color: '#8e8ea0' };
-    return `<div class="feed-item" onclick="openChat('${item.agent}')">
-      <div class="feed-header">
-        <span class="feed-emoji">${a.emoji}</span>
-        <span class="feed-name" style="color:${a.color}">${a.name}</span>
-        <span class="feed-time">${item.time}</span>
-      </div>
-      <div class="feed-text">${item.text}</div>
-    </div>`;
-  }).join('');
-}
-
-function showPanel(panel) {
-  const tabs = { feed: 0, team: 1, chat: 2 };
-  document.querySelectorAll('.panel-tab').forEach((t,i) => t.classList.toggle('active', i === tabs[panel]));
-  document.getElementById('feedPanel').classList.toggle('active', panel === 'feed');
-  document.getElementById('teamPanel').classList.toggle('active', panel === 'team');
-  document.getElementById('chatPanel').classList.toggle('active', panel === 'chat');
-}
-
-function openChat(agentId) {
-  currentChat = agentId;
-  const a = agents[agentId];
-  document.getElementById('chatAgentName').textContent = a.name;
-  document.getElementById('chatAgentName').style.color = a.color;
-  showPanel('chat');
-
-  if (hatchedAgents[agentId]) {
-    // Already hatched — show chat with input
-    const inputArea = document.querySelector('#chatPanel .chat-input-area');
-    inputArea.style.display = '';
-    // Don't clear messages — keep the conversation
-  } else {
-    // Not hatched — show hatch screen
-    showHatchScreen(agentId);
-  }
-}
-
-// Map HQ agent ids to package names
-const agentPkgMap = { founder: 'founder-agent', creator: 'creator-agent', devops: 'devops-agent' };
-const hatchedAgents = {}; // track which agents have been hatched
-const streamBuffers = {}; // runId -> accumulated text for streaming
-
-function renderMarkdown(text) {
-  return text
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code style="background:#1a1a2e;padding:2px 4px;border-radius:3px;">$1</code>')
-    .replace(/\n/g, '<br>');
-}
-
-// ============================================================
-// WebSocket connection to server (which bridges to gateway)
-// ============================================================
-
+const WS_URL = `ws://${location.host}`;
 let ws = null;
-let wsConnected = false;
+let selectedAgent = null;
+let agentStates = {}; // agentPkg -> { hatched, sessionKey, messages:[] }
+let streamBuffers = {}; // runId -> accumulated text
 
+// Connect WebSocket
 function connectWS() {
-  ws = new WebSocket(`ws://${location.host}/`);
-  
-  ws.onopen = () => {
-    console.log('🔌 Connected to Arena server');
-    const dot = document.getElementById('gwStatus');
-    if (dot) { dot.style.background = '#fbbf24'; dot.title = 'Connected to server'; }
-  };
-  
+  ws = new WebSocket(WS_URL);
+  ws.onopen = () => updateGatewayStatus(true);
+  ws.onclose = () => { updateGatewayStatus(false); setTimeout(connectWS, 3000); };
   ws.onmessage = (e) => {
-    try {
-      const msg = JSON.parse(e.data);
-      handleWSMessage(msg);
-    } catch (err) { console.error('WS parse error:', err); }
+    try { handleMsg(JSON.parse(e.data)); } catch(err) { console.error('ws msg error', err); }
   };
-  
-  ws.onclose = () => {
-    console.log('🔌 Disconnected from Arena server');
-    wsConnected = false;
-    const dot = document.getElementById('gwStatus');
-    if (dot) { dot.style.background = '#ef4444'; dot.title = 'Disconnected'; }
-    // Reconnect after 3s
-    setTimeout(connectWS, 3000);
-  };
-  
-  ws.onerror = () => {};
 }
 
-function handleWSMessage(msg) {
-  // Gateway connection status
+function updateGatewayStatus(connected) {
+  const el = document.getElementById('gwStatus');
+  if (connected) { el.textContent = '● Connected'; el.className = 'status online'; }
+  else { el.textContent = '● Disconnected'; el.className = 'status offline'; }
+}
+
+function handleMsg(msg) {
   if (msg.type === 'status') {
-    wsConnected = msg.connected;
-    const dot = document.getElementById('gwStatus');
-    if (dot) {
-      dot.style.background = msg.connected ? '#22c55e' : '#fbbf24';
-      dot.title = msg.connected ? 'Gateway connected' : 'Waiting for gateway...';
-    }
+    updateGatewayStatus(msg.connected);
   }
 
-  // Hatch confirmed
   if (msg.type === 'hatch-ok') {
-    const agentId = Object.entries(agentPkgMap).find(([k,v]) => v === msg.agentPkg)?.[0];
-    if (agentId) {
-      hatchedAgents[agentId] = { sessionKey: msg.sessionKey, agent: msg.agent };
-      console.log(`🐣 ${msg.agent.displayName} hatched! Session: ${msg.sessionKey}`);
-    }
+    const st = agentStates[msg.agentPkg];
+    if (st) { st.hatched = true; st.sessionKey = msg.sessionKey; }
+    if (selectedAgent === msg.agentPkg) renderChat();
   }
 
-  // Streaming delta — real-time text as agent types
   if (msg.type === 'chat-delta') {
-    const agentId = Object.entries(agentPkgMap).find(([k,v]) => v === msg.agentPkg)?.[0];
-    if (!agentId) return;
-    const a = agents[agentId];
-    
-    // Extract text from message
-    let deltaText = '';
-    if (typeof msg.message === 'string') {
-      deltaText = msg.message;
-    } else if (Array.isArray(msg.message)) {
-      for (const part of msg.message) {
-        if (part.type === 'text' && part.text) deltaText += part.text;
-      }
-    } else if (msg.message?.text) {
-      deltaText = msg.message.text;
-    }
-    
-    if (!deltaText) return;
-    
-    // Accumulate in buffer
+    const st = agentStates[msg.agentPkg];
+    if (!st) return;
     if (!streamBuffers[msg.runId]) streamBuffers[msg.runId] = '';
-    streamBuffers[msg.runId] += deltaText;
-    
-    // Update or create the streaming message element
-    const msgs = document.getElementById('chatMessages');
-    let streamEl = document.getElementById(`stream-${msg.runId}`);
-    
-    // Remove typing indicator if present
-    const typingEl = document.querySelector('.typing-indicator');
-    if (typingEl) typingEl.remove();
-    
-    if (!streamEl) {
-      streamEl = document.createElement('div');
-      streamEl.id = `stream-${msg.runId}`;
-      streamEl.className = 'chat-msg agent';
-      streamEl.style.borderLeft = `3px solid ${a.color}`;
-      streamEl.innerHTML = `<div class="msg-sender">${a.emoji} ${a.name}</div><span class="stream-text"></span>`;
-      msgs.appendChild(streamEl);
-    }
-    
-    streamEl.querySelector('.stream-text').innerHTML = renderMarkdown(streamBuffers[msg.runId]);
-    msgs.scrollTop = msgs.scrollHeight;
+    // Extract text
+    let text = '';
+    if (typeof msg.message === 'string') text = msg.message;
+    else if (Array.isArray(msg.message)) msg.message.forEach(p => { if (p.type==='text') text += p.text; });
+    else if (msg.message?.text) text = msg.message.text;
+    streamBuffers[msg.runId] += text;
+    if (selectedAgent === msg.agentPkg) updateStreamingMsg(msg.runId, streamBuffers[msg.runId]);
   }
 
-  // Final message — streaming complete
   if (msg.type === 'chat-final') {
-    const agentId = Object.entries(agentPkgMap).find(([k,v]) => v === msg.agentPkg)?.[0];
-    if (!agentId) return;
-    const a = agents[agentId];
-    const msgs = document.getElementById('chatMessages');
-    
-    // Remove typing indicator
-    const typingEl = document.querySelector('.typing-indicator');
-    if (typingEl) typingEl.remove();
-    
-    // Extract final text
-    let finalText = '';
-    if (typeof msg.message === 'string') {
-      finalText = msg.message;
-    } else if (Array.isArray(msg.message)) {
-      for (const part of msg.message) {
-        if (part.type === 'text' && part.text) finalText += part.text;
-      }
-    } else if (msg.message?.text) {
-      finalText = msg.message.text;
+    const st = agentStates[msg.agentPkg];
+    if (!st) return;
+    let text = streamBuffers[msg.runId] || '';
+    if (!text) {
+      if (typeof msg.message === 'string') text = msg.message;
+      else if (Array.isArray(msg.message)) msg.message.forEach(p => { if (p.type==='text') text += p.text; });
+      else if (msg.message?.text) text = msg.message.text;
     }
-    
-    // Replace stream element with final or create new
-    let streamEl = document.getElementById(`stream-${msg.runId}`);
-    if (streamEl && finalText) {
-      streamEl.querySelector('.stream-text').innerHTML = renderMarkdown(finalText);
-    } else if (finalText) {
-      msgs.innerHTML += `<div class="chat-msg agent" style="border-left: 3px solid ${a.color};"><div class="msg-sender">${a.emoji} ${a.name}</div><span class="stream-text">${renderMarkdown(finalText)}</span></div>`;
-    }
-    
-    // If this was a hatch, show the input area
-    if (!document.querySelector('#chatPanel .chat-input-area')?.style.display !== 'none') {
-      const inputArea = document.querySelector('#chatPanel .chat-input-area');
-      if (inputArea) inputArea.style.display = '';
-    }
-    
-    // Clean up buffer
     delete streamBuffers[msg.runId];
-    msgs.scrollTop = msgs.scrollHeight;
+    if (text) { st.messages.push({ role:'agent', text }); }
+    if (selectedAgent === msg.agentPkg) renderChat();
   }
 
-  // Agent events — streaming text + tool calls
   if (msg.type === 'agent-event') {
-    const agentId = Object.entries(agentPkgMap).find(([k,v]) => v === msg.agentPkg)?.[0];
-    if (!agentId) return;
-    const a = agents[agentId];
-    const payload = msg.payload;
-    const runId = payload.runId;
-    
-    // Streaming assistant text
-    if (payload.stream === 'assistant' && payload.data?.text) {
-      const msgs = document.getElementById('chatMessages');
-      
-      // Remove typing indicator
-      const typingEl = document.querySelector('.typing-indicator');
-      if (typingEl) typingEl.remove();
-      
-      // Create or update stream element
-      let streamEl = document.getElementById(`stream-${runId}`);
-      if (!streamEl) {
-        streamEl = document.createElement('div');
-        streamEl.id = `stream-${runId}`;
-        streamEl.className = 'chat-msg agent';
-        streamEl.style.borderLeft = `3px solid ${a.color}`;
-        streamEl.innerHTML = `<div class="msg-sender">${a.emoji} ${a.name}</div><span class="stream-text"></span>`;
-        msgs.appendChild(streamEl);
-      }
-      
-      streamEl.querySelector('.stream-text').innerHTML = renderMarkdown(payload.data.text);
-      msgs.scrollTop = msgs.scrollHeight;
-    }
-    
-    // Tool calls
-    if (payload.stream === 'tool' && payload.data) {
-      const toolName = payload.data.name || payload.data.tool || 'tool';
-      const msgs = document.getElementById('chatMessages');
-      
-      // Only show tool-start, not every update
-      if (payload.data.phase === 'start' || (!payload.data.phase && !document.getElementById(`tool-${runId}-${toolName}`))) {
-        const toolEl = document.createElement('div');
-        toolEl.id = `tool-${runId}-${toolName}`;
-        toolEl.className = 'chat-msg agent';
-        toolEl.style.borderLeft = `3px solid ${a.color}`;
-        toolEl.style.opacity = '0.7';
-        toolEl.style.fontSize = '11px';
-        toolEl.innerHTML = `<div class="msg-sender">🔧 ${a.name}</div>Using <strong>${toolName}</strong>...`;
-        msgs.appendChild(toolEl);
-        msgs.scrollTop = msgs.scrollHeight;
-      }
-    }
-    
-    // Lifecycle end — agent finished
-    if (payload.stream === 'lifecycle' && payload.data?.phase === 'end') {
-      const inputArea = document.querySelector('#chatPanel .chat-input-area');
-      if (inputArea) inputArea.style.display = '';
-    }
+    // Could show tool use in future
   }
 
-  // Error
   if (msg.type === 'error') {
     console.error('Server error:', msg.error);
-    const msgs = document.getElementById('chatMessages');
-    if (msgs) {
-      // Remove typing indicator
-      const typingEl = document.querySelector('.typing-indicator');
-      if (typingEl) typingEl.remove();
-      msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>${msg.error}</div>`;
-      msgs.scrollTop = msgs.scrollHeight;
-    }
   }
 }
 
-// Connect on page load
-connectWS();
-
-// ============================================================
-// Hatch & Chat UI
-// ============================================================
-
-function showHatchScreen(agentId) {
-  const a = agents[agentId];
-  const msgs = document.getElementById('chatMessages');
-  const inputArea = document.querySelector('#chatPanel .chat-input-area');
-  inputArea.style.display = 'none';
-
-  msgs.innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:24px;">
-      <div style="font-size:64px;margin-bottom:16px;animation:pulse 2s infinite;">🥚</div>
-      <div style="font-family:'Press Start 2P',monospace;font-size:12px;color:${a.color};margin-bottom:8px;">${a.name}</div>
-      <div style="font-size:13px;color:#8e8ea0;margin-bottom:24px;max-width:300px;line-height:1.6;">
-        This agent is ready to hatch. Once activated, it'll wake up as a <strong>real AI sub-agent</strong> with full tool access — web search, code execution, file management, and more.
-      </div>
-      <button onclick="hatchAgent('${agentId}')" id="hatchBtn" style="padding:14px 32px;background:linear-gradient(135deg,${a.color},${a.color}cc);color:#000;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;font-family:'Press Start 2P',monospace;transition:all 0.3s;box-shadow:0 0 20px ${a.color}44;">
-        🐣 HATCH AGENT
-      </button>
-      <div id="gwStatus" style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;margin-top:12px;" title="Gateway connected"></div>
-      <div style="font-size:10px;color:#6e6e80;margin-top:4px;">Real AI · Full tool access · localhost:3333</div>
-    </div>
-  `;
-}
-
-function hatchAgent(agentId) {
-  const a = agents[agentId];
-  const msgs = document.getElementById('chatMessages');
-  const btn = document.getElementById('hatchBtn');
-  
-  btn.disabled = true;
-  btn.innerHTML = '🥚 HATCHING...';
-  btn.style.opacity = '0.7';
-  
-  msgs.innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:24px;">
-      <div style="font-size:64px;margin-bottom:16px;" id="hatchEgg">🥚</div>
-      <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:${a.color};" id="hatchStatus">Connecting to gateway...</div>
-    </div>
-  `;
-
-  const egg = document.getElementById('hatchEgg');
-  const status = document.getElementById('hatchStatus');
-  
-  setTimeout(() => { 
-    egg.textContent = '🐣'; 
-    status.textContent = 'Spawning sub-agent...'; 
-  }, 1000);
-
-  setTimeout(() => { 
-    status.textContent = 'Agent waking up...'; 
-  }, 2500);
-
-  // Send hatch command via WebSocket
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'hatch', agentPkg: agentPkgMap[agentId] }));
-    
-    // Transition to chat view after a beat (agent response will stream in)
-    setTimeout(() => {
-      hatchedAgents[agentId] = true;
-      egg.textContent = '🐥';
-      status.textContent = `${a.name} is alive!`;
-      
-      setTimeout(() => {
-        const inputArea = document.querySelector('#chatPanel .chat-input-area');
-        inputArea.style.display = '';
-        msgs.innerHTML = `
-          <div style="text-align:center;padding:12px;margin-bottom:8px;">
-            <span style="font-size:10px;color:#6e6e80;background:#1a1a2e;padding:4px 12px;border-radius:12px;">🐣 ${a.name} hatched · real sub-agent with tool access</span>
-          </div>
-          <div class="chat-msg agent typing-indicator" style="border-left: 3px solid ${a.color};">
-            <div class="msg-sender">${a.emoji} ${a.name}</div>
-            <em style="color:#8e8ea0;">waking up...</em>
-          </div>
-        `;
-        msgs.scrollTop = msgs.scrollHeight;
-      }, 1200);
-    }, 3000);
-  } else {
-    msgs.innerHTML = `<div style="text-align:center;padding:24px;color:#ef4444;">❌ Not connected to server. Is localhost:3333 running?<br><br><button onclick="showHatchScreen('${agentId}')" style="padding:8px 16px;background:#1a1a2e;border:1px solid #2a2a3a;color:#ececf1;border-radius:8px;cursor:pointer;">Try Again</button></div>`;
-  }
-}
-
-function sendMessage() {
-  if (!currentChat) return;
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if (!text) return;
-  input.value = '';
-  const a = agents[currentChat];
-  const msgs = document.getElementById('chatMessages');
-
-  // User message
-  msgs.innerHTML += `<div class="chat-msg user"><div class="msg-sender">👤 You</div>${text}</div>`;
-  
-  // Typing indicator
-  msgs.innerHTML += `<div class="chat-msg agent typing-indicator" style="border-left: 3px solid ${a.color};"><div class="msg-sender">${a.emoji} ${a.name}</div><em style="color:#8e8ea0;">thinking...</em></div>`;
-  msgs.scrollTop = msgs.scrollHeight;
-
-  // Send via WebSocket
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ 
-      type: 'chat', 
-      agentPkg: agentPkgMap[currentChat],
-      message: text,
-    }));
-  } else {
-    const typingEl = document.querySelector('.typing-indicator');
-    if (typingEl) typingEl.remove();
-    msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>Not connected. Is localhost:3333 running?</div>`;
-    msgs.scrollTop = msgs.scrollHeight;
-  }
-}
-
-function sendTeamMessage() {
-  const input = document.getElementById('teamInput');
-  const text = input.value.trim();
-  if (!text) return;
-  input.value = '';
-  const msgs = document.getElementById('teamMessages');
-
-  msgs.innerHTML += `<div class="chat-msg user"><div class="msg-sender">👤 You</div>${text}</div>`;
-  msgs.scrollTop = msgs.scrollHeight;
-
-  // Send to founder agent via WebSocket (team lead)
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    msgs.innerHTML += `<div class="chat-msg agent typing-indicator" style="border-left: 3px solid #22c55e;"><div class="msg-sender">🚀 Founder Agent</div><em style="color:#8e8ea0;">thinking...</em></div>`;
-    msgs.scrollTop = msgs.scrollHeight;
-    
-    ws.send(JSON.stringify({
-      type: 'chat',
-      agentPkg: 'founder-agent',
-      message: `[Team Chat] ${text}`,
-    }));
-  } else {
-    msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>Not connected — is localhost:3333 running?</div>`;
-  }
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-// Clock
-function updateClock() {
-  const now = new Date();
-  document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', {
-    hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
-  });
-}
-
-// Mobile layout adjustments
-function adjustForMobile() {
-  // Will reposition agent chars dynamically when we have them
-}
-window.addEventListener('resize', adjustForMobile);
-
-function showChatInstructions() {
-  const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
-  modal.innerHTML = `
-    <div style="background:#111118;border:1px solid #22c55e;border-radius:16px;padding:28px;width:460px;max-width:90vw;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h3 style="font-family:'Press Start 2P',monospace;font-size:11px;color:#22c55e;">⚡ TALK TO YOUR AGENT</h3>
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;color:#8e8ea0;font-size:18px;cursor:pointer;">✕</button>
-      </div>
-      
-      <div style="margin-bottom:20px;">
-        <div style="font-size:13px;font-weight:600;color:#ececf1;margin-bottom:8px;">Option 1: Terminal Chat</div>
-        <div onclick="navigator.clipboard.writeText('openclaw tui');this.querySelector('.copy-hint').textContent='✅ copied!'" style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;font-family:monospace;font-size:14px;color:#06b6d4;cursor:pointer;position:relative;">
-          <span style="color:#8b949e;">$</span> openclaw tui
-          <span class="copy-hint" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:#8b949e;font-family:Inter,sans-serif;">click to copy</span>
-        </div>
-        <div style="font-size:11px;color:#6e6e80;margin-top:6px;">Opens a full chat UI right in your terminal. Just like texting.</div>
-      </div>
-
-      <div style="margin-bottom:20px;">
-        <div style="font-size:13px;font-weight:600;color:#ececf1;margin-bottom:8px;">Option 2: Telegram</div>
-        <div style="font-size:11px;color:#6e6e80;line-height:1.6;">If you've connected Telegram to OpenClaw, just message your bot directly. Your agent responds there.</div>
-      </div>
-
-      <div style="margin-bottom:20px;">
-        <div style="font-size:13px;font-weight:600;color:#ececf1;margin-bottom:8px;">Option 3: Any Channel</div>
-        <div style="font-size:11px;color:#6e6e80;line-height:1.6;">OpenClaw supports Discord, Slack, WhatsApp, Signal, and more. <a href="https://docs.openclaw.ai" target="_blank" style="color:#fbbf24;">See docs →</a></div>
-      </div>
-
-      <div style="padding-top:16px;border-top:1px solid #2a2a3a;">
-        <div style="font-size:10px;color:#6e6e80;line-height:1.6;">
-          <strong style="color:#fbbf24;">💡 Pro tip:</strong> Your agent is already running. Just open any connected channel and say hello — it'll introduce itself!
-        </div>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
-}
-
-function showConnectModal() {
-  const modal = document.getElementById('connectModal');
-  modal.style.display = 'flex';
-  const saved = localStorage.getItem('openclaw_token');
-  if (saved) document.getElementById('tokenInput').value = saved;
-  const savedPort = localStorage.getItem('openclaw_port');
-  if (savedPort) document.getElementById('portInput').value = savedPort;
-  document.getElementById('connectStatus').innerHTML = openclawConnected
-    ? '<span style="color:#22c55e;">● Connected</span> — click Reconnect to refresh'
-    : '<span style="color:#ef4444;">● Not connected</span> — enter your token and click Connect';
-}
-
-async function tryConnect(reconnect) {
-  const token = document.getElementById('tokenInput').value.trim();
-  const port = parseInt(document.getElementById('portInput').value) || 18789;
-  const status = document.getElementById('connectStatus');
-
-  if (token) localStorage.setItem('openclaw_token', token);
-  localStorage.setItem('openclaw_port', port.toString());
-
-  status.innerHTML = '<span style="color:#fbbf24;">⏳ Connecting...</span>';
-
-  // Disconnect existing
-  if (bridge) bridge.disconnect();
-
-  bridge = new OpenClawBridge({ port, token: token || null });
-
+// Fetch registered agents from server
+async function loadAgents() {
   try {
-    await bridge.connect();
-    openclawConnected = true;
-    status.innerHTML = '<span style="color:#22c55e;">✅ Connected!</span>';
-    document.getElementById('connectionStatus').textContent = '🟢 OpenClaw Connected';
-    document.getElementById('connectionStatus').style.color = '#22c55e';
+    const res = await fetch('/api/agents/registered');
+    const agents = await res.json();
+    // Also get package info for display
+    const pkgRes = await fetch('/api/agents');
+    const packages = await pkgRes.json();
+    const pkgMap = {};
+    packages.forEach(p => pkgMap[p.name] = p);
 
-    bridge.onMessage((data) => {
-      // Remove typing indicator
-      const typing = document.getElementById('typing-indicator');
-      if (typing) typing.remove();
+    const list = document.getElementById('agentList');
+    if (agents.length === 0) return; // keep empty state
 
-      if (data.params?.text || data.text) {
-        const text = data.params?.text || data.text;
-        const agentName = data.params?.agent || 'Agent';
-        addLiveMessage(agentName, text);
-      }
+    list.innerHTML = '';
+    agents.forEach(a => {
+      const pkg = pkgMap[a.id + '-agent'] || pkgMap[a.id] || {};
+      const emoji = pkg.emoji || '🤖';
+      const displayName = pkg.displayName || a.name || a.id;
+      const role = pkg.tagline || a.id;
+      const pkgName = pkg.name || a.id + '-agent';
+
+      agentStates[pkgName] = agentStates[pkgName] || { hatched:false, sessionKey:null, messages:[] };
+
+      const card = document.createElement('div');
+      card.className = 'agent-card';
+      card.dataset.pkg = pkgName;
+      card.innerHTML = `
+        <div class="agent-top">
+          <span class="agent-emoji">${emoji}</span>
+          <div class="agent-info">
+            <div class="agent-name">${displayName}</div>
+            <div class="agent-role">${role}</div>
+          </div>
+          <div class="agent-dot offline"></div>
+        </div>`;
+      card.onclick = () => selectAgent(pkgName, displayName, emoji);
+      list.appendChild(card);
     });
-
-    bridge.onStatus(({ connected }) => {
-      openclawConnected = connected;
-      const indicator = document.getElementById('connectionStatus');
-      indicator.textContent = connected ? '🟢 OpenClaw Connected' : '🔴 Disconnected (click to reconnect)';
-      indicator.style.color = connected ? '#22c55e' : '#ef4444';
-    });
-
-    // Close modal after short delay
-    setTimeout(() => {
-      document.getElementById('connectModal').style.display = 'none';
-    }, 1000);
-
-  } catch (e) {
-    status.innerHTML = `<span style="color:#ef4444;">❌ Failed: ${e.message}</span><br><span style="font-size:10px;color:#6e6e80;">Check your token and make sure OpenClaw gateway is running.</span>`;
-    document.getElementById('connectionStatus').textContent = '🔴 Disconnected (click to reconnect)';
-    document.getElementById('connectionStatus').style.color = '#ef4444';
+  } catch(e) {
+    console.error('Failed to load agents:', e);
   }
 }
 
-// === OpenClaw Bridge ===
-let bridge = null;
-let openclawConnected = false;
+function selectAgent(pkgName, displayName, emoji) {
+  selectedAgent = pkgName;
+  // Update active card
+  document.querySelectorAll('.agent-card').forEach(c => c.classList.toggle('active', c.dataset.pkg === pkgName));
 
-async function initBridge() {
-  if (typeof OpenClawBridge === 'undefined') return;
-  bridge = new OpenClawBridge();
+  const st = agentStates[pkgName];
+  const area = document.getElementById('chatArea');
 
-  const detected = await bridge.detect();
-  const indicator = document.getElementById('connectionStatus');
+  area.innerHTML = `
+    <div class="chat-header">
+      <span style="font-size:24px">${emoji}</span>
+      <span class="name">${displayName}</span>
+      <span class="meta">${st.hatched ? '● Online' : 'Not started'}</span>
+      <button class="hatch-btn" id="hatchBtn" onclick="hatchAgent('${pkgName}')" ${st.hatched ? 'disabled' : ''}>
+        ${st.hatched ? '✓ Running' : '🥚 Hatch'}
+      </button>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="chat-input" id="chatInput" style="${st.hatched ? '' : 'display:none'}">
+      <input type="text" id="msgInput" placeholder="Message ${displayName}..." onkeydown="if(event.key==='Enter')sendMsg()">
+      <button onclick="sendMsg()">Send</button>
+    </div>`;
 
-  if (detected) {
-    try {
-      // Try to get token from localStorage or URL params
-      const params = new URLSearchParams(window.location.search);
-      const token = params.get('token') || localStorage.getItem('openclaw_token');
-      if (token) {
-        bridge.token = token;
-        localStorage.setItem('openclaw_token', token);
-      }
-
-      await bridge.connect();
-      openclawConnected = true;
-      if (indicator) {
-        indicator.textContent = '🟢 OpenClaw Connected';
-        indicator.style.color = '#22c55e';
-      }
-
-      // Listen for real agent messages
-      bridge.onMessage((data) => {
-        if (data.params?.text || data.text) {
-          const text = data.params?.text || data.text;
-          const agentName = data.params?.agent || 'Agent';
-          addLiveMessage(agentName, text);
-        }
-      });
-
-      bridge.onStatus(({ connected }) => {
-        openclawConnected = connected;
-        if (indicator) {
-          indicator.textContent = connected ? '🟢 OpenClaw Connected' : '🔴 Disconnected';
-          indicator.style.color = connected ? '#22c55e' : '#ef4444';
-        }
-      });
-
-    } catch (e) {
-      console.log('Bridge connection failed:', e.message);
-      if (indicator) {
-        indicator.textContent = '🟡 OpenClaw detected (auth needed)';
-        indicator.style.color = '#fbbf24';
-      }
-    }
-  } else {
-    if (indicator) {
-      indicator.textContent = '⚪ OpenClaw not detected';
-      indicator.style.color = '#8e8ea0';
-    }
-  }
+  renderChat();
 }
 
-function addLiveMessage(agentName, text) {
-  // Add to team chat
-  const msgs = document.getElementById('teamMessages');
-  if (msgs) {
-    const agentColors = { founder: '#22c55e', creator: '#ec4899', devops: '#ef4444' };
-    const color = agentColors[agentName.toLowerCase()] || '#fbbf24';
-    msgs.innerHTML += `<div class="chat-msg agent" style="border-left: 3px solid ${color};">
-      <div class="msg-sender">🤖 ${agentName}</div>${text}</div>`;
-    msgs.scrollTop = msgs.scrollHeight;
+function renderChat() {
+  if (!selectedAgent) return;
+  const st = agentStates[selectedAgent];
+  const msgs = document.getElementById('messages');
+  if (!msgs) return;
+
+  if (!st.hatched && st.messages.length === 0) {
+    msgs.innerHTML = '<div class="msg system">Click "Hatch" to wake this agent up</div>';
+    return;
   }
 
-  // Add to feed
-  feedItems.unshift({
-    agent: 'founder',
-    text: `<strong>Live:</strong> ${text.substring(0, 80)}...`,
-    time: 'just now'
-  });
-  renderFeed();
+  msgs.innerHTML = st.messages.map(m =>
+    `<div class="msg ${m.role}">${escapeHtml(m.text)}</div>`
+  ).join('');
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Show input if hatched
+  const input = document.getElementById('chatInput');
+  if (input) input.style.display = st.hatched ? '' : 'none';
 }
 
-// Override sendMessage to use real bridge when connected
-const _origSendMessage = sendMessage;
-sendMessage = function() {
-  if (openclawConnected && bridge && currentChat) {
-    const input = document.getElementById('chatInput');
-    const text = input.value.trim();
-    if (!text) return;
-    input.value = '';
-
-    const a = agents[currentChat];
-    const msgs = document.getElementById('chatMessages');
-    msgs.innerHTML += `<div class="chat-msg user"><div class="msg-sender">👤 You</div>${text}</div>`;
-    msgs.scrollTop = msgs.scrollHeight;
-
-    // Send to real OpenClaw
-    bridge.sendMessage(text);
-
-    // Show typing indicator
-    msgs.innerHTML += `<div class="chat-msg agent" id="typing-indicator">
-      <div class="msg-sender">${a.emoji} ${a.name}</div>
-      <span style="color:var(--muted)">typing...</span></div>`;
-    msgs.scrollTop = msgs.scrollHeight;
-  } else {
-    _origSendMessage();
+function updateStreamingMsg(runId, text) {
+  const msgs = document.getElementById('messages');
+  if (!msgs) return;
+  let el = document.getElementById('stream-' + runId);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'stream-' + runId;
+    el.className = 'msg agent';
+    msgs.appendChild(el);
   }
-};
+  el.textContent = text;
+  msgs.scrollTop = msgs.scrollHeight;
+}
 
-const _origSendTeamMessage = sendTeamMessage;
-sendTeamMessage = function() {
-  if (openclawConnected && bridge) {
-    const input = document.getElementById('teamInput');
-    const text = input.value.trim();
-    if (!text) return;
-    input.value = '';
+function hatchAgent(pkgName) {
+  if (!ws || ws.readyState !== 1) return;
+  const btn = document.getElementById('hatchBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '🐣 Hatching...'; }
 
-    const msgs = document.getElementById('teamMessages');
-    msgs.innerHTML += `<div class="chat-msg user"><div class="msg-sender">👤 You</div>${text}</div>`;
-    msgs.scrollTop = msgs.scrollHeight;
+  const msgs = document.getElementById('messages');
+  if (msgs) msgs.innerHTML = '<div class="hatch-anim"><div class="egg">🥚</div><div class="status-text">Waking up...</div></div>';
 
-    // Send to real OpenClaw
-    bridge.sendMessage(text);
-  } else {
-    _origSendTeamMessage();
-  }
-};
+  ws.send(JSON.stringify({ type: 'hatch', agentPkg: pkgName }));
+}
+
+function sendMsg() {
+  const input = document.getElementById('msgInput');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text || !selectedAgent) return;
+  input.value = '';
+
+  const st = agentStates[selectedAgent];
+  st.messages.push({ role:'user', text });
+  renderChat();
+
+  ws.send(JSON.stringify({ type:'chat', agentPkg: selectedAgent, message: text }));
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
 
 // Init
-renderFeed();
-updateClock();
-setInterval(updateClock, 1000);
-
-// Init bridge
-initBridge();
+loadAgents();
+connectWS();
 </script>
 </body>
 </html>
