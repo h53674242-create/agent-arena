@@ -146,9 +146,10 @@ function handleMsg(msg) {
   if (msg.type === 'chat-delta') {
     const id = pkgToId(msg.agentPkg);
     if (!chatState[id]) return;
-    if (!streamBuffers[msg.runId]) streamBuffers[msg.runId] = '';
-    streamBuffers[msg.runId] += extractText(msg.message);
-    if (selectedAgent === id) updateStream(msg.runId, streamBuffers[msg.runId]);
+    // chat-delta messages contain cumulative text, not incremental
+    const text = extractText(msg.message);
+    if (text) streamBuffers[msg.runId] = text;
+    if (selectedAgent === id) updateStream(msg.runId, streamBuffers[msg.runId] || '');
   }
 
   if (msg.type === 'chat-final') {
@@ -167,6 +168,7 @@ function handleMsg(msg) {
 function extractText(m) {
   if (typeof m === 'string') return m;
   if (Array.isArray(m)) return m.filter(p=>p.type==='text').map(p=>p.text).join('');
+  if (m?.content) return extractText(m.content);
   return m?.text || '';
 }
 

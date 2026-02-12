@@ -487,6 +487,7 @@ wss.on('connection', (clientWs) => {
           // Subscribe to events for this new session
           const cleanup = gateway.on('chat', (payload) => {
             if (payload.sessionKey !== sessionKey) return;
+            console.log(`  📨 [${clientId}] chat event: state=${payload.state} runId=${payload.runId} msgLen=${JSON.stringify(payload.message)?.length || 0}`);
             if (payload.state === 'delta') {
               clientWs.send(JSON.stringify({ type: 'chat-delta', agentPkg: msg.agentPkg, runId: payload.runId, message: payload.message, sessionKey }));
             }
