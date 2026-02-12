@@ -322,7 +322,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // API: signup
-  if (url.pathname === '/api/signup' && req.method === 'POST') {
+  if ((url.pathname === '/api/signup' || url.pathname === '/api/waitlist') && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => body += chunk);
     req.on('end', () => {

@@ -637,8 +637,30 @@ function toggleFaq(el) {
 }
 
 // Waitlist form
-function handleWaitlist(e) {
+async function handleWaitlist(e) {
   e.preventDefault();
+  var email = document.getElementById('waitlistEmail').value.trim();
+  if (!email) return;
+
+  // Try formsubmit.co (works on GitHub Pages)
+  try {
+    await fetch('https://formsubmit.co/ajax/hopper@openclaw.ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ email: email, source: 'agent-arena-landing', _subject: 'New Agent Arena Waitlist Signup!' })
+    });
+  } catch(err) {}
+
+  // Also try local server if running
+  try {
+    await fetch('/api/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, source: 'landing', timestamp: new Date().toISOString() }),
+      signal: AbortSignal.timeout(2000)
+    });
+  } catch(err) {}
+
   document.getElementById('waitlistSuccess').style.display = 'block';
   document.querySelector('.waitlist-form').style.display = 'none';
 }

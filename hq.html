@@ -143,23 +143,41 @@
   .chat-input button { padding:8px 14px; background:var(--accent); color:#000; border:none;
     border-radius:6px; font-weight:600; cursor:pointer; font-size:12px; }
 
-  /* Setup gate */
-  .setup-gate { display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; }
+  /* Setup gate / Waitlist */
+  .setup-gate { display:none; flex:1; flex-direction:column; align-items:center; padding:60px 20px; text-align:center; overflow-y:auto; }
   .setup-gate.active { display:flex; }
-  .setup-gate h1 { font-family:'Press Start 2P',monospace; font-size:24px; color:var(--accent); margin-bottom:8px; }
-  .setup-gate .subtitle { color:var(--muted); font-size:15px; margin-bottom:40px; max-width:500px; line-height:1.6; }
-  .setup-steps { max-width:560px; width:100%; text-align:left; }
-  .setup-step { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-bottom:16px; }
-  .setup-step .step-num { font-family:'Press Start 2P',monospace; font-size:9px; color:var(--accent); margin-bottom:8px; }
-  .setup-step h3 { font-size:16px; font-weight:700; margin-bottom:6px; }
-  .setup-step p { font-size:13px; color:var(--muted); line-height:1.5; }
-  .setup-step code { display:block; background:#000; color:var(--green); padding:10px 14px; border-radius:6px; font-size:12px; margin-top:10px; overflow-x:auto; white-space:nowrap; cursor:pointer; position:relative; }
-  .setup-step code:hover::after { content:'click to copy'; position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:9px; color:var(--muted); }
-  .setup-step a { color:var(--accent); text-decoration:underline; }
-  .setup-retry { margin-top:24px; padding:12px 28px; background:var(--accent); color:#000; border:none; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; transition:all 0.2s; }
-  .setup-retry:hover { transform:scale(1.05); }
-  .setup-retry:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
-  .setup-status { margin-top:12px; font-size:12px; color:var(--muted); }
+  .setup-gate h1 { font-family:'Press Start 2P',monospace; font-size:28px; color:var(--accent); margin-bottom:12px; line-height:1.4; }
+  .setup-gate .subtitle { color:var(--muted); font-size:16px; margin-bottom:48px; max-width:520px; line-height:1.7; }
+  .setup-gate .hero-emoji { font-size:64px; margin-bottom:20px; animation: float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+  /* Waitlist form */
+  .waitlist-box { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:32px 36px; max-width:480px; width:100%; margin-bottom:32px; }
+  .waitlist-box h2 { font-size:20px; font-weight:800; margin-bottom:6px; }
+  .waitlist-box .wl-sub { font-size:13px; color:var(--muted); margin-bottom:20px; }
+  .waitlist-form { display:flex; gap:8px; }
+  .waitlist-form input { flex:1; padding:12px 16px; background:#000; border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; outline:none; }
+  .waitlist-form input:focus { border-color:var(--accent); }
+  .waitlist-form button { padding:12px 24px; background:var(--accent); color:#000; border:none; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+  .waitlist-form button:hover { transform:scale(1.03); filter:brightness(1.1); }
+  .waitlist-form button:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+  .waitlist-success { display:none; text-align:center; padding:16px 0; }
+  .waitlist-success .check { font-size:40px; margin-bottom:8px; }
+  .waitlist-success h3 { font-size:18px; color:var(--green); margin-bottom:4px; }
+  .waitlist-success p { font-size:13px; color:var(--muted); }
+  .waitlist-error { color:var(--red); font-size:12px; margin-top:8px; display:none; }
+
+  /* Features preview */
+  .preview-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; max-width:600px; width:100%; margin-bottom:32px; }
+  .preview-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 16px; text-align:center; }
+  .preview-card .pc-icon { font-size:28px; margin-bottom:8px; }
+  .preview-card h3 { font-size:13px; font-weight:700; margin-bottom:4px; }
+  .preview-card p { font-size:11px; color:var(--muted); line-height:1.4; }
+
+  .waitlist-count { font-size:13px; color:var(--muted); margin-top:8px; }
+  .waitlist-count span { color:var(--accent); font-weight:700; }
+
+  @media(max-width:600px) { .preview-grid { grid-template-columns:1fr; } .waitlist-form { flex-direction:column; } }
 
   .hq-content { display:flex; flex:1; overflow:hidden; }
   .hq-content.hidden { display:none; }
@@ -182,32 +200,46 @@
   <span class="status offline" id="gwStatus">● Disconnected</span>
 </nav>
 
-<!-- Setup Gate: shown when OpenClaw not detected -->
+<!-- Waitlist Gate: shown when not running locally -->
 <div class="setup-gate" id="setupGate">
-  <h1>🦞 Agent Arena HQ</h1>
-  <p class="subtitle">HQ runs locally on your machine. To use it, you need OpenClaw installed and the Agent Arena server running.</p>
-  <div class="setup-steps">
-    <div class="setup-step">
-      <div class="step-num">STEP 01</div>
-      <h3>Install OpenClaw</h3>
-      <p>OpenClaw is the runtime that powers your AI agents. Get it at <a href="https://github.com/openclaw/openclaw" target="_blank">github.com/openclaw/openclaw</a> or:</p>
-      <code onclick="navigator.clipboard.writeText('npm install -g openclaw')">npm install -g openclaw</code>
+  <div class="hero-emoji">🦞</div>
+  <h1>Your AI Team HQ</h1>
+  <p class="subtitle">A virtual office where your AI agents work together. Chat with them, watch them collaborate, and manage your team — all running locally on your machine.</p>
+
+  <div class="waitlist-box">
+    <div id="waitlistFormWrap">
+      <h2>Join the Waitlist</h2>
+      <p class="wl-sub">Get early access when we launch. Be first to hire your AI team.</p>
+      <div class="waitlist-form">
+        <input type="email" id="waitlistEmail" placeholder="you@example.com" required>
+        <button id="waitlistBtn" onclick="submitWaitlist()">Join Waitlist</button>
+      </div>
+      <div class="waitlist-error" id="waitlistError"></div>
     </div>
-    <div class="setup-step">
-      <div class="step-num">STEP 02</div>
-      <h3>Install an Agent</h3>
-      <p>Pick an agent and run the installer. It sets up the agent's workspace, identity, and connects it to your gateway.</p>
-      <code onclick="navigator.clipboard.writeText(this.textContent)">curl -fsSL raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s founder-agent</code>
-    </div>
-    <div class="setup-step">
-      <div class="step-num">STEP 03</div>
-      <h3>Start the Arena Server</h3>
-      <p>Clone the repo and start the local HQ server. Then refresh this page.</p>
-      <code onclick="navigator.clipboard.writeText('cd agent-arena && node server.js')">cd agent-arena && node server.js</code>
+    <div class="waitlist-success" id="waitlistSuccess">
+      <div class="check">✅</div>
+      <h3>You're on the list!</h3>
+      <p>We'll email you when HQ is ready. In the meantime, check out our <a href="agents.html" style="color:var(--accent)">agent roster</a>.</p>
     </div>
   </div>
-  <button class="setup-retry" id="retryBtn" onclick="checkConnection()">🔄 Check Connection</button>
-  <div class="setup-status" id="setupStatus">Checking for local server...</div>
+
+  <div class="preview-grid">
+    <div class="preview-card">
+      <div class="pc-icon">🏢</div>
+      <h3>Virtual Office</h3>
+      <p>Watch your agents work at their desks in real-time</p>
+    </div>
+    <div class="preview-card">
+      <div class="pc-icon">💬</div>
+      <h3>Team Chat</h3>
+      <p>Message all your agents at once or DM individually</p>
+    </div>
+    <div class="preview-card">
+      <div class="pc-icon">🔒</div>
+      <h3>100% Local</h3>
+      <p>Everything runs on your machine. Your data never leaves</p>
+    </div>
+  </div>
 </div>
 
 <!-- Actual HQ: shown when connected -->
@@ -283,11 +315,6 @@ const LOCAL_SERVER = `${location.protocol}//${location.host}`;
 
 // Connection gate: check if the local server is reachable
 async function checkConnection() {
-  var btn = document.getElementById('retryBtn');
-  var status = document.getElementById('setupStatus');
-  btn.disabled = true;
-  status.textContent = 'Checking for local server...';
-
   try {
     var res = await fetch(LOCAL_SERVER + '/api/agents', { signal: AbortSignal.timeout(3000) });
     if (res.ok) {
@@ -303,15 +330,81 @@ async function checkConnection() {
     }
     throw new Error('not ok');
   } catch(e) {
+    // Not running locally — show waitlist
     document.getElementById('setupGate').classList.add('active');
-    status.textContent = 'No local server detected. Follow the steps above to get started.';
-    btn.disabled = false;
-
-    // Check if we're on GitHub Pages (not localhost)
-    if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-      status.textContent = 'You\u2019re viewing this on the web. HQ only works locally \u2014 follow the steps above to set it up on your machine.';
-    }
   }
+}
+
+// Waitlist submission — stores to server /api/waitlist if local, or localStorage + GitHub issue fallback
+async function submitWaitlist() {
+  var emailInput = document.getElementById('waitlistEmail');
+  var btn = document.getElementById('waitlistBtn');
+  var errEl = document.getElementById('waitlistError');
+  var email = emailInput.value.trim();
+
+  errEl.style.display = 'none';
+
+  // Validate email
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'Please enter a valid email address.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Joining...';
+
+  try {
+    // Try local server first (has /api/waitlist endpoint)
+    var res = await fetch('/api/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, source: 'hq', timestamp: new Date().toISOString() }),
+      signal: AbortSignal.timeout(3000)
+    });
+    if (res.ok) {
+      showWaitlistSuccess();
+      return;
+    }
+  } catch(e) {
+    // Local server not available — use formsubmit.co as fallback
+  }
+
+  try {
+    // Fallback: formsubmit.co (emails go to hopper@openclaw.ai)
+    var res2 = await fetch('https://formsubmit.co/ajax/hopper@openclaw.ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ email: email, source: 'agent-arena-hq', _subject: 'New Agent Arena Waitlist Signup!' })
+    });
+    if (res2.ok) {
+      showWaitlistSuccess();
+      return;
+    }
+  } catch(e2) {
+    // Last resort: just store locally
+  }
+
+  // Absolute fallback: localStorage
+  var stored = JSON.parse(localStorage.getItem('waitlist-emails') || '[]');
+  stored.push({ email: email, timestamp: new Date().toISOString() });
+  localStorage.setItem('waitlist-emails', JSON.stringify(stored));
+  showWaitlistSuccess();
+}
+
+function showWaitlistSuccess() {
+  document.getElementById('waitlistFormWrap').style.display = 'none';
+  document.getElementById('waitlistSuccess').style.display = 'block';
+  localStorage.setItem('waitlist-joined', 'true');
+}
+
+// If already joined, show success state
+if (localStorage.getItem('waitlist-joined')) {
+  setTimeout(function() {
+    var fw = document.getElementById('waitlistFormWrap');
+    var ws = document.getElementById('waitlistSuccess');
+    if (fw && ws) { fw.style.display = 'none'; ws.style.display = 'block'; }
+  }, 100);
 }
 
 // Auto-check on load
