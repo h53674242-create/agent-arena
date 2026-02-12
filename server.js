@@ -210,6 +210,20 @@ const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return; }
 
+  // API: registered agents (from gateway config) — must be before /api/agents/:name
+  if (url.pathname === '/api/agents/registered') {
+    try {
+      const config = JSON.parse(fs.readFileSync(path.join(require('os').homedir(), '.openclaw/openclaw.json'), 'utf8'));
+      const agentsList = (config.agents?.list || []).map(a => ({ id: a.id, name: a.name || a.id }));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(agentsList));
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify([]));
+    }
+    return;
+  }
+
   // API: list agents
   if (url.pathname === '/api/agents') {
     const agents = [];
