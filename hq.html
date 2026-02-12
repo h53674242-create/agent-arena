@@ -214,6 +214,7 @@ let selectedAgent = null;
 let agentData = {};
 let chatState = {};
 let streamBuffers = {};
+let teamPending = new Set(); // agentIds with pending team responses
 
 // Session persistence
 function saveKeys() { const k={}; for(const[id,s]of Object.entries(chatState)) if(s.sessionKey) k[id]=s.sessionKey; localStorage.setItem('hq-sessions',JSON.stringify(k)); }
@@ -257,6 +258,15 @@ function handleMsg(msg) {
     const text=extractText(msg.message);
     if(text) streamBuffers[msg.runId]=text;
     if(selectedAgent===id) updateStream(msg.runId,streamBuffers[msg.runId]||'');
+    // Stream in team panel too
+    if(teamPending.has(id) && text) {
+      const a=agentData[id];
+      const el=document.getElementById('teamMessages');
+      let s=document.getElementById('team-stream-'+id);
+      if(!s){s=document.createElement('div');s.id='team-stream-'+id;s.className='msg agent';el.appendChild(s);}
+      s.innerHTML=`<strong>${a?.emoji||'🤖'} ${a?.displayName||id}:</strong><br>${esc(text)}`;
+      el.scrollTop=el.scrollHeight;
+    }
   }
 
   if(msg.type==='chat-final') {
@@ -267,6 +277,16 @@ function handleMsg(msg) {
     delete streamBuffers[msg.runId];
     if(text) st.messages.push({role:'agent',text});
     if(selectedAgent===id) renderDM();
+    // If this was a team message response, show in team panel too
+    if(text && teamPending.has(id)) {
+      teamPending.delete(id);
+      const a=agentData[id];
+      const el=document.getElementById('teamMessages');
+      const streamEl=document.getElementById('team-stream-'+id);
+      if(streamEl) streamEl.remove();
+      el.innerHTML+=`<div class="msg agent"><strong>${a?.emoji||'🤖'} ${a?.displayName||id}:</strong><br>${esc(text)}</div>`;
+      el.scrollTop=el.scrollHeight;
+    }
   }
 
   if(msg.type==='history') {
@@ -404,8 +424,9 @@ function sendTeam() {
   const el=document.getElementById('teamMessages');
   el.innerHTML+=`<div class="msg user">${esc(text)}</div>`;
   el.scrollTop=el.scrollHeight;
-  // Send to all agents
+  // Send to all agents and mark as pending team responses
   for(const[id,a]of Object.entries(agentData)){
+    teamPending.add(id);
     ws.send(JSON.stringify({type:'chat',agentPkg:a.pkgName,message:'[Team Chat] '+text,sessionKey:chatState[id]?.sessionKey}));
   }
 }
