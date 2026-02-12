@@ -143,8 +143,29 @@
   .chat-input button { padding:8px 14px; background:var(--accent); color:#000; border:none;
     border-radius:6px; font-weight:600; cursor:pointer; font-size:12px; }
 
+  /* Setup gate */
+  .setup-gate { display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; }
+  .setup-gate.active { display:flex; }
+  .setup-gate h1 { font-family:'Press Start 2P',monospace; font-size:24px; color:var(--accent); margin-bottom:8px; }
+  .setup-gate .subtitle { color:var(--muted); font-size:15px; margin-bottom:40px; max-width:500px; line-height:1.6; }
+  .setup-steps { max-width:560px; width:100%; text-align:left; }
+  .setup-step { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-bottom:16px; }
+  .setup-step .step-num { font-family:'Press Start 2P',monospace; font-size:9px; color:var(--accent); margin-bottom:8px; }
+  .setup-step h3 { font-size:16px; font-weight:700; margin-bottom:6px; }
+  .setup-step p { font-size:13px; color:var(--muted); line-height:1.5; }
+  .setup-step code { display:block; background:#000; color:var(--green); padding:10px 14px; border-radius:6px; font-size:12px; margin-top:10px; overflow-x:auto; white-space:nowrap; cursor:pointer; position:relative; }
+  .setup-step code:hover::after { content:'click to copy'; position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:9px; color:var(--muted); }
+  .setup-step a { color:var(--accent); text-decoration:underline; }
+  .setup-retry { margin-top:24px; padding:12px 28px; background:var(--accent); color:#000; border:none; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; transition:all 0.2s; }
+  .setup-retry:hover { transform:scale(1.05); }
+  .setup-retry:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+  .setup-status { margin-top:12px; font-size:12px; color:var(--muted); }
+
+  .hq-content { display:flex; flex:1; overflow:hidden; }
+  .hq-content.hidden { display:none; }
+
   @media(max-width:768px) {
-    .main { flex-direction:column; }
+    .hq-content { flex-direction:column; }
     .office-wrap { height:35vh; border-right:none; border-bottom:1px solid var(--border); }
     .chat-wrap { width:100%; flex:1; }
   }
@@ -161,7 +182,36 @@
   <span class="status offline" id="gwStatus">● Disconnected</span>
 </nav>
 
-<div class="main">
+<!-- Setup Gate: shown when OpenClaw not detected -->
+<div class="setup-gate" id="setupGate">
+  <h1>🦞 Agent Arena HQ</h1>
+  <p class="subtitle">HQ runs locally on your machine. To use it, you need OpenClaw installed and the Agent Arena server running.</p>
+  <div class="setup-steps">
+    <div class="setup-step">
+      <div class="step-num">STEP 01</div>
+      <h3>Install OpenClaw</h3>
+      <p>OpenClaw is the runtime that powers your AI agents. Get it at <a href="https://github.com/openclaw/openclaw" target="_blank">github.com/openclaw/openclaw</a> or:</p>
+      <code onclick="navigator.clipboard.writeText('npm install -g openclaw')">npm install -g openclaw</code>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">STEP 02</div>
+      <h3>Install an Agent</h3>
+      <p>Pick an agent and run the installer. It sets up the agent's workspace, identity, and connects it to your gateway.</p>
+      <code onclick="navigator.clipboard.writeText(this.textContent)">curl -fsSL raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s founder-agent</code>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">STEP 03</div>
+      <h3>Start the Arena Server</h3>
+      <p>Clone the repo and start the local HQ server. Then refresh this page.</p>
+      <code onclick="navigator.clipboard.writeText('cd agent-arena && node server.js')">cd agent-arena && node server.js</code>
+    </div>
+  </div>
+  <button class="setup-retry" id="retryBtn" onclick="checkConnection()">🔄 Check Connection</button>
+  <div class="setup-status" id="setupStatus">Checking for local server...</div>
+</div>
+
+<!-- Actual HQ: shown when connected -->
+<div class="hq-content hidden" id="hqContent">
   <div class="office-wrap">
     <div class="office-topbar">
       <h2>🏢 THE OFFICE</h2>
@@ -225,9 +275,46 @@
     </div>
   </div>
 </div>
+</div>
 
 <script>
 const WS_URL = `ws://${location.host}`;
+const LOCAL_SERVER = `${location.protocol}//${location.host}`;
+
+// Connection gate: check if the local server is reachable
+async function checkConnection() {
+  var btn = document.getElementById('retryBtn');
+  var status = document.getElementById('setupStatus');
+  btn.disabled = true;
+  status.textContent = 'Checking for local server...';
+
+  try {
+    var res = await fetch(LOCAL_SERVER + '/api/agents', { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      // Server is running! Show HQ
+      document.getElementById('setupGate').style.display = 'none';
+      document.getElementById('hqContent').classList.remove('hidden');
+      init();
+      connectWS();
+      updateClock();
+      setInterval(updateClock, 1000);
+      setTimeout(loadChat, 100);
+      return;
+    }
+    throw new Error('not ok');
+  } catch(e) {
+    status.textContent = 'No local server detected. Follow the steps above to get started.';
+    btn.disabled = false;
+
+    // Check if we're on GitHub Pages (not localhost)
+    if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+      status.textContent = 'You\u2019re viewing this on the web. HQ only works locally \u2014 follow the steps above to set it up on your machine.';
+    }
+  }
+}
+
+// Auto-check on load
+checkConnection();
 let ws = null;
 let agentData = {};   // id -> {emoji, displayName, pkgName, ...}
 let sessions = {};    // id -> sessionKey (for the arena session)
@@ -406,12 +493,7 @@ function loadChat() {
   try { const sk = JSON.parse(localStorage.getItem('hq-sessions')||'{}'); Object.assign(sessions, sk); } catch{}
 }
 
-init();
-connectWS();
-updateClock();
-setInterval(updateClock, 1000);
-// Load saved chat after a tick (so DOM is ready)
-setTimeout(loadChat, 100);
+// init/connect/clock are called by checkConnection() on success
 </script>
 </body>
 </html>
