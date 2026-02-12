@@ -67,6 +67,49 @@
   .coffee-station { position:absolute; z-index:2; text-align:center; font-size:9px; color:var(--muted); }
   .coffee-station .icon { font-size:18px; }
 
+  /* Whiteboard */
+  .whiteboard { position:absolute; z-index:4; background:#e8e4df; border-radius:4px;
+    border:3px solid #888; box-shadow:0 4px 12px rgba(0,0,0,0.4); padding:10px; cursor:pointer;
+    transition: transform 0.2s; }
+  .whiteboard:hover { transform:scale(1.03); }
+  .whiteboard .wb-title { font-family:'Press Start 2P',monospace; font-size:6px; color:#333; margin-bottom:6px;
+    border-bottom:1px dashed #aaa; padding-bottom:4px; }
+  .whiteboard .wb-item { font-size:8px; color:#444; line-height:1.6; font-family:'Inter',sans-serif; }
+  .whiteboard .wb-item.done { text-decoration:line-through; color:#999; }
+  .whiteboard::before { content:'📌'; position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:12px; }
+
+  /* Sticky notes */
+  .sticky { position:absolute; width:48px; height:48px; font-size:7px; padding:5px;
+    border-radius:1px; box-shadow:2px 3px 6px rgba(0,0,0,0.3); z-index:4;
+    font-family:'Inter',sans-serif; line-height:1.3; color:#333; cursor:pointer;
+    transition:transform 0.2s; }
+  .sticky:hover { transform:rotate(0deg) scale(1.15); z-index:20; }
+  .sticky.yellow { background:#fef08a; transform:rotate(-2deg); }
+  .sticky.pink { background:#fda4af; transform:rotate(3deg); }
+  .sticky.blue { background:#93c5fd; transform:rotate(-1deg); }
+  .sticky.green { background:#86efac; transform:rotate(2deg); }
+
+  /* Fun elements */
+  .pizza-box { position:absolute; z-index:3; font-size:10px; cursor:pointer; }
+  .pizza-box:hover::after { content:'(3 slices left)'; position:absolute; top:-14px; left:0;
+    font-size:7px; color:var(--muted); white-space:nowrap; }
+  .cat { position:absolute; z-index:5; font-size:18px; cursor:pointer;
+    animation:cat-sleep 3s ease-in-out infinite; }
+  @keyframes cat-sleep { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(0.95)} }
+  .cat:hover::after { content:'zzz...'; position:absolute; top:-12px; right:-8px;
+    font-size:8px; color:var(--muted); }
+  .trophy { position:absolute; z-index:3; font-size:16px; cursor:pointer; }
+  .trophy:hover::after { content:'First Ship Award'; position:absolute; top:-14px; left:-10px;
+    font-size:7px; color:var(--accent); white-space:nowrap; }
+  .clock-widget { position:absolute; z-index:3; background:rgba(0,0,0,0.3); border:1px solid var(--border);
+    border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+    font-size:9px; color:var(--muted); }
+  .bookshelf { position:absolute; z-index:2; font-size:9px; color:var(--muted); padding:4px 8px;
+    background:rgba(92,61,30,0.4); border-radius:3px; border:1px solid rgba(92,61,30,0.5); }
+  .rip-plant { position:absolute; z-index:2; font-size:14px; cursor:pointer; }
+  .rip-plant:hover::after { content:'RIP Gary 🪦'; position:absolute; top:-14px; left:-4px;
+    font-size:7px; color:var(--muted); white-space:nowrap; }
+
   .agent-char { position:absolute; z-index:10; cursor:pointer; text-align:center; transition: left 2s ease, top 2s ease; }
   .agent-char:hover { z-index:20; }
   .agent-char:hover .bubble { opacity:1 !important; }
@@ -131,10 +174,38 @@
         <div class="poster p2">📈 GROW OR DIE</div>
         <div class="poster p3">🔒 TRUST NO PORT</div>
       </div>
+      <!-- Whiteboard -->
+      <div class="whiteboard" style="left:350px;top:10px;width:140px;" id="whiteboard" onclick="editGoals()">
+        <div class="wb-title">🎯 TEAM GOALS</div>
+        <div id="goalsList">
+          <div class="wb-item done">✅ Build HQ</div>
+          <div class="wb-item done">✅ Multi-agent chat</div>
+          <div class="wb-item">⬜ First paying user</div>
+          <div class="wb-item">⬜ Launch tweet</div>
+          <div class="wb-item">⬜ 100 installs</div>
+        </div>
+      </div>
+
+      <!-- Sticky notes -->
+      <div class="sticky yellow" style="left:510px;top:14px;">ship ugly tuesday > perfect friday</div>
+      <div class="sticky pink" style="left:510px;top:65px;">Creator: 5am trends ✅</div>
+      <div class="sticky blue" style="left:575px;top:30px;">need stripe link!!</div>
+
+      <!-- Plants -->
       <div class="plant" style="left:20px;top:120px;">🪴</div>
       <div class="plant" style="right:20px;top:130px;">🌿</div>
+      <div class="rip-plant" style="left:55px;top:125px;">🥀</div>
+
+      <!-- Furniture -->
       <div class="couch" style="left:30px;bottom:40px;">🛋️ chill zone</div>
       <div class="coffee-station" style="right:30px;top:120px;"><div class="icon">☕</div>COFFEE</div>
+      <div class="bookshelf" style="left:160px;bottom:30px;">📚 AGENTS.md | SOUL.md | MEMORY.md</div>
+
+      <!-- Fun stuff -->
+      <div class="pizza-box" style="left:400px;bottom:50px;">🍕</div>
+      <div class="cat" style="left:65px;bottom:55px;">😺</div>
+      <div class="trophy" style="right:80px;bottom:40px;">🏆</div>
+
       <div id="desks"></div>
       <div id="chars"></div>
     </div>
@@ -298,6 +369,23 @@ function send() {
       message: text, sessionKey: sessions[id] || null,
     }));
   }
+}
+
+// Whiteboard goals editor
+function editGoals() {
+  const current = [];
+  document.querySelectorAll('#goalsList .wb-item').forEach(el => {
+    current.push(el.textContent.trim());
+  });
+  const input = prompt('Edit goals (one per line):', current.join('\n'));
+  if (input === null) return;
+  const goals = input.split('\n').filter(g => g.trim());
+  const list = document.getElementById('goalsList');
+  list.innerHTML = goals.map(g => {
+    const done = g.startsWith('✅') || g.startsWith('[x]');
+    const text = g.replace(/^\[x\]\s*/, '✅ ').trim();
+    return `<div class="wb-item${done ? ' done' : ''}">${text.startsWith('✅') || text.startsWith('⬜') ? '' : '⬜ '}${text}</div>`;
+  }).join('');
 }
 
 function updateClock() {
