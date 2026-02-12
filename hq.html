@@ -14,7 +14,6 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column; }
 
-  /* Nav */
   nav { padding:10px 20px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px; }
   nav .logo { font-family:'Press Start 2P',monospace; font-size:11px; color:var(--accent); }
   nav a { color:var(--muted); text-decoration:none; font-size:13px; }
@@ -24,10 +23,8 @@
   nav .status.online { color:var(--green); background:rgba(34,197,94,0.1); }
   nav .status.offline { color:var(--red); background:rgba(239,68,68,0.1); }
 
-  /* Main layout */
   .main { flex:1; display:flex; overflow:hidden; }
 
-  /* Agent list (left) */
   .agents-panel { width:280px; border-right:1px solid var(--border); display:flex; flex-direction:column; }
   .agents-header { padding:14px 16px; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid var(--border); }
   .agents-list { flex:1; overflow-y:auto; }
@@ -39,17 +36,17 @@
   .agent-card .agent-info { flex:1; }
   .agent-card .agent-name { font-size:13px; font-weight:600; }
   .agent-card .agent-role { font-size:11px; color:var(--muted); margin-top:2px; }
-  .agent-card .agent-dot { width:8px; height:8px; border-radius:50%; }
+  .agent-card .agent-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
   .agent-card .agent-dot.online { background:var(--green); box-shadow:0 0 6px rgba(34,197,94,0.4); }
   .agent-card .agent-dot.offline { background:var(--muted); }
   .empty-agents { padding:40px 20px; text-align:center; color:var(--muted); font-size:13px; line-height:1.6; }
   .empty-agents a { color:var(--accent); text-decoration:none; }
 
-  /* Chat area (right) */
   .chat-area { flex:1; display:flex; flex-direction:column; }
   .chat-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
   .chat-header .name { font-weight:600; font-size:14px; }
   .chat-header .meta { font-size:11px; color:var(--muted); }
+  .chat-header .meta.online { color:var(--green); }
   .chat-header .hatch-btn { margin-left:auto; padding:6px 14px; background:var(--accent); color:#000; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; }
   .chat-header .hatch-btn:hover { filter:brightness(1.1); }
   .chat-header .hatch-btn:disabled { opacity:0.5; cursor:default; }
@@ -59,8 +56,6 @@
   .msg.agent { background:var(--surface); border:1px solid var(--border); align-self:flex-start; }
   .msg.user { background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.2); align-self:flex-end; }
   .msg.system { align-self:center; color:var(--muted); font-size:11px; background:none; border:none; padding:4px; }
-  .msg code { background:rgba(255,255,255,0.06); padding:1px 4px; border-radius:3px; font-size:12px; }
-  .msg pre { background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; overflow-x:auto; margin:6px 0; font-size:12px; }
   .typing { align-self:flex-start; color:var(--muted); font-size:12px; padding:8px 14px; }
   .typing span { animation:blink 1.4s infinite; }
   .typing span:nth-child(2) { animation-delay:0.2s; }
@@ -75,13 +70,11 @@
   .chat-input button { padding:10px 16px; background:var(--accent); color:#000; border:none; border-radius:8px; font-weight:600; cursor:pointer; font-size:13px; }
   .chat-input button:disabled { opacity:0.4; cursor:default; }
 
-  /* Hatch animation */
   .hatch-anim { text-align:center; padding:60px 20px; }
   .hatch-anim .egg { font-size:64px; animation:wobble 0.5s ease-in-out infinite; }
   .hatch-anim .status-text { margin-top:12px; color:var(--muted); font-size:12px; }
   @keyframes wobble { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-5deg)} 75%{transform:rotate(5deg)} }
 
-  /* Mobile */
   @media(max-width:640px) {
     .agents-panel { width:100%; border-right:none; border-bottom:1px solid var(--border); max-height:40vh; }
     .main { flex-direction:column; }
@@ -112,7 +105,7 @@
   </div>
 
   <div class="chat-area" id="chatArea">
-    <div class="no-chat" id="noChat">← Select an agent to chat</div>
+    <div class="no-chat">← Select an agent to chat</div>
   </div>
 </div>
 
@@ -120,136 +113,167 @@
 const WS_URL = `ws://${location.host}`;
 let ws = null;
 let selectedAgent = null;
-let agentStates = {}; // agentPkg -> { hatched, sessionKey, messages:[] }
-let streamBuffers = {}; // runId -> accumulated text
+let agentData = {};    // agentId -> { emoji, displayName, role, pkgName, online, sessionKey }
+let chatState = {};    // agentId -> { messages:[], hatched, sessionKey }
+let streamBuffers = {};
 
-// Connect WebSocket
+// ---- WebSocket ----
 function connectWS() {
   ws = new WebSocket(WS_URL);
-  ws.onopen = () => updateGatewayStatus(true);
-  ws.onclose = () => { updateGatewayStatus(false); setTimeout(connectWS, 3000); };
-  ws.onmessage = (e) => {
-    try { handleMsg(JSON.parse(e.data)); } catch(err) { console.error('ws msg error', err); }
-  };
+  ws.onopen = () => updateGW(true);
+  ws.onclose = () => { updateGW(false); setTimeout(connectWS, 3000); };
+  ws.onmessage = (e) => { try { handleMsg(JSON.parse(e.data)); } catch(err) { console.error(err); } };
 }
 
-function updateGatewayStatus(connected) {
+function updateGW(on) {
   const el = document.getElementById('gwStatus');
-  if (connected) { el.textContent = '● Connected'; el.className = 'status online'; }
-  else { el.textContent = '● Disconnected'; el.className = 'status offline'; }
+  el.textContent = on ? '● Connected' : '● Disconnected';
+  el.className = 'status ' + (on ? 'online' : 'offline');
 }
 
 function handleMsg(msg) {
-  if (msg.type === 'status') {
-    updateGatewayStatus(msg.connected);
-  }
+  if (msg.type === 'status') updateGW(msg.connected);
 
   if (msg.type === 'hatch-ok') {
-    const st = agentStates[msg.agentPkg];
+    const id = pkgToId(msg.agentPkg);
+    const st = chatState[id];
     if (st) { st.hatched = true; st.sessionKey = msg.sessionKey; }
-    if (selectedAgent === msg.agentPkg) renderChat();
+    if (agentData[id]) agentData[id].online = true;
+    updateAgentDot(id);
+    if (selectedAgent === id) renderChat();
   }
 
   if (msg.type === 'chat-delta') {
-    const st = agentStates[msg.agentPkg];
-    if (!st) return;
+    const id = pkgToId(msg.agentPkg);
+    if (!chatState[id]) return;
     if (!streamBuffers[msg.runId]) streamBuffers[msg.runId] = '';
-    // Extract text
-    let text = '';
-    if (typeof msg.message === 'string') text = msg.message;
-    else if (Array.isArray(msg.message)) msg.message.forEach(p => { if (p.type==='text') text += p.text; });
-    else if (msg.message?.text) text = msg.message.text;
-    streamBuffers[msg.runId] += text;
-    if (selectedAgent === msg.agentPkg) updateStreamingMsg(msg.runId, streamBuffers[msg.runId]);
+    streamBuffers[msg.runId] += extractText(msg.message);
+    if (selectedAgent === id) updateStream(msg.runId, streamBuffers[msg.runId]);
   }
 
   if (msg.type === 'chat-final') {
-    const st = agentStates[msg.agentPkg];
+    const id = pkgToId(msg.agentPkg);
+    const st = chatState[id];
     if (!st) return;
-    let text = streamBuffers[msg.runId] || '';
-    if (!text) {
-      if (typeof msg.message === 'string') text = msg.message;
-      else if (Array.isArray(msg.message)) msg.message.forEach(p => { if (p.type==='text') text += p.text; });
-      else if (msg.message?.text) text = msg.message.text;
-    }
+    let text = streamBuffers[msg.runId] || extractText(msg.message);
     delete streamBuffers[msg.runId];
-    if (text) { st.messages.push({ role:'agent', text }); }
-    if (selectedAgent === msg.agentPkg) renderChat();
+    if (text) st.messages.push({ role:'agent', text });
+    if (selectedAgent === id) renderChat();
   }
 
-  if (msg.type === 'agent-event') {
-    // Could show tool use in future
-  }
-
-  if (msg.type === 'error') {
-    console.error('Server error:', msg.error);
-  }
+  if (msg.type === 'error') console.error('Server:', msg.error);
 }
 
-// Fetch registered agents from server
-async function loadAgents() {
+function extractText(m) {
+  if (typeof m === 'string') return m;
+  if (Array.isArray(m)) return m.filter(p=>p.type==='text').map(p=>p.text).join('');
+  return m?.text || '';
+}
+
+function pkgToId(pkg) { return pkg?.replace(/-agent$/, '') || pkg; }
+
+// ---- Load agents + sessions ----
+async function init() {
   try {
-    const res = await fetch('/api/agents/registered');
-    const agents = await res.json();
-    // Also get package info for display
-    const pkgRes = await fetch('/api/agents');
+    const [regRes, pkgRes, sessRes] = await Promise.all([
+      fetch('/api/agents/registered'),
+      fetch('/api/agents'),
+      fetch('/api/sessions'),
+    ]);
+    const registered = await regRes.json();
     const packages = await pkgRes.json();
+    const sessions = await sessRes.json();
+
     const pkgMap = {};
     packages.forEach(p => pkgMap[p.name] = p);
 
+    // Build active session map: agentId -> most recent main session
+    const sessionMap = {};
+    sessions.forEach(s => {
+      if (!s.agentId) return;
+      // Prefer main sessions (agent:X:main) over subagent sessions
+      const isMain = s.key?.endsWith(':main');
+      if (!sessionMap[s.agentId] || isMain) {
+        sessionMap[s.agentId] = s;
+      }
+    });
+
     const list = document.getElementById('agentList');
-    if (agents.length === 0) return; // keep empty state
-
+    if (registered.length === 0) return;
     list.innerHTML = '';
-    agents.forEach(a => {
-      const pkg = pkgMap[a.id + '-agent'] || pkgMap[a.id] || {};
-      const emoji = pkg.emoji || '🤖';
-      const displayName = pkg.displayName || a.name || a.id;
-      const role = pkg.tagline || a.id;
-      const pkgName = pkg.name || a.id + '-agent';
 
-      agentStates[pkgName] = agentStates[pkgName] || { hatched:false, sessionKey:null, messages:[] };
+    registered.forEach(a => {
+      const id = a.id;
+      const pkg = pkgMap[id + '-agent'] || pkgMap[id] || {};
+      const session = sessionMap[id];
+      const online = !!session;
+
+      agentData[id] = {
+        emoji: pkg.emoji || '🤖',
+        displayName: pkg.displayName || a.name || id,
+        role: pkg.tagline || id,
+        pkgName: pkg.name || id + '-agent',
+        online,
+        sessionKey: session?.key || null,
+      };
+
+      chatState[id] = chatState[id] || {
+        messages: [],
+        hatched: online,  // already running = already hatched
+        sessionKey: session?.key || null,
+      };
 
       const card = document.createElement('div');
       card.className = 'agent-card';
-      card.dataset.pkg = pkgName;
+      card.id = 'card-' + id;
       card.innerHTML = `
         <div class="agent-top">
-          <span class="agent-emoji">${emoji}</span>
+          <span class="agent-emoji">${agentData[id].emoji}</span>
           <div class="agent-info">
-            <div class="agent-name">${displayName}</div>
-            <div class="agent-role">${role}</div>
+            <div class="agent-name">${agentData[id].displayName}</div>
+            <div class="agent-role">${agentData[id].role}</div>
           </div>
-          <div class="agent-dot offline"></div>
+          <div class="agent-dot ${online ? 'online' : 'offline'}" id="dot-${id}"></div>
         </div>`;
-      card.onclick = () => selectAgent(pkgName, displayName, emoji);
+      card.onclick = () => selectAgent(id);
       list.appendChild(card);
     });
   } catch(e) {
-    console.error('Failed to load agents:', e);
+    console.error('Init failed:', e);
   }
 }
 
-function selectAgent(pkgName, displayName, emoji) {
-  selectedAgent = pkgName;
-  // Update active card
-  document.querySelectorAll('.agent-card').forEach(c => c.classList.toggle('active', c.dataset.pkg === pkgName));
+function updateAgentDot(id) {
+  const dot = document.getElementById('dot-' + id);
+  if (!dot) return;
+  const on = agentData[id]?.online;
+  dot.className = 'agent-dot ' + (on ? 'online' : 'offline');
+}
 
-  const st = agentStates[pkgName];
+function selectAgent(id) {
+  selectedAgent = id;
+  document.querySelectorAll('.agent-card').forEach(c => c.classList.toggle('active', c.id === 'card-' + id));
+  renderChatArea();
+}
+
+function renderChatArea() {
+  const id = selectedAgent;
+  if (!id) return;
+  const a = agentData[id];
+  const st = chatState[id];
   const area = document.getElementById('chatArea');
 
+  const isOnline = a.online || st.hatched;
   area.innerHTML = `
     <div class="chat-header">
-      <span style="font-size:24px">${emoji}</span>
-      <span class="name">${displayName}</span>
-      <span class="meta">${st.hatched ? '● Online' : 'Not started'}</span>
-      <button class="hatch-btn" id="hatchBtn" onclick="hatchAgent('${pkgName}')" ${st.hatched ? 'disabled' : ''}>
-        ${st.hatched ? '✓ Running' : '🥚 Hatch'}
-      </button>
+      <span style="font-size:24px">${a.emoji}</span>
+      <span class="name">${a.displayName}</span>
+      <span class="meta ${isOnline ? 'online' : ''}">${isOnline ? '● Online' : '○ Offline'}</span>
+      ${!isOnline ? `<button class="hatch-btn" id="hatchBtn" onclick="hatchAgent('${id}')">🥚 Hatch</button>` : ''}
     </div>
     <div class="messages" id="messages"></div>
-    <div class="chat-input" id="chatInput" style="${st.hatched ? '' : 'display:none'}">
-      <input type="text" id="msgInput" placeholder="Message ${displayName}..." onkeydown="if(event.key==='Enter')sendMsg()">
+    <div class="chat-input" id="chatInput" style="${isOnline ? '' : 'display:none'}">
+      <input type="text" id="msgInput" placeholder="Message ${a.displayName}..." onkeydown="if(event.key==='Enter')sendMsg()">
       <button onclick="sendMsg()">Send</button>
     </div>`;
 
@@ -258,26 +282,27 @@ function selectAgent(pkgName, displayName, emoji) {
 
 function renderChat() {
   if (!selectedAgent) return;
-  const st = agentStates[selectedAgent];
+  const st = chatState[selectedAgent];
   const msgs = document.getElementById('messages');
   if (!msgs) return;
+  const a = agentData[selectedAgent];
 
-  if (!st.hatched && st.messages.length === 0) {
+  if (st.messages.length === 0 && !st.hatched && !a.online) {
     msgs.innerHTML = '<div class="msg system">Click "Hatch" to wake this agent up</div>';
     return;
   }
 
-  msgs.innerHTML = st.messages.map(m =>
-    `<div class="msg ${m.role}">${escapeHtml(m.text)}</div>`
-  ).join('');
+  if (st.messages.length === 0 && (st.hatched || a.online)) {
+    msgs.innerHTML = '<div class="msg system">Send a message to start chatting</div>';
+  } else {
+    msgs.innerHTML = st.messages.map(m =>
+      `<div class="msg ${m.role}">${esc(m.text)}</div>`
+    ).join('');
+  }
   msgs.scrollTop = msgs.scrollHeight;
-
-  // Show input if hatched
-  const input = document.getElementById('chatInput');
-  if (input) input.style.display = st.hatched ? '' : 'none';
 }
 
-function updateStreamingMsg(runId, text) {
+function updateStream(runId, text) {
   const msgs = document.getElementById('messages');
   if (!msgs) return;
   let el = document.getElementById('stream-' + runId);
@@ -287,19 +312,18 @@ function updateStreamingMsg(runId, text) {
     el.className = 'msg agent';
     msgs.appendChild(el);
   }
-  el.textContent = text;
+  el.innerHTML = esc(text);
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-function hatchAgent(pkgName) {
+function hatchAgent(id) {
   if (!ws || ws.readyState !== 1) return;
+  const a = agentData[id];
   const btn = document.getElementById('hatchBtn');
   if (btn) { btn.disabled = true; btn.textContent = '🐣 Hatching...'; }
-
   const msgs = document.getElementById('messages');
   if (msgs) msgs.innerHTML = '<div class="hatch-anim"><div class="egg">🥚</div><div class="status-text">Waking up...</div></div>';
-
-  ws.send(JSON.stringify({ type: 'hatch', agentPkg: pkgName }));
+  ws.send(JSON.stringify({ type: 'hatch', agentPkg: a.pkgName }));
 }
 
 function sendMsg() {
@@ -309,19 +333,20 @@ function sendMsg() {
   if (!text || !selectedAgent) return;
   input.value = '';
 
-  const st = agentStates[selectedAgent];
+  const st = chatState[selectedAgent];
+  const a = agentData[selectedAgent];
   st.messages.push({ role:'user', text });
   renderChat();
 
-  ws.send(JSON.stringify({ type:'chat', agentPkg: selectedAgent, message: text }));
+  ws.send(JSON.stringify({ type:'chat', agentPkg: a.pkgName, message: text, sessionKey: st.sessionKey }));
 }
 
-function escapeHtml(s) {
+function esc(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 }
 
 // Init
-loadAgents();
+init();
 connectWS();
 </script>
 </body>

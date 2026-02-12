@@ -202,7 +202,7 @@ if (GATEWAY_TOKEN) {
 // HTTP Server
 // ============================================================
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`);
 
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -295,6 +295,29 @@ const server = http.createServer((req, res) => {
   if (url.pathname === '/api/gateway/status') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ connected: gateway?.connected || false }));
+    return;
+  }
+
+  // API: sessions — list active agent sessions from gateway
+  if (url.pathname === '/api/sessions') {
+    if (!gateway?.connected) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify([]));
+      return;
+    }
+    try {
+      const result = await gateway.request('sessions.list', { limit: 50 });
+      const sessions = (result.sessions || result || []).map(s => ({
+        key: s.key, kind: s.kind, label: s.label,
+        updatedAt: s.updatedAt, model: s.model,
+        agentId: s.key?.split(':')?.[1] || null,
+      }));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(sessions));
+    } catch(e) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify([]));
+    }
     return;
   }
 
