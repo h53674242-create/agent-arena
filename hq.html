@@ -104,6 +104,10 @@
   .agent-char.walking .agent-sprite {
     animation: walk 0.6s steps(2) infinite;
   }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
   @keyframes walk {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-4px); }
@@ -667,19 +671,119 @@ function openChat(agentId) {
   const a = agents[agentId];
   document.getElementById('chatAgentName').textContent = a.name;
   document.getElementById('chatAgentName').style.color = a.color;
-  const msgs = document.getElementById('chatMessages');
-  msgs.innerHTML = a.messages.map(m => `
-    <div class="chat-msg ${m.sender}">
-      <div class="msg-sender">${m.sender === 'agent' ? a.emoji + ' ' + a.name : '👤 You'}</div>
-      ${m.text}
-    </div>`).join('');
   showPanel('chat');
-  msgs.scrollTop = msgs.scrollHeight;
+
+  if (hatchedAgents[agentId]) {
+    // Already hatched — show chat with input
+    const inputArea = document.querySelector('#chatPanel .chat-input-area');
+    inputArea.style.display = '';
+    // Don't clear messages — keep the conversation
+  } else {
+    // Not hatched — show hatch screen
+    showHatchScreen(agentId);
+  }
 }
 
 // Map HQ agent ids to package names
 const agentPkgMap = { founder: 'founder-agent', creator: 'creator-agent', devops: 'devops-agent' };
 const chatSessionIds = {}; // per-agent session tracking
+const hatchedAgents = {}; // track which agents have been hatched
+
+function renderMarkdown(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code style="background:#1a1a2e;padding:2px 4px;border-radius:3px;">$1</code>')
+    .replace(/\n/g, '<br>');
+}
+
+function showHatchScreen(agentId) {
+  const a = agents[agentId];
+  const msgs = document.getElementById('chatMessages');
+  const inputArea = document.querySelector('#chatPanel .chat-input-area');
+  inputArea.style.display = 'none'; // hide input until hatched
+
+  msgs.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:24px;">
+      <div style="font-size:64px;margin-bottom:16px;animation:pulse 2s infinite;">🥚</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:12px;color:${a.color};margin-bottom:8px;">${a.name}</div>
+      <div style="font-size:13px;color:#8e8ea0;margin-bottom:24px;max-width:300px;line-height:1.6;">
+        This agent is ready to hatch. Once activated, it'll wake up as a real AI with its own personality and memory.
+      </div>
+      <button onclick="hatchAgent('${agentId}')" id="hatchBtn" style="padding:14px 32px;background:linear-gradient(135deg,${a.color},${a.color}cc);color:#000;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;font-family:'Press Start 2P',monospace;transition:all 0.3s;box-shadow:0 0 20px ${a.color}44;">
+        🐣 HATCH AGENT
+      </button>
+      <div style="font-size:10px;color:#6e6e80;margin-top:12px;">Requires local server on localhost:3333</div>
+    </div>
+  `;
+}
+
+async function hatchAgent(agentId) {
+  const a = agents[agentId];
+  const msgs = document.getElementById('chatMessages');
+  const btn = document.getElementById('hatchBtn');
+  
+  // Hatching animation
+  btn.disabled = true;
+  btn.innerHTML = '🥚 HATCHING...';
+  btn.style.opacity = '0.7';
+  
+  msgs.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:24px;">
+      <div style="font-size:64px;margin-bottom:16px;" id="hatchEgg">🥚</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:11px;color:${a.color};" id="hatchStatus">Initializing agent...</div>
+    </div>
+  `;
+
+  // Egg crack animation
+  const egg = document.getElementById('hatchEgg');
+  const status = document.getElementById('hatchStatus');
+  setTimeout(() => { egg.textContent = '🐣'; status.textContent = 'Agent waking up...'; }, 1500);
+
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        agentPkg: agentPkgMap[agentId],
+        message: 'This is your first boot. You just got hired! Introduce yourself — who you are, what you can do, and ask what we should work on today. Be punchy, be excited. Keep it to 3-5 sentences max.',
+      }),
+    });
+    const data = await resp.json();
+
+    if (data.ok) {
+      chatSessionIds[agentId] = data.sessionId;
+      hatchedAgents[agentId] = true;
+      
+      // Show the hatched state
+      setTimeout(() => {
+        egg.textContent = '🐥';
+        status.textContent = `${a.name} is alive!`;
+        
+        setTimeout(() => {
+          // Transition to chat view
+          const inputArea = document.querySelector('#chatPanel .chat-input-area');
+          inputArea.style.display = '';
+          msgs.innerHTML = `
+            <div style="text-align:center;padding:12px;margin-bottom:8px;">
+              <span style="font-size:10px;color:#6e6e80;background:#1a1a2e;padding:4px 12px;border-radius:12px;">🐣 ${a.name} hatched</span>
+            </div>
+            <div class="chat-msg agent" style="border-left: 3px solid ${a.color};">
+              <div class="msg-sender">${a.emoji} ${a.name}</div>
+              ${renderMarkdown(data.reply)}
+            </div>
+          `;
+          msgs.scrollTop = msgs.scrollHeight;
+        }, 1000);
+      }, 500);
+    } else {
+      msgs.innerHTML = `<div style="text-align:center;padding:24px;color:#ef4444;">❌ Hatch failed: ${data.error}<br><br><button onclick="showHatchScreen('${agentId}')" style="padding:8px 16px;background:#1a1a2e;border:1px solid #2a2a3a;color:#ececf1;border-radius:8px;cursor:pointer;">Try Again</button></div>`;
+    }
+  } catch (e) {
+    msgs.innerHTML = `<div style="text-align:center;padding:24px;color:#ef4444;">❌ Connection failed. Is localhost:3333 running?<br><br><button onclick="showHatchScreen('${agentId}')" style="padding:8px 16px;background:#1a1a2e;border:1px solid #2a2a3a;color:#ececf1;border-radius:8px;cursor:pointer;">Try Again</button></div>`;
+  }
+}
 
 async function sendMessage() {
   if (!currentChat) return;
@@ -717,14 +821,7 @@ async function sendMessage() {
 
     if (data.ok) {
       chatSessionIds[currentChat] = data.sessionId;
-      // Simple markdown: bold, italic, code, newlines
-      const rendered = data.reply
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/`([^`]+)`/g, '<code style="background:#1a1a2e;padding:2px 4px;border-radius:3px;">$1</code>')
-        .replace(/\n/g, '<br>');
-      msgs.innerHTML += `<div class="chat-msg agent" style="border-left: 3px solid ${a.color};"><div class="msg-sender">${a.emoji} ${a.name}</div>${rendered}</div>`;
+      msgs.innerHTML += `<div class="chat-msg agent" style="border-left: 3px solid ${a.color};"><div class="msg-sender">${a.emoji} ${a.name}</div>${renderMarkdown(data.reply)}</div>`;
     } else {
       msgs.innerHTML += `<div class="chat-msg agent"><div class="msg-sender">⚠️ System</div>Error: ${data.error || 'Unknown error'}</div>`;
     }
