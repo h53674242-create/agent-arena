@@ -303,6 +303,7 @@ async function checkConnection() {
     }
     throw new Error('not ok');
   } catch(e) {
+    document.getElementById('setupGate').classList.add('active');
     status.textContent = 'No local server detected. Follow the steps above to get started.';
     btn.disabled = false;
 
