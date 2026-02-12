@@ -400,8 +400,11 @@ wss.on('connection', (clientWs) => {
         const bootstrap = fs.existsSync(path.join(pkgDir, 'BOOTSTRAP.md'))
           ? fs.readFileSync(path.join(pkgDir, 'BOOTSTRAP.md'), 'utf8') : '';
 
-        // Create a unique session key for this agent
-        const sessionKey = `agent:main:arena:${msg.agentPkg}-${clientId}`;
+        // Create session key targeting the correct agent
+        // Session key format: agent:<agentId>:<scope>:<unique>
+        // This ensures the right agent (with its own workspace/SOUL) handles the session
+        const agentId = manifest.agentId || msg.agentPkg.replace(/-agent$/, '');
+        const sessionKey = `agent:${agentId}:arena:${msg.agentPkg}-${clientId}`;
         agentSessions[msg.agentPkg] = sessionKey;
 
         console.log(`  🐣 [${clientId}] Hatching ${manifest.displayName} → ${sessionKey}`);
@@ -473,10 +476,32 @@ wss.on('connection', (clientWs) => {
           return;
         }
 
-        const sessionKey = agentSessions[msg.agentPkg] || msg.sessionKey;
+        let sessionKey = agentSessions[msg.agentPkg] || msg.sessionKey;
+        
+        // If no session exists yet, create one for this agent
         if (!sessionKey) {
-          clientWs.send(JSON.stringify({ type: 'error', error: 'Agent not hatched yet' }));
-          return;
+          const agentId = msg.agentPkg?.replace(/-agent$/, '') || 'main';
+          sessionKey = `agent:${agentId}:arena:${msg.agentPkg}-${clientId}`;
+          agentSessions[msg.agentPkg] = sessionKey;
+          
+          // Subscribe to events for this new session
+          const cleanup = gateway.on('chat', (payload) => {
+            if (payload.sessionKey !== sessionKey) return;
+            if (payload.state === 'delta') {
+              clientWs.send(JSON.stringify({ type: 'chat-delta', agentPkg: msg.agentPkg, runId: payload.runId, message: payload.message, sessionKey }));
+            }
+            if (payload.state === 'final') {
+              clientWs.send(JSON.stringify({ type: 'chat-final', agentPkg: msg.agentPkg, runId: payload.runId, message: payload.message, sessionKey }));
+            }
+          });
+          eventCleanups.push(cleanup);
+          const agentCleanup = gateway.on('agent', (payload) => {
+            if (payload.sessionKey !== sessionKey) return;
+            clientWs.send(JSON.stringify({ type: 'agent-event', agentPkg: msg.agentPkg, payload }));
+          });
+          eventCleanups.push(agentCleanup);
+          
+          console.log(`  🆕 [${clientId}] Auto-created session for ${msg.agentPkg} → ${sessionKey}`);
         }
 
         console.log(`  💬 [${clientId}] → ${msg.agentPkg}: ${(msg.message || '').slice(0, 60)}...`);
