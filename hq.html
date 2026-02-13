@@ -718,8 +718,10 @@ function switchDetailTab(tab) {
 
 // ═══ Hire Modal ═══
 function showHireView(view) {
-  document.querySelectorAll('.hire-view').forEach(v=>v.classList.remove('active'));
-  document.getElementById(view).classList.add('active');
+  document.querySelectorAll('.hire-view').forEach(v=>{v.classList.remove('active');v.style.display='none';});
+  const el=document.getElementById(view);
+  el.classList.add('active');
+  el.style.display='flex';
 }
 
 function openHireModal() {
