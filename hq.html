@@ -335,6 +335,30 @@
   .confetti-piece { position:absolute; width:8px; height:8px; border-radius:2px; animation:confettiFall 2s ease forwards; }
   @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
 
+  /* Confirm Modal */
+  .confirm-overlay {
+    display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,0.7); z-index:60; align-items:center; justify-content:center;
+    backdrop-filter:blur(4px);
+  }
+  .confirm-overlay.open { display:flex; }
+  .confirm-box {
+    width:400px; max-width:90vw; background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:28px; text-align:center;
+    animation:modalIn 0.2s ease; box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  .confirm-box .conf-emoji { font-size:40px; margin-bottom:12px; }
+  .confirm-box h3 { font-size:16px; font-weight:700; margin-bottom:8px; }
+  .confirm-box p { font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:20px; }
+  .confirm-box .conf-btns { display:flex; gap:12px; justify-content:center; }
+  .confirm-box .conf-btn {
+    padding:10px 24px; border:none; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .confirm-box .conf-cancel { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+  .confirm-box .conf-cancel:hover { border-color:var(--text); }
+  .confirm-box .conf-danger { background:var(--red); color:#fff; }
+  .confirm-box .conf-danger:hover { filter:brightness(1.1); }
+
   /* Waitlist */
   .waitlist-gate { display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; }
   .waitlist-gate.active { display:flex; }
@@ -484,6 +508,11 @@
       <button class="upsell-btn">Hire Agents</button>
     </div>
   </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box" id="confirmBox"></div>
 </div>
 
 <script>
@@ -891,10 +920,27 @@ function formatPrice(p) {
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
 // ═══ Fire Agent ═══
-async function fireAgent(agentName) {
+function fireAgent(agentName) {
   const agent=agents.find(a=>a.name===agentName);
   const name=agent?.displayName||agentName;
-  if(!confirm(`Are you sure you want to remove ${name} from your team?\n\nTheir workspace and memory files will be kept, but they'll no longer be active.`)) return;
+  const emoji=agent?.emoji||'🤖';
+
+  document.getElementById('confirmBox').innerHTML=`
+    <div class="conf-emoji">${emoji}</div>
+    <h3>Remove ${esc(name)}?</h3>
+    <p>They'll leave your team but their workspace and memory files will be kept. You can always hire them back later.</p>
+    <div class="conf-btns">
+      <button class="conf-btn conf-cancel" onclick="document.getElementById('confirmOverlay').classList.remove('open')">Keep on Team</button>
+      <button class="conf-btn conf-danger" onclick="doFireAgent('${agentName}')">Remove Agent</button>
+    </div>
+  `;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+async function doFireAgent(agentName) {
+  document.getElementById('confirmOverlay').classList.remove('open');
+  const agent=agents.find(a=>a.name===agentName);
+  const name=agent?.displayName||agentName;
   try {
     const res=await fetch(`${LOCAL}/api/agents/${agentName}/fire`,{method:'POST'});
     const data=await res.json();
