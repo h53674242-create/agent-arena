@@ -10,308 +10,271 @@
     --bg: #08080c; --surface: #111118; --surface2: #1a1a24;
     --border: #2a2a3a; --text: #e4e4e7; --muted: #71717a;
     --accent: #fbbf24; --green: #22c55e; --red: #ef4444; --blue: #3b82f6;
+    --purple: #a78bfa;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); height:100vh; overflow:hidden; display:flex; flex-direction:column; }
 
-  /* === Top Bar === */
+  /* Top Bar */
   .topbar { padding:10px 20px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px; flex-shrink:0; z-index:10; }
   .topbar .logo { font-family:'Press Start 2P',monospace; font-size:11px; color:var(--accent); }
   .topbar a { color:var(--muted); text-decoration:none; font-size:13px; transition:color .15s; }
   .topbar a:hover { color:var(--text); }
   .topbar .spacer { flex:1; }
-  .topbar .status-badge { font-size:10px; padding:4px 10px; border-radius:10px; font-weight:600; }
-  .topbar .status-badge.online { color:var(--green); background:rgba(34,197,94,0.1); }
-  .topbar .status-badge.offline { color:var(--red); background:rgba(239,68,68,0.1); }
+  .topbar .badge { font-size:10px; padding:4px 10px; border-radius:10px; font-weight:600; }
+  .topbar .badge.online { color:var(--green); background:rgba(34,197,94,0.1); }
+  .topbar .badge.offline { color:var(--red); background:rgba(239,68,68,0.1); }
   .topbar .clock { font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; }
 
-  /* === Main Layout === */
-  .main-layout { flex:1; display:flex; flex-direction:row; overflow:hidden; }
+  /* Main */
+  .main { flex:1; display:flex; overflow:hidden; }
 
-  /* === Office Scene === */
-  .office-scene {
-    flex:1; position:relative; overflow:hidden;
-    background: linear-gradient(180deg, #1e1b2e 0%, #151320 100%);
-    border-right: 1px solid var(--border);
-    min-width:0;
+  /* ═══ Office ═══ */
+  .office {
+    flex:1; position:relative; overflow:hidden; min-width:0;
+    background: linear-gradient(180deg, #1e1b2e 0%, #151320 50%, #13111f 100%);
   }
+
+  /* Wall */
+  .office .wall { position:absolute; top:0; left:0; right:0; height:90px; background:linear-gradient(180deg,#2a2545,#1e1b2e); border-bottom:2px solid rgba(251,191,36,0.06); }
+
+  .wall-item { position:absolute; z-index:2; }
+  .wall-item.title { top:16px; left:50%; transform:translateX(-50%); font-family:'Press Start 2P',monospace; font-size:9px; color:var(--accent); background:rgba(0,0,0,0.4); padding:8px 16px; border-radius:4px; border:1px solid rgba(251,191,36,0.15); }
+  .wall-item.poster { padding:6px 12px; border-radius:3px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); font-size:9px; color:var(--muted); }
+  .wall-item.p1 { top:20px; left:40px; }
+  .wall-item.p2 { top:20px; right:40px; }
+  .wall-item.window { top:10px; right:180px; width:70px; height:50px; background:linear-gradient(180deg,#1a2040,#2a3060); border:2px solid rgba(255,255,255,0.08); border-radius:4px; }
+  .wall-item.window::after { content:'✦ · ✧'; position:absolute; top:12px; left:12px; font-size:7px; color:rgba(255,255,255,0.3); }
+  .wall-item.whiteboard { top:10px; left:180px; width:100px; height:55px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:3px; font-size:7px; padding:5px; color:var(--muted); line-height:1.4; overflow:hidden; }
 
   /* Floor */
-  .office-scene::after {
-    content:''; position:absolute; bottom:0; left:0; right:0; height:120px;
-    background: linear-gradient(180deg, #1a1728 0%, #13111f 100%);
-    border-top: 2px solid rgba(251,191,36,0.06);
+  .office .floor { position:absolute; bottom:0; left:0; right:0; height:40px; background:linear-gradient(180deg,#13111f,#0d0b18); border-top:1px solid rgba(255,255,255,0.03); }
+
+  /* Decorations */
+  .deco { position:absolute; z-index:2; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+  .deco.plant1 { bottom:50px; left:30px; font-size:28px; }
+  .deco.plant2 { bottom:50px; right:40px; font-size:22px; }
+  .deco.cat { bottom:45px; left:80px; font-size:20px; cursor:pointer; transition:transform .2s; }
+  .deco.cat:hover { transform:scale(1.2) rotate(-5deg); }
+  .deco.coffee { top:60px; left:50px; font-size:14px; }
+  .deco.clock-w { top:18px; left:50%; margin-left:120px; font-size:14px; }
+  .deco.rug {
+    bottom:42px; left:50%; transform:translateX(-50%); width:500px; height:20px;
+    background:rgba(167,139,250,0.04); border-radius:50%; border:1px solid rgba(167,139,250,0.06);
   }
 
-  /* Wall details */
-  .wall-shelf {
-    position:absolute; top:30px; height:50px; z-index:1;
-    background: linear-gradient(180deg, #2d2745 0%, #252040 100%);
-    border: 1px solid rgba(255,255,255,0.05); border-radius:3px;
-  }
-  .wall-shelf.s1 { left:40px; width:120px; }
-  .wall-shelf.s2 { right:60px; width:140px; }
-
-  .wall-art {
-    position:absolute; z-index:1; padding:8px 14px; border-radius:4px;
-    background: rgba(0,0,0,0.3); border:2px solid rgba(255,255,255,0.08);
-    font-size:10px; color:var(--muted); letter-spacing:0.5px;
-  }
-  .wall-art.a1 { top:20px; left:50%; transform:translateX(-50%); border-color:rgba(251,191,36,0.2); color:var(--accent); font-family:'Press Start 2P',monospace; font-size:8px; }
-  .wall-art.a2 { top:35px; left:220px; }
-  .wall-art.a3 { top:35px; right:260px; }
-
-  /* Window */
-  .window {
-    position:absolute; top:10px; width:80px; height:60px; z-index:1;
-    background: linear-gradient(180deg, #1a2040 0%, #2a3060 100%);
-    border: 2px solid rgba(255,255,255,0.1); border-radius:4px;
-    overflow:hidden;
-  }
-  .window.w1 { left:60%; }
-  .window .stars { position:absolute; top:10px; left:15px; font-size:6px; color:rgba(255,255,255,0.4); }
-
-  /* Desks */
-  .desk-row {
-    position:absolute; bottom:40px; left:50%; transform:translateX(-50%);
-    display:flex; gap:24px; z-index:3;
+  /* ═══ Desks — centered ═══ */
+  .desk-area {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    display:flex; gap:32px; z-index:4;
   }
 
   .desk {
-    width:160px; height:90px; position:relative; cursor:pointer;
-    transition: transform 0.2s ease;
+    width:140px; position:relative; cursor:pointer;
+    transition:transform 0.2s ease;
+    display:flex; flex-direction:column; align-items:center;
   }
-  .desk:hover { transform:translateY(-2px); }
+  .desk:hover { transform:translateY(-3px); }
 
-  .desk-surface {
-    position:absolute; bottom:0; left:0; right:0; height:40px;
-    background: linear-gradient(180deg, #3d3355 0%, #2d2545 100%);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 6px 6px 4px 4px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  }
-
-  /* Monitor on desk */
-  .desk-monitor {
-    position:absolute; bottom:38px; left:50%; transform:translateX(-50%);
-    width:50px; height:35px;
-    background: linear-gradient(180deg, #0a0a12 0%, #12121e 100%);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius:3px;
-    box-shadow: 0 0 8px rgba(59,130,246,0.1);
-  }
-  .desk-monitor::after {
-    content:''; position:absolute; bottom:-4px; left:50%; transform:translateX(-50%);
-    width:12px; height:4px; background:#2d2545; border-radius:0 0 2px 2px;
-  }
-  .desk-monitor .screen-glow {
-    position:absolute; top:3px; left:3px; right:3px; bottom:5px;
-    background: rgba(59,130,246,0.08); border-radius:1px;
-  }
-  .desk.active .desk-monitor .screen-glow { background:rgba(34,197,94,0.15); }
-
-  /* Agent avatar at desk */
   .agent-avatar {
-    position:absolute; bottom:55px; left:50%; transform:translateX(-50%);
-    width:36px; height:36px; border-radius:50%;
+    width:44px; height:44px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
-    font-size:20px; z-index:4;
-    background: rgba(17,17,24,0.8);
-    border: 2px solid var(--border);
-    transition: all 0.3s ease;
+    font-size:24px; background:rgba(17,17,24,0.9);
+    border:2px solid var(--border); transition:all 0.3s ease;
+    position:relative;
   }
-  .desk.active .agent-avatar {
-    border-color: var(--green);
-    box-shadow: 0 0 12px rgba(34,197,94,0.2);
+  .desk.active .agent-avatar { border-color:var(--green); box-shadow:0 0 16px rgba(34,197,94,0.2); }
+  .desk.empty .agent-avatar { border:2px dashed var(--border); opacity:0.4; }
+
+  .status-dot {
+    position:absolute; bottom:0; right:0; width:10px; height:10px;
+    border-radius:50%; border:2px solid var(--bg);
+  }
+  .status-dot.online { background:var(--green); }
+  .status-dot.offline { background:var(--muted); }
+  .status-dot.busy { background:var(--accent); animation:pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .agent-label {
+    margin-top:6px; font-size:10px; font-weight:600; text-align:center;
+    color:var(--text); white-space:nowrap;
+  }
+  .desk.empty .agent-label { color:var(--muted); }
+
+  .desk-obj {
+    margin-top:6px; width:100px; height:30px;
+    background:linear-gradient(180deg,#3d3355,#2d2545);
+    border:1px solid rgba(255,255,255,0.06); border-radius:5px;
+    position:relative;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+  }
+  .desk-monitor {
+    position:absolute; top:-20px; left:50%; transform:translateX(-50%);
+    width:40px; height:28px; background:linear-gradient(180deg,#0a0a12,#12121e);
+    border:1px solid rgba(255,255,255,0.08); border-radius:3px;
+  }
+  .desk-monitor .glow {
+    position:absolute; inset:3px 3px 5px 3px;
+    background:rgba(59,130,246,0.06); border-radius:1px;
+  }
+  .desk.active .desk-monitor .glow { background:rgba(34,197,94,0.12); }
+  .desk-monitor::after {
+    content:''; position:absolute; bottom:-3px; left:50%; transform:translateX(-50%);
+    width:10px; height:3px; background:#2d2545; border-radius:0 0 2px 2px;
   }
 
-  .agent-name-tag {
-    position:absolute; bottom:78px; left:50%; transform:translateX(-50%);
-    font-size:9px; font-weight:700; color:var(--text); white-space:nowrap;
-    background:rgba(0,0,0,0.6); padding:2px 8px; border-radius:8px;
-    z-index:5;
-  }
-
-  .agent-status-dot {
-    position:absolute; bottom:57px; left:calc(50% + 12px);
-    width:8px; height:8px; border-radius:50%; z-index:5;
-    border: 1.5px solid var(--bg);
-  }
-  .agent-status-dot.online { background:var(--green); }
-  .agent-status-dot.offline { background:var(--muted); }
-  .agent-status-dot.busy { background:var(--accent); animation:pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-
-  /* Speech bubble */
   .speech-bubble {
-    position:absolute; bottom:100px; left:50%; transform:translateX(-50%);
-    background:var(--surface); border:1px solid var(--border); border-radius:10px;
-    padding:6px 10px; font-size:10px; color:var(--muted); white-space:nowrap;
-    opacity:0; transition:opacity 0.3s; z-index:6; max-width:200px;
-    overflow:hidden; text-overflow:ellipsis;
+    position:absolute; top:-20px; left:50%; transform:translateX(-50%);
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:5px 10px; font-size:9px; color:var(--muted); white-space:nowrap;
+    max-width:180px; overflow:hidden; text-overflow:ellipsis;
+    opacity:0; transition:opacity 0.3s; z-index:6;
   }
   .speech-bubble::after {
-    content:''; position:absolute; bottom:-5px; left:50%; transform:translateX(-50%);
-    width:8px; height:5px; background:var(--surface);
-    clip-path:polygon(0 0, 100% 0, 50% 100%);
+    content:''; position:absolute; bottom:-4px; left:50%; transform:translateX(-50%);
+    border-left:4px solid transparent; border-right:4px solid transparent;
+    border-top:4px solid var(--surface);
   }
   .speech-bubble.visible { opacity:1; }
 
-  /* Decorations */
-  .deco {
-    position:absolute; z-index:2; font-size:16px;
-    filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  /* Add Agent CTA */
+  .add-agent-desk {
+    width:140px; display:flex; flex-direction:column; align-items:center;
+    cursor:pointer; transition:transform 0.2s; opacity:0.5;
   }
-  .deco.plant1 { bottom:130px; left:20px; font-size:24px; }
-  .deco.plant2 { bottom:130px; right:30px; font-size:20px; }
-  .deco.coffee { bottom:20px; right:50px; font-size:14px; }
-  .deco.cat { bottom:25px; left:30px; font-size:18px; cursor:pointer; transition:transform .2s; }
-  .deco.cat:hover { transform:scale(1.2) rotate(-5deg); }
-  .deco.clock-wall { top:22px; left:50%; margin-left:100px; }
-  .deco.whiteboard {
-    top:8px; right:50px; width:100px; height:65px;
-    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
-    border-radius:3px; font-size:8px; padding:6px; color:var(--muted);
-    line-height:1.4; overflow:hidden;
+  .add-agent-desk:hover { opacity:0.8; transform:translateY(-3px); }
+  .add-circle {
+    width:44px; height:44px; border-radius:50%;
+    border:2px dashed var(--accent); display:flex;
+    align-items:center; justify-content:center;
+    font-size:20px; color:var(--accent); transition:all 0.2s;
   }
+  .add-agent-desk:hover .add-circle { border-style:solid; background:rgba(251,191,36,0.05); }
+  .add-label { margin-top:6px; font-size:10px; font-weight:600; color:var(--accent); }
 
-  /* Meeting indicator */
+  /* Meeting bar */
   .meeting-bar {
     position:absolute; bottom:0; left:0; right:0; z-index:8;
-    background: rgba(17,17,24,0.95); border-top:1px solid var(--border);
+    background:rgba(17,17,24,0.95); border-top:1px solid var(--border);
     padding:8px 16px; display:flex; align-items:center; gap:12px;
     backdrop-filter:blur(8px);
   }
   .meeting-bar .label { font-size:11px; color:var(--accent); font-weight:700; }
-  .meeting-bar .participants { font-size:10px; color:var(--muted); }
+  .meeting-bar .parts { font-size:10px; color:var(--muted); }
   .meeting-bar .spacer { flex:1; }
-  .meeting-bar button {
-    padding:6px 14px; border:none; border-radius:6px; font-size:11px;
-    font-weight:600; cursor:pointer; transition:all .15s;
-  }
+  .meeting-bar button { padding:6px 14px; border:none; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; }
   .meeting-bar .start-btn { background:var(--green); color:#000; }
   .meeting-bar .start-btn:hover { filter:brightness(1.1); }
   .meeting-bar .end-btn { background:var(--red); color:#fff; display:none; }
 
-  /* === Chat Panel === */
-  .chat-panel {
-    flex:0 0 380px; display:flex; flex-direction:column; overflow:hidden;
-    background:var(--surface);
+  /* ═══ Right Panel ═══ */
+  .right-panel {
+    flex:0 0 400px; display:flex; flex-direction:column; overflow:hidden;
+    background:var(--surface); border-left:1px solid var(--border);
   }
 
-  .chat-header {
-    padding:10px 20px; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:12px; flex-shrink:0;
+  /* Tabs */
+  .panel-tabs {
+    display:flex; border-bottom:1px solid var(--border); flex-shrink:0;
   }
-  .chat-header h3 { font-size:13px; font-weight:700; }
-  .chat-header .channel { font-size:11px; color:var(--muted); }
-  .chat-header .spacer { flex:1; }
-  .chat-header .toggle-btn {
-    padding:4px 10px; background:rgba(255,255,255,0.05); border:1px solid var(--border);
-    border-radius:6px; color:var(--muted); font-size:11px; cursor:pointer;
+  .panel-tab {
+    flex:1; padding:10px 16px; font-size:12px; font-weight:600;
+    color:var(--muted); cursor:pointer; text-align:center;
+    border-bottom:2px solid transparent; transition:all .15s;
+    background:none; border-top:none; border-left:none; border-right:none;
   }
-  .chat-header .toggle-btn:hover { color:var(--text); border-color:var(--accent); }
+  .panel-tab:hover { color:var(--text); }
+  .panel-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 
-  .messages {
-    flex:1; overflow-y:auto; padding:16px 20px; display:flex;
-    flex-direction:column; gap:2px;
-  }
+  /* Tab content */
+  .tab-content { flex:1; display:none; flex-direction:column; overflow:hidden; }
+  .tab-content.active { display:flex; }
 
-  .msg {
-    padding:6px 0; line-height:1.5; font-size:13px;
-    animation:fadeIn 0.2s ease;
-  }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
-
-  .msg .sender {
-    font-weight:700; font-size:12px; margin-right:8px;
-  }
-  .msg .time {
-    font-size:10px; color:var(--muted); margin-right:8px;
-  }
+  /* Chat tab */
+  .messages { flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:2px; }
+  .msg { padding:5px 0; line-height:1.5; font-size:13px; animation:fadeIn 0.2s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+  .msg .time { font-size:10px; color:var(--muted); margin-right:6px; }
+  .msg .sender { font-weight:700; font-size:12px; margin-right:6px; }
   .msg .content { color:var(--text); }
   .msg .content code { background:rgba(255,255,255,0.06); padding:1px 4px; border-radius:3px; font-size:12px; }
+  .msg-system { font-size:11px; color:var(--muted); text-align:center; padding:8px 0; font-style:italic; }
 
-  .msg-system {
-    font-size:11px; color:var(--muted); text-align:center;
-    padding:8px 0; font-style:italic;
-  }
-
-  .typing-line {
-    font-size:11px; color:var(--muted); padding:4px 0;
-    display:none;
-  }
+  .typing-line { font-size:11px; color:var(--muted); padding:4px 16px; display:none; }
   .typing-line.active { display:block; }
-  .typing-dots { display:inline-block; }
   .typing-dots span { animation:blink 1.4s infinite; }
   .typing-dots span:nth-child(2) { animation-delay:0.2s; }
   .typing-dots span:nth-child(3) { animation-delay:0.4s; }
-  @keyframes blink { 0%,100% { opacity:0.2; } 50% { opacity:1; } }
+  @keyframes blink { 0%,100%{opacity:0.2} 50%{opacity:1} }
 
-  .chat-input-bar {
-    padding:12px 20px; border-top:1px solid var(--border);
-    display:flex; gap:10px; align-items:center; flex-shrink:0;
+  .chat-input {
+    padding:12px 16px; border-top:1px solid var(--border);
+    display:flex; gap:8px; flex-shrink:0;
   }
-  .chat-input-bar input {
+  .chat-input input {
     flex:1; padding:10px 14px; background:var(--bg); border:1px solid var(--border);
-    border-radius:8px; color:var(--text); font-size:13px; outline:none;
-    font-family:inherit;
+    border-radius:8px; color:var(--text); font-size:13px; outline:none; font-family:inherit;
   }
-  .chat-input-bar input:focus { border-color:var(--accent); }
-  .chat-input-bar input::placeholder { color:var(--muted); }
-  .chat-input-bar button {
-    padding:10px 18px; background:var(--accent); color:#000; border:none;
+  .chat-input input:focus { border-color:var(--accent); }
+  .chat-input input::placeholder { color:var(--muted); }
+  .chat-input button {
+    padding:10px 16px; background:var(--accent); color:#000; border:none;
     border-radius:8px; font-weight:700; font-size:13px; cursor:pointer;
-    transition:filter .15s;
   }
-  .chat-input-bar button:hover { filter:brightness(1.1); }
-  .chat-input-bar button:disabled { opacity:0.4; cursor:not-allowed; }
+  .chat-input button:hover { filter:brightness(1.1); }
 
-  /* === Waitlist Gate === */
-  .waitlist-gate {
-    display:none; flex:1; flex-direction:column; align-items:center;
-    justify-content:center; padding:40px; text-align:center;
+  /* Activity log tab */
+  .activity-log { flex:1; overflow-y:auto; padding:12px 16px; }
+  .log-entry {
+    padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03);
+    font-size:12px; display:flex; gap:10px; align-items:flex-start;
   }
+  .log-entry .log-icon { font-size:14px; flex-shrink:0; margin-top:1px; }
+  .log-entry .log-body { flex:1; min-width:0; }
+  .log-entry .log-action { color:var(--text); line-height:1.4; }
+  .log-entry .log-action .agent-name { color:var(--accent); font-weight:600; }
+  .log-entry .log-action .tool-name { color:var(--purple); font-weight:500; }
+  .log-entry .log-time { font-size:10px; color:var(--muted); margin-top:2px; }
+  .log-empty { text-align:center; color:var(--muted); padding:40px 20px; font-size:13px; }
+
+  /* Upsell banner */
+  .upsell {
+    padding:12px 16px; background:linear-gradient(90deg,rgba(251,191,36,0.08),rgba(251,191,36,0.02));
+    border-top:1px solid var(--border); flex-shrink:0;
+    display:flex; align-items:center; gap:10px; cursor:pointer;
+    transition:background .15s;
+  }
+  .upsell:hover { background:rgba(251,191,36,0.1); }
+  .upsell .upsell-icon { font-size:18px; }
+  .upsell .upsell-text { flex:1; }
+  .upsell .upsell-title { font-size:11px; font-weight:700; color:var(--accent); }
+  .upsell .upsell-desc { font-size:10px; color:var(--muted); margin-top:1px; }
+  .upsell .upsell-btn {
+    padding:5px 12px; background:var(--accent); color:#000; border:none;
+    border-radius:6px; font-size:10px; font-weight:700; cursor:pointer;
+  }
+
+  /* ═══ Waitlist Gate ═══ */
+  .waitlist-gate { display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; }
   .waitlist-gate.active { display:flex; }
   .waitlist-gate .big-emoji { font-size:80px; margin-bottom:24px; }
   .waitlist-gate h1 { font-family:'Press Start 2P',monospace; font-size:20px; color:var(--accent); margin-bottom:16px; line-height:1.4; }
   .waitlist-gate p { font-size:15px; color:var(--muted); line-height:1.6; max-width:480px; margin-bottom:32px; }
   .waitlist-gate .form-row { display:flex; gap:12px; max-width:400px; width:100%; }
-  .waitlist-gate input {
-    flex:1; padding:14px 18px; background:var(--surface); border:1px solid var(--border);
-    border-radius:8px; color:var(--text); font-size:14px; outline:none;
-  }
+  .waitlist-gate input { flex:1; padding:14px 18px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; outline:none; }
   .waitlist-gate input:focus { border-color:var(--accent); }
-  .waitlist-gate .join-btn {
-    padding:14px 24px; background:var(--accent); color:#000; border:none;
-    border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; white-space:nowrap;
-  }
+  .waitlist-gate .join-btn { padding:14px 24px; background:var(--accent); color:#000; border:none; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; white-space:nowrap; }
   .waitlist-gate .success-msg { display:none; font-size:18px; color:var(--green); }
   .waitlist-gate .success-msg.show { display:block; }
-  .waitlist-gate .preview-cards {
-    display:flex; gap:16px; margin-top:40px; flex-wrap:wrap; justify-content:center;
-  }
-  .waitlist-gate .preview-card {
-    background:var(--surface); border:1px solid var(--border); border-radius:10px;
-    padding:20px; width:160px; text-align:center;
-  }
+  .waitlist-gate .preview-cards { display:flex; gap:16px; margin-top:40px; flex-wrap:wrap; justify-content:center; }
+  .waitlist-gate .preview-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; width:160px; text-align:center; }
   .waitlist-gate .preview-card .emoji { font-size:28px; margin-bottom:8px; }
   .waitlist-gate .preview-card .title { font-size:12px; font-weight:700; margin-bottom:4px; }
   .waitlist-gate .preview-card .desc { font-size:10px; color:var(--muted); }
-
-  /* Resize handle */
-  .resize-handle {
-    width:6px; background:var(--bg); cursor:ew-resize; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center;
-    border-left:1px solid var(--border); border-right:1px solid var(--border);
-  }
-  .resize-handle::after { content:''; height:30px; width:2px; background:var(--border); border-radius:2px; }
-  .resize-handle:hover::after { background:var(--accent); }
 </style>
 </head>
 <body>
 
-<!-- Top Bar -->
 <div class="topbar">
   <span class="logo">🦞 AGENT ARENA HQ</span>
   <a href="index.html">Home</a>
@@ -319,439 +282,430 @@
   <a href="app.html">Dashboard</a>
   <div class="spacer"></div>
   <span class="clock" id="clock"></span>
-  <span class="status-badge offline" id="statusBadge">● Offline</span>
+  <span class="badge offline" id="statusBadge">● Offline</span>
 </div>
 
-<!-- Waitlist Gate (public visitors) -->
+<!-- Waitlist -->
 <div class="waitlist-gate" id="waitlistGate">
   <div class="big-emoji">🦞</div>
   <h1>Agent Arena HQ</h1>
-  <p>Your AI team's virtual office. Watch them work, join meetings, and collaborate in real-time. Currently in development.</p>
+  <p>Your AI team's virtual office. Watch them work, join meetings, and collaborate in real-time.</p>
   <div class="form-row" id="waitlistForm">
     <input type="email" id="waitlistEmail" placeholder="you@example.com">
     <button class="join-btn" onclick="submitWaitlist()">Get Early Access 🦞</button>
   </div>
-  <div class="success-msg" id="waitlistSuccess">✅ You're on the list! We'll be in touch.</div>
+  <div class="success-msg" id="waitlistSuccess">✅ You're on the list!</div>
   <div class="preview-cards">
-    <div class="preview-card"><div class="emoji">🏢</div><div class="title">Virtual Office</div><div class="desc">See your agents at their desks, working in real-time</div></div>
-    <div class="preview-card"><div class="emoji">💬</div><div class="title">Team Chat</div><div class="desc">Group standup meetings with all your agents</div></div>
-    <div class="preview-card"><div class="emoji">🔒</div><div class="title">100% Local</div><div class="desc">Your agents never leave your machine</div></div>
+    <div class="preview-card"><div class="emoji">🏢</div><div class="title">Virtual Office</div><div class="desc">See your agents at their desks</div></div>
+    <div class="preview-card"><div class="emoji">📋</div><div class="title">Activity Log</div><div class="desc">Every action, every tool call</div></div>
+    <div class="preview-card"><div class="emoji">🔒</div><div class="title">100% Local</div><div class="desc">Agents never leave your machine</div></div>
   </div>
 </div>
 
-<!-- Main HQ (local users only) -->
-<div class="main-layout" id="mainLayout" style="display:none;">
+<!-- HQ -->
+<div class="main" id="mainLayout" style="display:none;">
 
-  <!-- Office Scene -->
-  <div class="office-scene" id="officeScene">
-    <!-- Wall decorations -->
-    <div class="wall-art a1">AGENT ARENA HQ</div>
-    <div class="wall-art a2">📊 Q1 Goals</div>
-    <div class="wall-art a3">🚀 Ship It</div>
-    <div class="window w1"><div class="stars">✦ · ✧ · ✦</div></div>
-    <div class="deco whiteboard" id="whiteboard">📋 Sprint Goals<br>→ Launch v1<br>→ Get users<br>→ Ship fast</div>
+  <!-- Office -->
+  <div class="office" id="office">
+    <div class="wall"></div>
+    <div class="wall-item title">AGENT ARENA HQ</div>
+    <div class="wall-item poster p1">📊 Q1 Goals</div>
+    <div class="wall-item poster p2">🚀 Ship It</div>
+    <div class="wall-item window"></div>
+    <div class="wall-item whiteboard" id="whiteboard">📋 Sprint<br>→ Launch v1<br>→ Get users<br>→ Revenue</div>
 
-    <!-- Decorations -->
     <div class="deco plant1">🪴</div>
     <div class="deco plant2">🌿</div>
-    <div class="deco coffee">☕</div>
     <div class="deco cat" id="officeCat" title="Click me!">😺</div>
-    <div class="deco clock-wall" id="wallClock">🕐</div>
+    <div class="deco coffee">☕</div>
+    <div class="deco clock-w" id="wallClock">🕐</div>
+    <div class="deco rug"></div>
 
-    <!-- Desk row (populated by JS) -->
-    <div class="desk-row" id="deskRow"></div>
+    <div class="desk-area" id="deskArea"></div>
 
-    <!-- Meeting bar -->
+    <div class="floor"></div>
+
     <div class="meeting-bar">
       <span class="label">🎙️ Team Standup</span>
-      <span class="participants" id="meetingParticipants">No agents online</span>
+      <span class="parts" id="meetingParts">No agents online</span>
       <div class="spacer"></div>
-      <button class="start-btn" id="startMeetingBtn" onclick="startMeeting()">Start Meeting</button>
-      <button class="end-btn" id="endMeetingBtn" onclick="endMeeting()">End Meeting</button>
+      <button class="start-btn" id="startBtn" onclick="startMeeting()">Start Meeting</button>
+      <button class="end-btn" id="endBtn" onclick="endMeeting()">End Meeting</button>
     </div>
   </div>
 
-  <!-- Resize Handle -->
-  <div class="resize-handle" id="resizeHandle"></div>
+  <!-- Right Panel -->
+  <div class="right-panel">
+    <div class="panel-tabs">
+      <button class="panel-tab active" onclick="switchTab('chat')">💬 Chat</button>
+      <button class="panel-tab" onclick="switchTab('activity')">📋 Activity</button>
+    </div>
 
-  <!-- Chat Panel -->
-  <div class="chat-panel">
-    <div class="chat-header">
-      <h3>💬 #general</h3>
-      <span class="channel">Team Chat</span>
-      <div class="spacer"></div>
+    <!-- Chat Tab -->
+    <div class="tab-content active" id="tabChat">
+      <div class="messages" id="messages"></div>
+      <div class="typing-line" id="typingLine">
+        <span id="typingWho"></span> is typing<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+      </div>
+      <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Message your team..." autocomplete="off">
+        <button onclick="sendMessage()">Send</button>
+      </div>
     </div>
-    <div class="messages" id="messages"></div>
-    <div class="typing-line" id="typingLine">
-      <span id="typingWho"></span> is typing<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+
+    <!-- Activity Tab -->
+    <div class="tab-content" id="tabActivity">
+      <div class="activity-log" id="activityLog">
+        <div class="log-empty">Activity will appear here as your agents work.</div>
+      </div>
     </div>
-    <div class="chat-input-bar">
-      <input type="text" id="chatInput" placeholder="Message #general..." autocomplete="off">
-      <button id="sendBtn" onclick="sendMessage()">Send</button>
+
+    <!-- Upsell -->
+    <div class="upsell" onclick="window.location.href='agents.html'">
+      <div class="upsell-icon">⚡</div>
+      <div class="upsell-text">
+        <div class="upsell-title">Grow Your Team</div>
+        <div class="upsell-desc" id="upsellDesc">Add more agents to your office</div>
+      </div>
+      <button class="upsell-btn">Browse Agents</button>
     </div>
   </div>
 </div>
 
 <script>
-// ── State ──
-let ws = null;
-let agents = [];
-let registeredAgents = [];
-let sessions = {};
-let streamBuffers = {};
-let meetingActive = false;
-let agentStates = {}; // agentId -> { status, lastMessage }
-
+let ws = null, agents = [], registeredAgents = [], sessions = {}, streamBuffers = {};
+let meetingActive = false, activityEntries = [];
 const LOCAL = `${location.protocol}//${location.host}`;
-const WS_URL = `ws://${location.host}`;
 
-// ── Init ──
 async function init() {
-  updateClock();
-  setInterval(updateClock, 30000);
-  setupResize();
-  setupInput();
-  setupCat();
+  updateClock(); setInterval(updateClock, 30000);
+  setupInput(); setupCat();
   await checkConnection();
 }
 
-// ── Connection Check ──
 async function checkConnection() {
   try {
     const res = await fetch(`${LOCAL}/api/agents`, { signal: AbortSignal.timeout(3000) });
-    if (!res.ok) throw new Error();
+    if (!res.ok) throw 0;
     updateStatus(true);
     document.getElementById('mainLayout').style.display = 'flex';
-    document.getElementById('waitlistGate').classList.remove('active');
     await loadAgents();
     connectWS();
     loadChat();
+    loadActivity();
+    updateUpsell();
   } catch {
     document.getElementById('waitlistGate').classList.add('active');
-    document.getElementById('mainLayout').style.display = 'none';
     updateStatus(false);
   }
 }
 
-// ── Load Agents ──
 async function loadAgents() {
-  try {
-    const [aRes, rRes] = await Promise.all([
-      fetch(`${LOCAL}/api/agents`), fetch(`${LOCAL}/api/agents/registered`)
-    ]);
-    agents = await aRes.json();
-    registeredAgents = await rRes.json();
-    renderDesks();
-    updateMeetingParticipants();
-  } catch(e) { console.error('Load agents failed:', e); }
+  const [a, r] = await Promise.all([
+    fetch(`${LOCAL}/api/agents`).then(r=>r.json()),
+    fetch(`${LOCAL}/api/agents/registered`).then(r=>r.json())
+  ]);
+  agents = a; registeredAgents = r;
+  renderDesks();
+  updateMeetingParts();
 }
 
-// ── Render Desks ──
 function renderDesks() {
-  const row = document.getElementById('deskRow');
+  const area = document.getElementById('deskArea');
   const regIds = new Set(registeredAgents.map(a => a.id));
   const installed = agents.filter(a => regIds.has(a.name.replace(/-agent$/, '')));
-  
-  row.innerHTML = installed.map(agent => {
+  const uninstalled = agents.filter(a => !regIds.has(a.name.replace(/-agent$/, ''))).slice(0, 1);
+
+  let html = installed.map(agent => {
     const id = agent.name.replace(/-agent$/, '');
-    const isOnline = regIds.has(id);
     return `
-      <div class="desk ${isOnline ? 'active' : ''}" data-agent="${agent.name}" onclick="focusAgent('${agent.name}')">
-        <div class="agent-name-tag">${agent.displayName || agent.name}</div>
+      <div class="desk active" data-agent="${agent.name}" onclick="focusAgent('${agent.name}')">
         <div class="speech-bubble" id="bubble-${id}"></div>
-        <div class="agent-avatar">${agent.emoji || '🤖'}</div>
-        <div class="agent-status-dot ${isOnline ? 'online' : 'offline'}"></div>
-        <div class="desk-surface"></div>
-        <div class="desk-monitor"><div class="screen-glow"></div></div>
-      </div>
-    `;
+        <div class="agent-avatar">
+          ${agent.emoji || '🤖'}
+          <div class="status-dot online" id="dot-${id}"></div>
+        </div>
+        <div class="agent-label">${agent.displayName || agent.name}</div>
+        <div class="desk-obj"><div class="desk-monitor"><div class="glow"></div></div></div>
+      </div>`;
   }).join('');
 
-  // Also add uninstalled agents as "empty desks"
-  const uninstalled = agents.filter(a => !regIds.has(a.name.replace(/-agent$/, ''))).slice(0, 2);
-  uninstalled.forEach(agent => {
-    row.innerHTML += `
-      <div class="desk" data-agent="${agent.name}" style="opacity:0.4;" title="Not installed">
-        <div class="agent-name-tag" style="opacity:0.5;">${agent.displayName || agent.name}</div>
-        <div class="agent-avatar" style="filter:grayscale(1);">${agent.emoji || '🤖'}</div>
-        <div class="agent-status-dot offline"></div>
-        <div class="desk-surface"></div>
-        <div class="desk-monitor"><div class="screen-glow"></div></div>
+  // Empty desks for uninstalled
+  html += uninstalled.map(agent => `
+    <div class="desk empty" onclick="window.location.href='agents.html'" title="Install ${agent.displayName || agent.name}">
+      <div class="agent-avatar" style="filter:grayscale(1)">
+        ${agent.emoji || '🤖'}
+        <div class="status-dot offline"></div>
       </div>
-    `;
-  });
+      <div class="agent-label">${agent.displayName || agent.name}</div>
+      <div class="desk-obj"><div class="desk-monitor"><div class="glow"></div></div></div>
+    </div>`).join('');
+
+  // Add agent CTA
+  html += `
+    <div class="add-agent-desk" onclick="window.location.href='agents.html'" title="Add another agent to your team">
+      <div class="add-circle">+</div>
+      <div class="add-label">Add Agent</div>
+    </div>`;
+
+  area.innerHTML = html;
 }
 
-// ── Focus Agent (click desk) ──
-function focusAgent(agentName) {
-  const agent = agents.find(a => a.name === agentName);
-  if (!agent) return;
-  const input = document.getElementById('chatInput');
-  input.placeholder = `Message ${agent.displayName || agentName}...`;
-  input.focus();
+function focusAgent(name) {
+  switchTab('chat');
+  const agent = agents.find(a => a.name === name);
+  document.getElementById('chatInput').placeholder = `Message ${agent?.displayName || name}...`;
+  document.getElementById('chatInput').focus();
+}
+
+// ── Tabs ──
+function switchTab(tab) {
+  document.querySelectorAll('.panel-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'chat') || (i === 1 && tab === 'activity'));
+  });
+  document.getElementById('tabChat').classList.toggle('active', tab === 'chat');
+  document.getElementById('tabActivity').classList.toggle('active', tab === 'activity');
 }
 
 // ── WebSocket ──
 function connectWS() {
   if (ws && ws.readyState === WebSocket.OPEN) return;
-  ws = new WebSocket(WS_URL);
-  ws.onopen = () => { updateStatus(true); };
+  ws = new WebSocket(`ws://${location.host}`);
+  ws.onopen = () => updateStatus(true);
   ws.onclose = () => { updateStatus(false); setTimeout(connectWS, 3000); };
-  ws.onerror = (e) => console.error('WS error:', e);
-  ws.onmessage = (e) => {
-    try { handleWSMessage(JSON.parse(e.data)); } catch(err) { console.error(err); }
-  };
+  ws.onerror = e => console.error('WS:', e);
+  ws.onmessage = e => { try { handleMsg(JSON.parse(e.data)); } catch(err) { console.error(err); } };
 }
 
-function handleWSMessage(msg) {
+function handleMsg(msg) {
   if (msg.type === 'status') updateStatus(msg.connected);
-  if (msg.type === 'chat-delta') handleDelta(msg);
-  if (msg.type === 'chat-final') handleFinal(msg);
+  if (msg.type === 'chat-delta') onDelta(msg);
+  if (msg.type === 'chat-final') onFinal(msg);
+  // Log tool usage from events
+  if (msg.type === 'tool-use' || msg.type === 'agent-event') logActivity(msg);
 }
 
-function handleDelta(msg) {
+function onDelta(msg) {
   const text = extractText(msg.message);
   if (!text) return;
   streamBuffers[msg.runId] = (streamBuffers[msg.runId] || '') + text;
   if (msg.sessionKey) sessions[msg.agentPkg] = msg.sessionKey;
-  
+
   const agent = agents.find(a => a.name === msg.agentPkg);
   const id = msg.agentPkg.replace(/-agent$/, '');
-  
-  // Update typing
   showTyping(agent?.displayName || id);
-  
-  // Update speech bubble
+
   const bubble = document.getElementById(`bubble-${id}`);
-  if (bubble) {
-    bubble.textContent = (streamBuffers[msg.runId] || '').slice(-60);
-    bubble.classList.add('visible');
-  }
-  
-  // Update desk status
-  const dot = document.querySelector(`.desk[data-agent="${msg.agentPkg}"] .agent-status-dot`);
-  if (dot) { dot.className = 'agent-status-dot busy'; }
+  if (bubble) { bubble.textContent = (streamBuffers[msg.runId]||'').slice(-60); bubble.classList.add('visible'); }
+
+  const dot = document.getElementById(`dot-${id}`);
+  if (dot) dot.className = 'status-dot busy';
 }
 
-function handleFinal(msg) {
-  const fullText = streamBuffers[msg.runId] || extractText(msg.message);
+function onFinal(msg) {
+  const text = streamBuffers[msg.runId] || extractText(msg.message);
   delete streamBuffers[msg.runId];
   if (msg.sessionKey) sessions[msg.agentPkg] = msg.sessionKey;
-  
+
   const agent = agents.find(a => a.name === msg.agentPkg);
   const id = msg.agentPkg.replace(/-agent$/, '');
   const name = agent?.displayName || id;
-  
-  if (fullText) {
-    addMessage(name, fullText, agent?.emoji || '🤖');
+
+  if (text) {
+    addChatMsg(name, text, agent?.emoji || '🤖');
+    // Log as activity too
+    addActivityEntry(agent?.emoji || '🤖', name, 'sent a message', new Date());
     saveChat();
   }
-  
+
   hideTyping();
-  
-  // Clear speech bubble after delay
   const bubble = document.getElementById(`bubble-${id}`);
   if (bubble) setTimeout(() => bubble.classList.remove('visible'), 3000);
-  
-  // Reset desk status
-  const dot = document.querySelector(`.desk[data-agent="${msg.agentPkg}"] .agent-status-dot`);
-  if (dot) { dot.className = 'agent-status-dot online'; }
+  const dot = document.getElementById(`dot-${id}`);
+  if (dot) dot.className = 'status-dot online';
 }
 
-function extractText(message) {
-  if (typeof message === 'string') return message;
-  if (Array.isArray(message)) return message.filter(p => p.type === 'text').map(p => p.text).join('');
-  if (message?.content) return extractText(message.content);
-  return message?.text || '';
+function extractText(m) {
+  if (typeof m === 'string') return m;
+  if (Array.isArray(m)) return m.filter(p=>p.type==='text').map(p=>p.text).join('');
+  if (m?.content) return extractText(m.content);
+  return m?.text || '';
 }
 
-// ── Send Message ──
+// ── Chat ──
 function sendMessage() {
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
   if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
-  
   input.value = '';
-  addMessage('You', text, '👤');
-  
-  // Send to ALL installed agents
+  addChatMsg('You', text, '👤');
+
   const regIds = new Set(registeredAgents.map(a => a.id));
-  const installed = agents.filter(a => regIds.has(a.name.replace(/-agent$/, '')));
-  
-  installed.forEach(agent => {
-    ws.send(JSON.stringify({
-      type: 'chat',
-      agentPkg: agent.name,
-      message: text,
-      sessionKey: sessions[agent.name] || null
-    }));
+  agents.filter(a => regIds.has(a.name.replace(/-agent$/, ''))).forEach(agent => {
+    ws.send(JSON.stringify({ type:'chat', agentPkg:agent.name, message:text, sessionKey:sessions[agent.name]||null }));
   });
-  
   saveChat();
+}
+
+function addChatMsg(sender, text, emoji) {
+  const c = document.getElementById('messages');
+  const el = document.createElement('div');
+  el.className = 'msg';
+  const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const color = sender === 'You' ? 'var(--accent)' : 'var(--green)';
+  let html = escapeHtml(text).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>');
+  el.innerHTML = `<span class="time">${now}</span><span class="sender" style="color:${color}">${emoji} ${sender}</span><span class="content">${html}</span>`;
+  c.appendChild(el);
+  c.scrollTop = c.scrollHeight;
+}
+
+function addSystemMsg(text) {
+  const c = document.getElementById('messages');
+  const el = document.createElement('div');
+  el.className = 'msg-system';
+  el.textContent = text;
+  c.appendChild(el);
+  c.scrollTop = c.scrollHeight;
+}
+
+function showTyping(name) { document.getElementById('typingWho').textContent = name; document.getElementById('typingLine').classList.add('active'); }
+function hideTyping() { document.getElementById('typingLine').classList.remove('active'); }
+
+// ── Activity Log ──
+function addActivityEntry(emoji, agentName, action, time) {
+  const log = document.getElementById('activityLog');
+  // Clear empty state
+  const empty = log.querySelector('.log-empty');
+  if (empty) empty.remove();
+
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  const t = time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  entry.innerHTML = `
+    <div class="log-icon">${emoji}</div>
+    <div class="log-body">
+      <div class="log-action"><span class="agent-name">${agentName}</span> ${escapeHtml(action)}</div>
+      <div class="log-time">${t}</div>
+    </div>`;
+  log.prepend(entry);
+
+  // Keep max 200 entries
+  while (log.children.length > 200) log.lastChild.remove();
+  saveActivity();
+}
+
+function logActivity(msg) {
+  const agent = agents.find(a => a.name === msg.agentPkg);
+  const name = agent?.displayName || msg.agentPkg || 'Agent';
+  const emoji = agent?.emoji || '🤖';
+  let action = msg.event || msg.tool || 'performed an action';
+  if (msg.type === 'tool-use') action = `used <span class="tool-name">${msg.tool || 'tool'}</span>`;
+  addActivityEntry(emoji, name, action, new Date());
+}
+
+function saveActivity() {
+  const html = document.getElementById('activityLog').innerHTML;
+  localStorage.setItem('hq-activity', html);
+}
+function loadActivity() {
+  const saved = localStorage.getItem('hq-activity');
+  if (saved) document.getElementById('activityLog').innerHTML = saved;
 }
 
 // ── Meeting ──
 function startMeeting() {
   meetingActive = true;
-  document.getElementById('startMeetingBtn').style.display = 'none';
-  document.getElementById('endMeetingBtn').style.display = 'block';
-  addSystemMessage('🎙️ Team standup started');
-  
-  // Send standup prompt to all agents
+  document.getElementById('startBtn').style.display = 'none';
+  document.getElementById('endBtn').style.display = 'block';
+  addSystemMsg('🎙️ Team standup started');
+  addActivityEntry('🎙️', 'System', 'Team standup started', new Date());
   const input = document.getElementById('chatInput');
   const old = input.value;
-  input.value = "Quick standup: What are you working on today? Any blockers? Keep it brief.";
+  input.value = "Quick standup: What are you working on? Any blockers? Keep it brief.";
   sendMessage();
   input.value = old;
 }
 
 function endMeeting() {
   meetingActive = false;
-  document.getElementById('startMeetingBtn').style.display = 'block';
-  document.getElementById('endMeetingBtn').style.display = 'none';
-  addSystemMessage('🎙️ Standup ended');
-}
-
-// ── Chat UI ──
-function addMessage(sender, text, emoji) {
-  const container = document.getElementById('messages');
-  const el = document.createElement('div');
-  el.className = 'msg';
-  const now = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  const color = sender === 'You' ? 'var(--accent)' : 'var(--green)';
-  
-  // Simple markdown: **bold**, `code`, newlines
-  let html = escapeHtml(text)
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\n/g, '<br>');
-  
-  el.innerHTML = `<span class="time">${now}</span><span class="sender" style="color:${color}">${emoji} ${sender}</span><span class="content">${html}</span>`;
-  container.appendChild(el);
-  container.scrollTop = container.scrollHeight;
-}
-
-function addSystemMessage(text) {
-  const container = document.getElementById('messages');
-  const el = document.createElement('div');
-  el.className = 'msg-system';
-  el.textContent = text;
-  container.appendChild(el);
-  container.scrollTop = container.scrollHeight;
-}
-
-function showTyping(name) {
-  const line = document.getElementById('typingLine');
-  document.getElementById('typingWho').textContent = name;
-  line.classList.add('active');
-}
-
-function hideTyping() {
-  document.getElementById('typingLine').classList.remove('active');
+  document.getElementById('startBtn').style.display = 'block';
+  document.getElementById('endBtn').style.display = 'none';
+  addSystemMsg('🎙️ Standup ended');
 }
 
 // ── Persistence ──
 function saveChat() {
-  const html = document.getElementById('messages').innerHTML;
-  localStorage.setItem('hq-chat', html);
+  localStorage.setItem('hq-chat', document.getElementById('messages').innerHTML);
   localStorage.setItem('hq-sessions', JSON.stringify(sessions));
 }
-
 function loadChat() {
-  const saved = localStorage.getItem('hq-chat');
-  if (saved) document.getElementById('messages').innerHTML = saved;
-  const savedSessions = localStorage.getItem('hq-sessions');
-  if (savedSessions) sessions = JSON.parse(savedSessions);
+  const s = localStorage.getItem('hq-chat');
+  if (s) document.getElementById('messages').innerHTML = s;
+  const ss = localStorage.getItem('hq-sessions');
+  if (ss) sessions = JSON.parse(ss);
   document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
 }
 
-// ── UI Helpers ──
-function updateStatus(online) {
-  const badge = document.getElementById('statusBadge');
-  badge.textContent = online ? '● Online' : '● Offline';
-  badge.className = `status-badge ${online ? 'online' : 'offline'}`;
+// ── Upsell ──
+function updateUpsell() {
+  const regIds = new Set(registeredAgents.map(a => a.id));
+  const installed = agents.filter(a => regIds.has(a.name.replace(/-agent$/, '')));
+  const available = agents.length - installed.length;
+  const desc = document.getElementById('upsellDesc');
+  if (available > 0) {
+    desc.textContent = `${available} more agent${available>1?'s':''} available — expand your team`;
+  } else {
+    desc.textContent = 'Browse the marketplace for new agents';
+  }
+}
+
+// ── Helpers ──
+function updateStatus(on) {
+  const b = document.getElementById('statusBadge');
+  b.textContent = on ? '● Online' : '● Offline';
+  b.className = `badge ${on ? 'online' : 'offline'}`;
 }
 
 function updateClock() {
   const now = new Date();
-  document.getElementById('clock').textContent = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  // Update wall clock emoji
+  document.getElementById('clock').textContent = now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   const h = now.getHours() % 12;
   const clocks = ['🕛','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚'];
   const el = document.getElementById('wallClock');
   if (el) el.textContent = clocks[h];
 }
 
-function updateMeetingParticipants() {
+function updateMeetingParts() {
   const regIds = new Set(registeredAgents.map(a => a.id));
   const online = agents.filter(a => regIds.has(a.name.replace(/-agent$/, '')));
-  document.getElementById('meetingParticipants').textContent = 
-    online.length > 0 ? `${online.map(a => a.emoji || '🤖').join(' ')} ${online.length} agent${online.length>1?'s':''} ready` : 'No agents online';
+  document.getElementById('meetingParts').textContent =
+    online.length > 0 ? `${online.map(a=>a.emoji||'🤖').join(' ')} ${online.length} agent${online.length>1?'s':''} ready` : 'No agents online';
 }
 
-// ── Resize handle ──
-function setupResize() {
-  const handle = document.getElementById('resizeHandle');
-  const chat = document.querySelector('.chat-panel');
-  let startX, startW;
-  
-  handle.addEventListener('mousedown', (e) => {
-    startX = e.clientX;
-    startW = chat.offsetWidth;
-    document.addEventListener('mousemove', onResize);
-    document.addEventListener('mouseup', stopResize);
-    e.preventDefault();
-  });
-  
-  function onResize(e) {
-    const newW = Math.max(280, Math.min(700, startW - (e.clientX - startX)));
-    chat.style.flex = `0 0 ${newW}px`;
-  }
-  function stopResize() {
-    document.removeEventListener('mousemove', onResize);
-    document.removeEventListener('mouseup', stopResize);
-  }
-}
-
-// ── Input ──
 function setupInput() {
-  document.getElementById('chatInput').addEventListener('keydown', (e) => {
+  document.getElementById('chatInput').addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   });
 }
 
-// ── Cat ──
 function setupCat() {
   const cat = document.getElementById('officeCat');
-  const faces = ['😺','😸','😹','😻','😼','😽','🙀','😿','😾','😺'];
+  const faces = ['😺','😸','😹','😻','😼','😽','🙀','😿','😾'];
   let i = 0;
-  cat.addEventListener('click', () => { i = (i+1) % faces.length; cat.textContent = faces[i]; });
+  cat.addEventListener('click', () => { i = (i+1)%faces.length; cat.textContent = faces[i]; });
 }
 
-// ── Waitlist ──
 async function submitWaitlist() {
   const email = document.getElementById('waitlistEmail').value.trim();
   if (!email || !email.includes('@')) return alert('Enter a valid email.');
-  
-  try {
-    await fetch('/api/waitlist', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ email, source:'hq-waitlist', timestamp:new Date().toISOString() })
-    });
-  } catch(e) {
-    const list = JSON.parse(localStorage.getItem('waitlist-emails') || '[]');
-    list.push({ email, timestamp: new Date().toISOString() });
-    localStorage.setItem('waitlist-emails', JSON.stringify(list));
-  }
-  
-  document.getElementById('waitlistForm').style.display = 'none';
+  try { await fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,source:'hq',timestamp:new Date().toISOString()})}); }
+  catch { const l=JSON.parse(localStorage.getItem('waitlist-emails')||'[]'); l.push({email,timestamp:new Date().toISOString()}); localStorage.setItem('waitlist-emails',JSON.stringify(l)); }
+  document.getElementById('waitlistForm').style.display='none';
   document.getElementById('waitlistSuccess').classList.add('show');
 }
 
-// ── Escape HTML ──
-function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function escapeHtml(t) { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
 
-// ── Go ──
 init();
 </script>
 </body>
