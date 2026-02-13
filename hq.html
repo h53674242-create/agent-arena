@@ -596,9 +596,16 @@ async function installAgent(agentName) {
   try {
     const res=await fetch(`${LOCAL}/api/agents/${agentName}/install`,{method:'POST'});
     const data=await res.json();
-    if(data.ok) { addSystemMsg(`✅ ${agent?.displayName||agentName} has joined!`); setTimeout(()=>{loadAgents();updateUpsell()},2000); }
-    else throw new Error(data.error);
-  } catch(e) { alert('Install failed: '+e.message); }
+    if(data.ok) {
+      addSystemMsg(`✅ ${agent?.displayName||agentName} has joined the team!`);
+      // Wait for gateway restart then reload
+      setTimeout(async ()=>{
+        await loadAgents();
+        updateUpsell();
+        addSystemMsg(`${agent?.emoji||'🤖'} ${agent?.displayName||agentName} is at their desk and ready to work.`);
+      }, 3000);
+    } else throw new Error(data.error);
+  } catch(e) { alert('Install failed: '+e.message); if(desk){const l=desk.querySelector('.agent-label');if(l)l.innerHTML=`${agent?.displayName||agentName}<br><span style="font-size:8px;color:var(--accent)">Click to hire</span>`;} }
 }
 
 // ═══ WebSocket ═══

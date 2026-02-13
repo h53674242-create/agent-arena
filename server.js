@@ -355,7 +355,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // API: install agent (one-click from UI)
+  // API: install agent (one-click from UI — multi-agent aware)
   const installMatch = url.pathname.match(/^\/api\/agents\/([a-z0-9-]+)\/install$/);
   if (installMatch && req.method === 'POST') {
     const name = installMatch[1];
@@ -366,16 +366,49 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     try {
-      const installScript = path.join(BASE, 'installer', 'install.sh');
-      const result = execSync(`bash "${installScript}" "${name}" --from "${pkgDir}"`, {
-        env: { ...process.env, SKIP_RESTART: '1' },
-        timeout: 30000,
-        encoding: 'utf8',
+      const manifest = JSON.parse(fs.readFileSync(path.join(pkgDir, 'agent.json'), 'utf8'));
+      const agentId = manifest.agentId || name.replace(/-agent$/, '');
+      const home = require('os').homedir();
+      const configPath = path.join(home, '.openclaw/openclaw.json');
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+      // Check if already registered
+      if (config.agents?.list?.some(a => a.id === agentId)) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, message: 'Already installed' }));
+        return;
+      }
+
+      // Create dedicated workspace
+      const workspacePath = path.join(home, `.openclaw/workspace-${agentId}`);
+      if (!fs.existsSync(workspacePath)) fs.mkdirSync(workspacePath, { recursive: true });
+      fs.mkdirSync(path.join(workspacePath, 'memory'), { recursive: true });
+
+      // Copy agent files to workspace
+      for (const f of ['SOUL.md', 'AGENTS.md', 'HEARTBEAT.md', 'MEMORY.md', 'USER.md', 'TOOLS.md', 'BOOTSTRAP.md']) {
+        const src = path.join(pkgDir, f);
+        if (fs.existsSync(src)) {
+          fs.copyFileSync(src, path.join(workspacePath, f));
+        }
+      }
+
+      // Add to agents.list in config
+      if (!config.agents) config.agents = {};
+      if (!config.agents.list) config.agents.list = [];
+      config.agents.list.push({
+        id: agentId,
+        name: manifest.displayName || name,
+        workspace: workspacePath,
+        subagents: { allowAgents: ['*'] },
       });
-      // Also restart gateway to pick up new agent
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+      // Restart gateway to pick up new agent
       try { execSync('openclaw gateway restart', { timeout: 15000, encoding: 'utf8' }); } catch(e) {}
+
+      console.log(`  ✅ Installed ${manifest.displayName || name} (${agentId}) → ${workspacePath}`);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, output: result }));
+      res.end(JSON.stringify({ ok: true, agentId }));
     } catch(e) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Install failed: ' + e.message }));
