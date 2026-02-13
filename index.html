@@ -678,26 +678,43 @@ async function handleWaitlist(e) {
 }
 
 // Scroll fade-in for sections
-document.querySelectorAll('.section').forEach(function(el, i) {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(30px)';
-  el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
-});
+(function() {
+  var sections = document.querySelectorAll('.section');
+  var vh = window.innerHeight;
 
-var observer = new IntersectionObserver(function(entries) {
-  entries.forEach(function(entry) {
-    if (entry.isIntersecting) {
-      entry.target.style.opacity = '1';
-      entry.target.style.transform = 'translateY(0)';
-      observer.unobserve(entry.target);
+  sections.forEach(function(el) {
+    var rect = el.getBoundingClientRect();
+    // If already in viewport on load, show with slight delay for stagger effect
+    if (rect.top < vh + 100) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      setTimeout(function() {
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+      }, 100);
+    } else {
+      // Below fold — use observer
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(30px)';
+      el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
     }
   });
-}, { threshold: 0.05, rootMargin: '50px' });
 
-// Observe after a tick so initial intersection fires
-setTimeout(function() {
-  document.querySelectorAll('.section').forEach(function(el) { observer.observe(el); });
-}, 50);
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.05, rootMargin: '50px' });
+
+  sections.forEach(function(el) {
+    if (el.style.opacity === '0') observer.observe(el);
+  });
+})();
 </script>
 </body>
 </html>
