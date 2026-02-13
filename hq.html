@@ -422,13 +422,7 @@ function renderDesks() {
       </div>`;
   }).join('');
 
-  html+=uninstalled.map(agent=>`
-    <div class="desk empty" data-agent="${agent.name}" onclick="installAgent('${agent.name}')">
-      <div class="agent-avatar" style="filter:grayscale(1)">${agent.emoji||'🤖'}<div class="status-dot offline"></div></div>
-      <div class="agent-label">${agent.displayName||agent.name}<br><span style="font-size:8px;color:var(--accent)">Click to hire</span></div>
-      <div class="desk-obj"><div class="desk-monitor"><div class="glow"></div></div></div>
-    </div>`).join('');
-
+  // No greyed-out desks — uninstalled agents only available via Hire page
   html+=`<div class="add-agent-desk" onclick="window.location.href='agents.html'"><div class="add-circle">+</div><div class="add-label">Add Agent</div></div>`;
   area.innerHTML=html;
 }
