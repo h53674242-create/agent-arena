@@ -417,7 +417,7 @@ function renderDesks() {
   const area = document.getElementById('deskArea');
   const regIds = new Set(registeredAgents.map(a => a.id));
   const installed = agents.filter(a => regIds.has(a.name.replace(/-agent$/, '')));
-  const uninstalled = agents.filter(a => !regIds.has(a.name.replace(/-agent$/, ''))).slice(0, 1);
+  const uninstalled = agents.filter(a => !regIds.has(a.name.replace(/-agent$/, '')));
 
   let html = installed.map(agent => {
     const id = agent.name.replace(/-agent$/, '');
