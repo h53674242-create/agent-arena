@@ -453,58 +453,53 @@ function renderAgentActivity(data) {
     tl.innerHTML='<div class="detail-loading">No recent activity found.</div>';
   } else {
     let html='';
-    for(const msg of history.reverse()) {
+    for(const msg of history) {
       const role=msg.role||'unknown';
-      const content=extractMsgText(msg);
+      const text=msg.text||'';
+      const tools=msg.toolCalls||[];
       const time=msg.timestamp?new Date(msg.timestamp):null;
       const timeStr=time?time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
 
       if(role==='assistant') {
         msgCount++;
-        // Check for tool calls
-        const toolCalls=msg.tool_calls||msg.toolCalls||(Array.isArray(msg.content)?msg.content.filter(c=>c.type==='tool_use'):null);
-        if(toolCalls&&toolCalls.length) {
-          for(const tc of toolCalls) {
+        if(tools.length) {
+          for(const tc of tools) {
             toolCount++;
-            const toolName=tc.function?.name||tc.name||tc.tool||'tool';
-            const toolInput=tc.function?.arguments||tc.input||'';
-            const preview=typeof toolInput==='string'?toolInput.slice(0,200):JSON.stringify(toolInput).slice(0,200);
             html+=`<div class="tl-item">
               <div class="tl-icon tool">🔧</div>
               <div class="tl-body">
-                <div class="tl-title">Used tool <span class="tool-badge">${esc(toolName)}</span></div>
-                <div class="tl-preview">${esc(preview)}</div>
+                <div class="tl-title">Used tool <span class="tool-badge">${esc(tc.name||'tool')}</span></div>
+                <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc((tc.input||'').slice(0,300))}</div>
                 <div class="tl-time">${timeStr}</div>
               </div></div>`;
           }
         }
-        if(content) {
+        if(text) {
           html+=`<div class="tl-item">
             <div class="tl-icon msg">💬</div>
             <div class="tl-body">
               <div class="tl-title">Sent a message</div>
-              <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc(content.slice(0,500))}</div>
-              ${content.length>200?'<div class="tl-expand" onclick="this.previousElementSibling.classList.toggle(\'expanded\')">show more</div>':''}
+              <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc(text.slice(0,500))}</div>
+              ${text.length>200?'<div class="tl-expand" onclick="this.previousElementSibling.classList.toggle(\'expanded\')">show more</div>':''}
               <div class="tl-time">${timeStr}</div>
             </div></div>`;
         }
       } else if(role==='user') {
-        if(content) {
+        if(text) {
           html+=`<div class="tl-item">
             <div class="tl-icon sys">👤</div>
             <div class="tl-body">
-              <div class="tl-title">Received message</div>
-              <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc(content.slice(0,300))}</div>
+              <div class="tl-title">Received input</div>
+              <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc(text.slice(0,300))}</div>
               <div class="tl-time">${timeStr}</div>
             </div></div>`;
         }
-      } else if(role==='tool') {
-        const preview=content?content.slice(0,200):'(result)';
+      } else if(role==='tool'||role==='toolResult') {
         html+=`<div class="tl-item">
           <div class="tl-icon tool">📄</div>
           <div class="tl-body">
             <div class="tl-title">Tool result</div>
-            <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc(preview)}</div>
+            <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc((text||'(result)').slice(0,200))}</div>
             <div class="tl-time">${timeStr}</div>
           </div></div>`;
       }

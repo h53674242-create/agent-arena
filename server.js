@@ -360,26 +360,63 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     try {
+      // Resolve actual agentId from package manifest (e.g. hopper-agent -> main)
+      const manifestPath = path.join(PACKAGES, agentName, 'agent.json');
+      let resolvedId = agentId;
+      if (fs.existsSync(manifestPath)) {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        if (manifest.agentId) resolvedId = manifest.agentId;
+      }
+
       // Get all sessions for this agent
       const result = await gateway.request('sessions.list', { limit: 50 });
       const allSessions = result.sessions || result || [];
       const agentSessions = allSessions.filter(s => {
         const sAgent = s.key?.split(':')?.[1];
-        return sAgent === agentId || sAgent === agentName;
+        return sAgent === resolvedId || sAgent === agentId || sAgent === agentName;
       });
 
       // Get history from the main session
-      const mainSession = agentSessions.find(s => s.key === `agent:${agentId}:main`);
+      const mainSession = agentSessions.find(s => s.key === `agent:${resolvedId}:main`) || agentSessions.find(s => s.key === `agent:${agentId}:main`) || agentSessions[0];
+      // Read history from session files on disk
       let history = [];
-      if (mainSession) {
-        try {
-          const hist = await gateway.request('chat.history', {
-            sessionKey: mainSession.key,
-            limit: 30,
-            includeTools: true,
-          });
-          history = hist.messages || hist || [];
-        } catch(e) { /* no history */ }
+      const agentDir = path.join(require('os').homedir(), '.openclaw', 'agents', resolvedId, 'sessions');
+      if (fs.existsSync(agentDir)) {
+        // Find most recent session file
+        const files = fs.readdirSync(agentDir)
+          .filter(f => f.endsWith('.jsonl') && !f.includes('.deleted'))
+          .map(f => ({ name: f, mtime: fs.statSync(path.join(agentDir, f)).mtimeMs }))
+          .sort((a, b) => b.mtime - a.mtime);
+        
+        if (files.length > 0) {
+          try {
+            const content = fs.readFileSync(path.join(agentDir, files[0].name), 'utf8');
+            const lines = content.trim().split('\n').slice(-100); // last 100 lines
+            for (const line of lines) {
+              try {
+                const entry = JSON.parse(line);
+                if (entry.type === 'message' && entry.message) {
+                  const msg = entry.message;
+                  const role = msg.role || 'unknown';
+                  // Extract text content
+                  let text = '';
+                  let toolCalls = [];
+                  if (typeof msg.content === 'string') {
+                    text = msg.content;
+                  } else if (Array.isArray(msg.content)) {
+                    text = msg.content.filter(c => c.type === 'text').map(c => c.text).join('');
+                    toolCalls = msg.content.filter(c => c.type === 'tool_use').map(c => ({
+                      name: c.name, input: typeof c.input === 'string' ? c.input : JSON.stringify(c.input || {}).slice(0, 300)
+                    }));
+                  }
+                  if (text || toolCalls.length) {
+                    history.push({ role, text, toolCalls, timestamp: entry.timestamp });
+                  }
+                }
+              } catch(e) { /* skip bad line */ }
+            }
+          } catch(e) { /* can't read file */ }
+        }
       }
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
