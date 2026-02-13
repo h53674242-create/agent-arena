@@ -244,7 +244,7 @@
   }
   .hire-overlay.open { display:flex; }
   .hire-modal {
-    width:600px; max-width:90vw; max-height:80vh;
+    width:640px; max-width:90vw; max-height:85vh;
     background:var(--surface); border:1px solid var(--border); border-radius:12px;
     display:flex; flex-direction:column; overflow:hidden;
     animation:modalIn 0.2s ease; box-shadow:0 20px 60px rgba(0,0,0,0.5);
@@ -260,27 +260,80 @@
     display:flex; align-items:center; justify-content:center;
   }
   .hire-modal-header .close-btn:hover { color:var(--text); border-color:var(--accent); }
+
+  /* Hire views */
+  .hire-view { display:none; }
+  .hire-view.active { display:block; }
+
+  /* Browse view */
   .hire-list { flex:1; overflow-y:auto; padding:16px; }
   .hire-card {
-    display:flex; align-items:center; gap:16px; padding:16px;
-    border:1px solid var(--border); border-radius:10px; margin-bottom:12px;
-    transition:border-color .15s;
+    padding:20px; border:1px solid var(--border); border-radius:10px;
+    margin-bottom:12px; cursor:pointer; transition:all .15s;
   }
-  .hire-card:hover { border-color:rgba(251,191,36,0.3); }
-  .hire-card .hire-emoji { font-size:32px; }
-  .hire-card .hire-info { flex:1; }
-  .hire-card .hire-name { font-size:14px; font-weight:700; margin-bottom:2px; }
-  .hire-card .hire-desc { font-size:12px; color:var(--muted); line-height:1.4; }
-  .hire-card .hire-price { font-size:11px; color:var(--green); font-weight:600; margin-top:4px; }
-  .hire-card .hire-btn {
-    padding:8px 20px; background:var(--accent); color:#000; border:none;
-    border-radius:8px; font-weight:700; font-size:12px; cursor:pointer;
-    white-space:nowrap; transition:filter .15s;
+  .hire-card:hover { border-color:rgba(251,191,36,0.3); background:rgba(251,191,36,0.02); }
+  .hire-card.on-team { opacity:0.5; cursor:default; }
+  .hire-card .hire-top { display:flex; align-items:center; gap:14px; margin-bottom:10px; }
+  .hire-card .hire-emoji { font-size:36px; }
+  .hire-card .hire-meta { flex:1; }
+  .hire-card .hire-name { font-size:15px; font-weight:700; }
+  .hire-card .hire-title { font-size:12px; color:var(--muted); margin-top:1px; }
+  .hire-card .hire-price { font-size:12px; padding:3px 10px; border-radius:6px; font-weight:700; }
+  .hire-card .hire-price.free { color:var(--green); background:rgba(34,197,94,0.1); }
+  .hire-card .hire-price.paid { color:var(--accent); background:rgba(251,191,36,0.1); }
+  .hire-card .on-team-badge { font-size:11px; color:var(--green); font-weight:600; }
+  .hire-card .hire-desc { font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:10px; }
+  .hire-skills { display:flex; flex-wrap:wrap; gap:6px; }
+  .hire-skill { padding:3px 8px; background:var(--surface2); border:1px solid var(--border); border-radius:5px; font-size:10px; color:var(--text); }
+
+  /* Detail view */
+  .hire-detail { padding:24px; overflow-y:auto; flex:1; }
+  .hire-detail .hd-hero { text-align:center; margin-bottom:24px; }
+  .hire-detail .hd-emoji { font-size:64px; margin-bottom:12px; }
+  .hire-detail .hd-name { font-size:24px; font-weight:700; }
+  .hire-detail .hd-title { font-size:14px; color:var(--muted); margin-top:4px; }
+  .hire-detail .hd-price { display:inline-block; margin-top:10px; padding:5px 14px; border-radius:8px; font-weight:700; font-size:13px; }
+  .hire-detail .hd-section { margin-bottom:20px; }
+  .hire-detail .hd-section h3 { font-size:13px; font-weight:700; color:var(--accent); margin-bottom:8px; }
+  .hire-detail .hd-section p { font-size:13px; color:var(--muted); line-height:1.6; }
+  .hire-detail .hd-skills { display:flex; flex-wrap:wrap; gap:8px; }
+  .hire-detail .hd-skill { padding:5px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; font-size:11px; }
+  .hire-detail .hd-hire-btn {
+    display:block; width:100%; padding:14px; background:var(--accent); color:#000; border:none;
+    border-radius:10px; font-weight:700; font-size:15px; cursor:pointer; margin-top:20px;
+    transition:filter .15s;
   }
-  .hire-card .hire-btn:hover { filter:brightness(1.1); }
-  .hire-card .hire-btn:disabled { opacity:0.5; cursor:not-allowed; }
-  .hire-card .hire-btn.installed { background:var(--surface2); color:var(--muted); border:1px solid var(--border); cursor:default; }
-  .hire-empty { text-align:center; color:var(--muted); padding:40px; font-size:14px; }
+  .hire-detail .hd-hire-btn:hover { filter:brightness(1.1); }
+  .hire-detail .hd-back { background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; margin-bottom:16px; }
+  .hire-detail .hd-back:hover { color:var(--text); }
+
+  /* Onboarding view */
+  .onboarding { padding:40px 24px; text-align:center; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .onboarding .ob-emoji { font-size:80px; margin-bottom:20px; animation:bounce 0.6s ease infinite alternate; }
+  @keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-10px)} }
+  .onboarding .ob-title { font-size:20px; font-weight:700; margin-bottom:8px; }
+  .onboarding .ob-subtitle { font-size:14px; color:var(--muted); margin-bottom:24px; }
+  .onboarding .ob-steps { text-align:left; max-width:300px; margin:0 auto; }
+  .ob-step { display:flex; align-items:center; gap:12px; padding:8px 0; font-size:13px; color:var(--muted); transition:color 0.3s; }
+  .ob-step.done { color:var(--green); }
+  .ob-step.active { color:var(--text); }
+  .ob-step .ob-check { width:20px; text-align:center; }
+  .ob-progress { width:200px; height:4px; background:var(--border); border-radius:2px; margin-top:20px; overflow:hidden; }
+  .ob-progress .ob-bar { height:100%; background:var(--accent); border-radius:2px; transition:width 0.5s ease; width:0%; }
+
+  /* Celebration */
+  .celebration { padding:40px; text-align:center; }
+  .celebration .cel-emoji { font-size:80px; margin-bottom:16px; animation:celebratePop 0.5s ease; }
+  @keyframes celebratePop { 0%{transform:scale(0)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
+  .celebration h2 { font-size:22px; font-weight:700; margin-bottom:8px; }
+  .celebration p { font-size:14px; color:var(--muted); margin-bottom:24px; }
+  .celebration .cel-btn {
+    padding:12px 32px; background:var(--accent); color:#000; border:none;
+    border-radius:10px; font-weight:700; font-size:14px; cursor:pointer;
+  }
+  .confetti { position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:100; }
+  .confetti-piece { position:absolute; width:8px; height:8px; border-radius:2px; animation:confettiFall 2s ease forwards; }
+  @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
 
   /* Waitlist */
   .waitlist-gate { display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; }
@@ -391,11 +444,20 @@
   <!-- Hire Modal -->
   <div class="hire-overlay" id="hireOverlay" onclick="if(event.target===this)closeHireModal()">
     <div class="hire-modal">
-      <div class="hire-modal-header">
-        <h2>⚡ Hire an Agent</h2>
+      <div class="hire-modal-header" id="hireModalHeader">
+        <h2 id="hireModalTitle">⚡ Hire an Agent</h2>
         <button class="close-btn" onclick="closeHireModal()">✕</button>
       </div>
-      <div class="hire-list" id="hireList"></div>
+      <!-- Browse View -->
+      <div class="hire-view active" id="hireBrowse">
+        <div class="hire-list" id="hireList"></div>
+      </div>
+      <!-- Detail View -->
+      <div class="hire-view hire-detail" id="hireDetailView"></div>
+      <!-- Onboarding View -->
+      <div class="hire-view onboarding" id="hireOnboarding"></div>
+      <!-- Celebration View -->
+      <div class="hire-view celebration" id="hireCelebration"></div>
     </div>
   </div>
 
@@ -626,27 +688,15 @@ function switchDetailTab(tab) {
 }
 
 // ═══ Hire Modal ═══
+function showHireView(view) {
+  document.querySelectorAll('.hire-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(view).classList.add('active');
+}
+
 function openHireModal() {
-  const list=document.getElementById('hireList');
-  const installedSet=new Set(agents.filter(isInstalled).map(a=>a.name));
-
-  list.innerHTML=agents.map(agent=>{
-    const installed=installedSet.has(agent.name);
-    const price=typeof agent.price==='object'?`$${agent.price.amount}/${agent.price.interval}`:(agent.price||'FREE');
-    return `<div class="hire-card">
-      <div class="hire-emoji">${agent.emoji||'🤖'}</div>
-      <div class="hire-info">
-        <div class="hire-name">${agent.displayName||agent.name}</div>
-        <div class="hire-desc">${agent.title||agent.description||''}</div>
-        <div class="hire-price">${price}</div>
-      </div>
-      ${installed
-        ?'<button class="hire-btn installed" disabled>On Team ✓</button>'
-        :`<button class="hire-btn" id="hire-btn-${agent.name}" onclick="hireFromModal('${agent.name}')">Hire</button>`
-      }
-    </div>`;
-  }).join('')||'<div class="hire-empty">No agents available</div>';
-
+  document.getElementById('hireModalTitle').textContent='⚡ Hire an Agent';
+  renderHireList();
+  showHireView('hireBrowse');
   document.getElementById('hireOverlay').classList.add('open');
 }
 
@@ -654,31 +704,191 @@ function closeHireModal() {
   document.getElementById('hireOverlay').classList.remove('open');
 }
 
-async function hireFromModal(agentName) {
+function renderHireList() {
+  const list=document.getElementById('hireList');
+  const installedSet=new Set(agents.filter(isInstalled).map(a=>a.name));
+
+  list.innerHTML=agents.map(agent=>{
+    const installed=installedSet.has(agent.name);
+    const price=formatPrice(agent.price);
+    const priceClass=(!agent.price||agent.price==='FREE')?'free':'paid';
+    const skills=(agent.skills||[]).slice(0,5);
+    return `<div class="hire-card ${installed?'on-team':''}" onclick="${installed?'':`showAgentDetail('${agent.name}')`}">
+      <div class="hire-top">
+        <div class="hire-emoji">${agent.emoji||'🤖'}</div>
+        <div class="hire-meta">
+          <div class="hire-name">${agent.displayName||agent.name}</div>
+          <div class="hire-title">${agent.title||''}</div>
+        </div>
+        ${installed
+          ?'<span class="on-team-badge">✓ On Team</span>'
+          :`<span class="hire-price ${priceClass}">${price}</span>`
+        }
+      </div>
+      <div class="hire-desc">${agent.description||agent.desc||''}</div>
+      ${skills.length?`<div class="hire-skills">${skills.map(s=>`<span class="hire-skill">${esc(s)}</span>`).join('')}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function showAgentDetail(agentName) {
+  const agent=agents.find(a=>a.name===agentName);
+  if(!agent) return;
+  document.getElementById('hireModalTitle').textContent='Agent Details';
+  const price=formatPrice(agent.price);
+  const priceClass=(!agent.price||agent.price==='FREE')?'free':'paid';
+  const skills=agent.skills||[];
+  const tags=agent.tags||[];
+
+  document.getElementById('hireDetailView').innerHTML=`
+    <button class="hd-back" onclick="showHireView('hireBrowse');document.getElementById('hireModalTitle').textContent='⚡ Hire an Agent'">← Back to agents</button>
+    <div class="hd-hero">
+      <div class="hd-emoji">${agent.emoji||'🤖'}</div>
+      <div class="hd-name">${agent.displayName||agent.name}</div>
+      <div class="hd-title">${agent.title||''}</div>
+      <div class="hd-price ${priceClass}">${price}</div>
+    </div>
+    <div class="hd-section">
+      <h3>About</h3>
+      <p>${agent.description||agent.desc||'A powerful AI agent ready to join your team.'}</p>
+    </div>
+    ${skills.length?`<div class="hd-section">
+      <h3>Skills & Tools</h3>
+      <div class="hd-skills">${skills.map(s=>`<span class="hd-skill">🔧 ${esc(s)}</span>`).join('')}</div>
+    </div>`:''}
+    ${tags.length?`<div class="hd-section">
+      <h3>Tags</h3>
+      <div class="hd-skills">${tags.map(t=>`<span class="hd-skill">${esc(t)}</span>`).join('')}</div>
+    </div>`:''}
+    <button class="hd-hire-btn" onclick="startOnboarding('${agent.name}')">Hire ${agent.displayName||agent.name} →</button>
+  `;
+  showHireView('hireDetailView');
+}
+
+async function startOnboarding(agentName) {
   const agent=agents.find(a=>a.name===agentName);
   const name=agent?.displayName||agentName;
-  const btn=document.getElementById(`hire-btn-${agentName}`);
-  if(btn){btn.textContent='Hiring...';btn.disabled=true;}
+  document.getElementById('hireModalTitle').textContent='Onboarding';
 
+  document.getElementById('hireOnboarding').innerHTML=`
+    <div class="ob-emoji">${agent?.emoji||'🤖'}</div>
+    <div class="ob-title">Hiring ${name}...</div>
+    <div class="ob-subtitle">Setting up their workspace and tools</div>
+    <div class="ob-steps">
+      <div class="ob-step active" id="ob-step-1"><span class="ob-check">⏳</span> Creating workspace</div>
+      <div class="ob-step" id="ob-step-2"><span class="ob-check">○</span> Installing personality</div>
+      <div class="ob-step" id="ob-step-3"><span class="ob-check">○</span> Configuring tools</div>
+      <div class="ob-step" id="ob-step-4"><span class="ob-check">○</span> Booting agent</div>
+    </div>
+    <div class="ob-progress"><div class="ob-bar" id="obBar"></div></div>
+  `;
+  showHireView('hireOnboarding');
+
+  // Animate steps while installing
+  const steps=['ob-step-1','ob-step-2','ob-step-3','ob-step-4'];
+  const bar=document.getElementById('obBar');
+  let step=0;
+
+  function advanceStep() {
+    if(step>0) {
+      const prev=document.getElementById(steps[step-1]);
+      if(prev){prev.classList.remove('active');prev.classList.add('done');prev.querySelector('.ob-check').textContent='✓';}
+    }
+    if(step<steps.length) {
+      const cur=document.getElementById(steps[step]);
+      if(cur){cur.classList.add('active');cur.querySelector('.ob-check').textContent='⏳';}
+      bar.style.width=((step+1)/steps.length*100)+'%';
+    }
+    step++;
+  }
+
+  // Step 1: Creating workspace
+  advanceStep();
+  await sleep(800);
+
+  // Step 2: Installing personality
+  advanceStep();
+
+  // Actually install
   try {
     const res=await fetch(`${LOCAL}/api/agents/${agentName}/install`,{method:'POST'});
     const data=await res.json();
-    if(data.ok) {
-      if(btn){btn.textContent='On Team ✓';btn.className='hire-btn installed';}
-      addSystemMsg(`✅ ${name} has joined the team!`);
-      // Wait for gateway restart then reload desks
-      setTimeout(async()=>{
-        await loadAgents();
-        updateUpsell();
-        // Refresh the hire modal too
-        openHireModal();
-      },3000);
-    } else throw new Error(data.error);
+    if(!data.ok) throw new Error(data.error);
   } catch(e) {
     alert('Hire failed: '+e.message);
-    if(btn){btn.textContent='Hire';btn.disabled=false;}
+    showHireView('hireBrowse');
+    return;
   }
+
+  await sleep(600);
+  // Step 3: Configuring tools
+  advanceStep();
+  await sleep(800);
+
+  // Step 4: Booting agent
+  advanceStep();
+  await sleep(1000);
+
+  // Final step done
+  const last=document.getElementById(steps[3]);
+  if(last){last.classList.remove('active');last.classList.add('done');last.querySelector('.ob-check').textContent='✓';}
+  bar.style.width='100%';
+
+  await sleep(500);
+
+  // Show celebration
+  showCelebration(agent);
 }
+
+function showCelebration(agent) {
+  const name=agent?.displayName||agent?.name||'Agent';
+  document.getElementById('hireModalTitle').textContent='🎉 Welcome!';
+
+  document.getElementById('hireCelebration').innerHTML=`
+    <div class="cel-emoji">${agent?.emoji||'🤖'}</div>
+    <h2>${name} has joined the team!</h2>
+    <p>They're at their desk and ready to work. Say hi in the team chat!</p>
+    <button class="cel-btn" onclick="finishHiring()">Go to HQ →</button>
+  `;
+  showHireView('hireCelebration');
+
+  // Confetti!
+  spawnConfetti();
+
+  // Reload agents in background
+  loadAgents().then(()=>updateUpsell());
+}
+
+function finishHiring() {
+  closeHireModal();
+  // Desk already updated from loadAgents()
+  addSystemMsg('🎉 New team member is at their desk!');
+}
+
+function spawnConfetti() {
+  const container=document.createElement('div');
+  container.className='confetti';
+  document.body.appendChild(container);
+  const colors=['#fbbf24','#22c55e','#3b82f6','#ef4444','#a78bfa','#f472b6'];
+  for(let i=0;i<60;i++){
+    const piece=document.createElement('div');
+    piece.className='confetti-piece';
+    piece.style.left=Math.random()*100+'%';
+    piece.style.background=colors[Math.floor(Math.random()*colors.length)];
+    piece.style.animationDelay=Math.random()*1+'s';
+    piece.style.animationDuration=(1.5+Math.random()*1.5)+'s';
+    container.appendChild(piece);
+  }
+  setTimeout(()=>container.remove(),4000);
+}
+
+function formatPrice(p) {
+  if(!p||p==='FREE') return 'FREE';
+  if(typeof p==='object') return `$${p.amount}/${p.interval}`;
+  return p;
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
 // ═══ Fire Agent ═══
 async function fireAgent(agentName) {
@@ -691,27 +901,6 @@ async function fireAgent(agentName) {
     if(data.ok) { addSystemMsg(`👋 ${name} has left the team.`); setTimeout(()=>{loadAgents();updateUpsell()},2000); }
     else throw new Error(data.error);
   } catch(e) { alert('Failed to remove: '+e.message); }
-}
-
-// ═══ Install ═══
-async function installAgent(agentName) {
-  const agent=agents.find(a=>a.name===agentName);
-  if(!confirm(`Hire ${agent?.displayName||agentName}? This will install them into your workspace.`)) return;
-  const desk=document.querySelector(`.desk[data-agent="${agentName}"]`);
-  if(desk) desk.querySelector('.agent-label').innerHTML=`${agent?.displayName||agentName}<br><span style="font-size:8px;color:var(--accent)">Installing...</span>`;
-  try {
-    const res=await fetch(`${LOCAL}/api/agents/${agentName}/install`,{method:'POST'});
-    const data=await res.json();
-    if(data.ok) {
-      addSystemMsg(`✅ ${agent?.displayName||agentName} has joined the team!`);
-      // Wait for gateway restart then reload
-      setTimeout(async ()=>{
-        await loadAgents();
-        updateUpsell();
-        addSystemMsg(`${agent?.emoji||'🤖'} ${agent?.displayName||agentName} is at their desk and ready to work.`);
-      }, 3000);
-    } else throw new Error(data.error);
-  } catch(e) { alert('Install failed: '+e.message); if(desk){const l=desk.querySelector('.agent-label');if(l)l.innerHTML=`${agent?.displayName||agentName}<br><span style="font-size:8px;color:var(--accent)">Click to hire</span>`;} }
 }
 
 // ═══ WebSocket ═══
