@@ -513,9 +513,8 @@ const server = http.createServer(async (req, res) => {
 const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (clientWs) => {
-  const clientId = crypto.randomBytes(4).toString('hex');
-  console.log(`  [ws] Client ${clientId} connected`);
-  
+  // Use a stable client ID per browser (sent by client), or fallback to random
+  let clientId = null;
   const eventCleanups = []; // track event subscriptions for cleanup
   const agentSessions = {}; // agentPkg -> sessionKey
 
@@ -528,6 +527,15 @@ wss.on('connection', (clientWs) => {
   clientWs.on('message', async (raw) => {
     try {
       const msg = JSON.parse(raw.toString());
+
+      // ---- IDENTIFY: client sends stable ID ----
+      if (msg.type === 'identify') {
+        clientId = msg.clientId || crypto.randomBytes(4).toString('hex');
+        console.log(`  [ws] Client identified: ${clientId}`);
+        return;
+      }
+
+      if (!clientId) clientId = crypto.randomBytes(4).toString('hex');
 
       // ---- HATCH: create a new agent session ----
       if (msg.type === 'hatch') {
@@ -552,7 +560,7 @@ wss.on('connection', (clientWs) => {
         // Session key format: agent:<agentId>:<scope>:<unique>
         // This ensures the right agent (with its own workspace/SOUL) handles the session
         const agentId = manifest.agentId || msg.agentPkg.replace(/-agent$/, '');
-        const sessionKey = `agent:${agentId}:arena:${msg.agentPkg}-${clientId}`;
+        const sessionKey = `agent:${agentId}:arena:hq-${clientId}`;
         agentSessions[msg.agentPkg] = sessionKey;
 
         console.log(`  🐣 [${clientId}] Hatching ${manifest.displayName} → ${sessionKey}`);
@@ -650,7 +658,7 @@ wss.on('connection', (clientWs) => {
         // If no session exists yet, create one for this agent
         if (!sessionKey) {
           const agentId = msg.agentPkg?.replace(/-agent$/, '') || 'main';
-          sessionKey = `agent:${agentId}:arena:${msg.agentPkg}-${clientId}`;
+          sessionKey = `agent:${agentId}:arena:hq-${clientId}`;
           agentSessions[msg.agentPkg] = sessionKey;
           
           // Subscribe to events for this new session

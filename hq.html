@@ -360,6 +360,14 @@
 let ws=null, agents=[], registeredAgents=[], sessions={}, streamBuffers={}, selectedAgent=null;
 const LOCAL=`${location.protocol}//${location.host}`;
 
+// Stable client ID — persists across refreshes so agent sessions carry over
+function getClientId() {
+  let id = localStorage.getItem('hq-client-id');
+  if (!id) { id = crypto.randomUUID().slice(0,8); localStorage.setItem('hq-client-id', id); }
+  return id;
+}
+const CLIENT_ID = getClientId();
+
 async function init() {
   updateClock(); setInterval(updateClock,30000);
   setupInput(); setupCat();
@@ -572,7 +580,7 @@ async function installAgent(agentName) {
 function connectWS() {
   if(ws&&ws.readyState===WebSocket.OPEN) return;
   ws=new WebSocket(`ws://${location.host}`);
-  ws.onopen=()=>updateStatus(true);
+  ws.onopen=()=>{updateStatus(true);ws.send(JSON.stringify({type:'identify',clientId:CLIENT_ID}));};
   ws.onclose=()=>{updateStatus(false);setTimeout(connectWS,3000)};
   ws.onmessage=e=>{try{handleMsg(JSON.parse(e.data))}catch(err){console.error(err)}};
 }
