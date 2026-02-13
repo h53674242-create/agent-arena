@@ -349,6 +349,55 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // API: agent detail — sessions + recent history for an agent
+  const agentDetailMatch = url.pathname.match(/^\/api\/agents\/([a-z0-9-]+)\/activity$/);
+  if (agentDetailMatch) {
+    const agentName = agentDetailMatch[1];
+    const agentId = agentName.replace(/-agent$/, '');
+    if (!gateway?.connected) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ sessions: [], history: [] }));
+      return;
+    }
+    try {
+      // Get all sessions for this agent
+      const result = await gateway.request('sessions.list', { limit: 50 });
+      const allSessions = result.sessions || result || [];
+      const agentSessions = allSessions.filter(s => {
+        const sAgent = s.key?.split(':')?.[1];
+        return sAgent === agentId || sAgent === agentName;
+      });
+
+      // Get history from the main session
+      const mainSession = agentSessions.find(s => s.key === `agent:${agentId}:main`);
+      let history = [];
+      if (mainSession) {
+        try {
+          const hist = await gateway.request('chat.history', {
+            sessionKey: mainSession.key,
+            limit: 30,
+            includeTools: true,
+          });
+          history = hist.messages || hist || [];
+        } catch(e) { /* no history */ }
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        agentId,
+        sessions: agentSessions.map(s => ({
+          key: s.key, kind: s.kind, label: s.label,
+          updatedAt: s.updatedAt, model: s.model,
+        })),
+        history,
+      }));
+    } catch(e) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ sessions: [], history: [], error: e.message }));
+    }
+    return;
+  }
+
   // API: activity feed — recent session events from gateway
   if (url.pathname === '/api/activity') {
     if (!gateway?.connected) {

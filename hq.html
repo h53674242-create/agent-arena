@@ -17,7 +17,7 @@
 
   /* Top Bar */
   .topbar { padding:10px 20px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px; flex-shrink:0; z-index:10; }
-  .topbar .logo { font-family:'Press Start 2P',monospace; font-size:11px; color:var(--accent); }
+  .topbar .logo { font-family:'Press Start 2P',monospace; font-size:11px; color:var(--accent); cursor:pointer; }
   .topbar a { color:var(--muted); text-decoration:none; font-size:13px; transition:color .15s; }
   .topbar a:hover { color:var(--text); }
   .topbar .spacer { flex:1; }
@@ -33,11 +33,9 @@
   .office {
     flex:1; position:relative; overflow:hidden; min-width:0;
     background: linear-gradient(180deg, #1e1b2e 0%, #151320 50%, #13111f 100%);
+    transition: flex 0.3s ease;
   }
-
-  /* Wall */
   .office .wall { position:absolute; top:0; left:0; right:0; height:90px; background:linear-gradient(180deg,#2a2545,#1e1b2e); border-bottom:2px solid rgba(251,191,36,0.06); }
-
   .wall-item { position:absolute; z-index:2; }
   .wall-item.title { top:16px; left:50%; transform:translateX(-50%); font-family:'Press Start 2P',monospace; font-size:9px; color:var(--accent); background:rgba(0,0,0,0.4); padding:8px 16px; border-radius:4px; border:1px solid rgba(251,191,36,0.15); }
   .wall-item.poster { padding:6px 12px; border-radius:3px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); font-size:9px; color:var(--muted); }
@@ -46,11 +44,7 @@
   .wall-item.window { top:10px; right:180px; width:70px; height:50px; background:linear-gradient(180deg,#1a2040,#2a3060); border:2px solid rgba(255,255,255,0.08); border-radius:4px; }
   .wall-item.window::after { content:'✦ · ✧'; position:absolute; top:12px; left:12px; font-size:7px; color:rgba(255,255,255,0.3); }
   .wall-item.whiteboard { top:10px; left:180px; width:100px; height:55px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:3px; font-size:7px; padding:5px; color:var(--muted); line-height:1.4; overflow:hidden; }
-
-  /* Floor */
   .office .floor { position:absolute; bottom:0; left:0; right:0; height:40px; background:linear-gradient(180deg,#13111f,#0d0b18); border-top:1px solid rgba(255,255,255,0.03); }
-
-  /* Decorations */
   .deco { position:absolute; z-index:2; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
   .deco.plant1 { bottom:50px; left:30px; font-size:28px; }
   .deco.plant2 { bottom:50px; right:40px; font-size:22px; }
@@ -58,107 +52,39 @@
   .deco.cat:hover { transform:scale(1.2) rotate(-5deg); }
   .deco.coffee { top:60px; left:50px; font-size:14px; }
   .deco.clock-w { top:18px; left:50%; margin-left:120px; font-size:14px; }
-  .deco.rug {
-    bottom:42px; left:50%; transform:translateX(-50%); width:500px; height:20px;
-    background:rgba(167,139,250,0.04); border-radius:50%; border:1px solid rgba(167,139,250,0.06);
-  }
+  .deco.rug { bottom:42px; left:50%; transform:translateX(-50%); width:500px; height:20px; background:rgba(167,139,250,0.04); border-radius:50%; border:1px solid rgba(167,139,250,0.06); }
 
-  /* ═══ Desks — centered ═══ */
-  .desk-area {
-    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    display:flex; gap:32px; z-index:4;
-  }
-
-  .desk {
-    width:140px; position:relative; cursor:pointer;
-    transition:transform 0.2s ease;
-    display:flex; flex-direction:column; align-items:center;
-  }
+  /* Desks */
+  .desk-area { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:flex; gap:32px; z-index:4; }
+  .desk { width:140px; position:relative; cursor:pointer; transition:transform 0.2s; display:flex; flex-direction:column; align-items:center; }
   .desk:hover { transform:translateY(-3px); }
-
-  .agent-avatar {
-    width:44px; height:44px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    font-size:24px; background:rgba(17,17,24,0.9);
-    border:2px solid var(--border); transition:all 0.3s ease;
-    position:relative;
-  }
+  .desk.selected .agent-avatar { border-color:var(--accent) !important; box-shadow:0 0 20px rgba(251,191,36,0.3) !important; }
+  .agent-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; background:rgba(17,17,24,0.9); border:2px solid var(--border); transition:all 0.3s; position:relative; }
   .desk.active .agent-avatar { border-color:var(--green); box-shadow:0 0 16px rgba(34,197,94,0.2); }
   .desk.empty .agent-avatar { border:2px dashed var(--border); opacity:0.4; }
-
-  .status-dot {
-    position:absolute; bottom:0; right:0; width:10px; height:10px;
-    border-radius:50%; border:2px solid var(--bg);
-  }
+  .status-dot { position:absolute; bottom:0; right:0; width:10px; height:10px; border-radius:50%; border:2px solid var(--bg); }
   .status-dot.online { background:var(--green); }
   .status-dot.offline { background:var(--muted); }
   .status-dot.busy { background:var(--accent); animation:pulse 1.5s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-  .agent-label {
-    margin-top:6px; font-size:10px; font-weight:600; text-align:center;
-    color:var(--text); white-space:nowrap;
-  }
+  .agent-label { margin-top:6px; font-size:10px; font-weight:600; text-align:center; color:var(--text); white-space:nowrap; }
   .desk.empty .agent-label { color:var(--muted); }
-
-  .desk-obj {
-    margin-top:6px; width:100px; height:30px;
-    background:linear-gradient(180deg,#3d3355,#2d2545);
-    border:1px solid rgba(255,255,255,0.06); border-radius:5px;
-    position:relative;
-    box-shadow:0 4px 12px rgba(0,0,0,0.3);
-  }
-  .desk-monitor {
-    position:absolute; top:-20px; left:50%; transform:translateX(-50%);
-    width:40px; height:28px; background:linear-gradient(180deg,#0a0a12,#12121e);
-    border:1px solid rgba(255,255,255,0.08); border-radius:3px;
-  }
-  .desk-monitor .glow {
-    position:absolute; inset:3px 3px 5px 3px;
-    background:rgba(59,130,246,0.06); border-radius:1px;
-  }
+  .desk-obj { margin-top:6px; width:100px; height:30px; background:linear-gradient(180deg,#3d3355,#2d2545); border:1px solid rgba(255,255,255,0.06); border-radius:5px; position:relative; box-shadow:0 4px 12px rgba(0,0,0,0.3); }
+  .desk-monitor { position:absolute; top:-20px; left:50%; transform:translateX(-50%); width:40px; height:28px; background:linear-gradient(180deg,#0a0a12,#12121e); border:1px solid rgba(255,255,255,0.08); border-radius:3px; }
+  .desk-monitor .glow { position:absolute; inset:3px 3px 5px 3px; background:rgba(59,130,246,0.06); border-radius:1px; }
   .desk.active .desk-monitor .glow { background:rgba(34,197,94,0.12); }
-  .desk-monitor::after {
-    content:''; position:absolute; bottom:-3px; left:50%; transform:translateX(-50%);
-    width:10px; height:3px; background:#2d2545; border-radius:0 0 2px 2px;
-  }
-
-  .speech-bubble {
-    position:absolute; top:-20px; left:50%; transform:translateX(-50%);
-    background:var(--surface); border:1px solid var(--border); border-radius:8px;
-    padding:5px 10px; font-size:9px; color:var(--muted); white-space:nowrap;
-    max-width:180px; overflow:hidden; text-overflow:ellipsis;
-    opacity:0; transition:opacity 0.3s; z-index:6;
-  }
-  .speech-bubble::after {
-    content:''; position:absolute; bottom:-4px; left:50%; transform:translateX(-50%);
-    border-left:4px solid transparent; border-right:4px solid transparent;
-    border-top:4px solid var(--surface);
-  }
+  .desk-monitor::after { content:''; position:absolute; bottom:-3px; left:50%; transform:translateX(-50%); width:10px; height:3px; background:#2d2545; border-radius:0 0 2px 2px; }
+  .speech-bubble { position:absolute; top:-20px; left:50%; transform:translateX(-50%); background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:5px 10px; font-size:9px; color:var(--muted); white-space:nowrap; max-width:180px; overflow:hidden; text-overflow:ellipsis; opacity:0; transition:opacity 0.3s; z-index:6; }
+  .speech-bubble::after { content:''; position:absolute; bottom:-4px; left:50%; transform:translateX(-50%); border-left:4px solid transparent; border-right:4px solid transparent; border-top:4px solid var(--surface); }
   .speech-bubble.visible { opacity:1; }
-
-  /* Add Agent CTA */
-  .add-agent-desk {
-    width:140px; display:flex; flex-direction:column; align-items:center;
-    cursor:pointer; transition:transform 0.2s; opacity:0.5;
-  }
+  .add-agent-desk { width:140px; display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:transform 0.2s; opacity:0.5; }
   .add-agent-desk:hover { opacity:0.8; transform:translateY(-3px); }
-  .add-circle {
-    width:44px; height:44px; border-radius:50%;
-    border:2px dashed var(--accent); display:flex;
-    align-items:center; justify-content:center;
-    font-size:20px; color:var(--accent); transition:all 0.2s;
-  }
+  .add-circle { width:44px; height:44px; border-radius:50%; border:2px dashed var(--accent); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--accent); }
   .add-agent-desk:hover .add-circle { border-style:solid; background:rgba(251,191,36,0.05); }
   .add-label { margin-top:6px; font-size:10px; font-weight:600; color:var(--accent); }
 
   /* Meeting bar */
-  .meeting-bar {
-    position:absolute; bottom:0; left:0; right:0; z-index:8;
-    background:rgba(17,17,24,0.95); border-top:1px solid var(--border);
-    padding:8px 16px; display:flex; align-items:center; gap:12px;
-    backdrop-filter:blur(8px);
-  }
+  .meeting-bar { position:absolute; bottom:0; left:0; right:0; z-index:8; background:rgba(17,17,24,0.95); border-top:1px solid var(--border); padding:8px 16px; display:flex; align-items:center; gap:12px; backdrop-filter:blur(8px); }
   .meeting-bar .label { font-size:11px; color:var(--accent); font-weight:700; }
   .meeting-bar .parts { font-size:10px; color:var(--muted); }
   .meeting-bar .spacer { flex:1; }
@@ -167,30 +93,102 @@
   .meeting-bar .start-btn:hover { filter:brightness(1.1); }
   .meeting-bar .end-btn { background:var(--red); color:#fff; display:none; }
 
-  /* ═══ Right Panel ═══ */
+  /* ═══ Agent Detail Panel (overlay on office) ═══ */
+  .agent-detail {
+    display:none; position:absolute; top:0; right:0; bottom:0; width:420px;
+    background:var(--surface); border-left:1px solid var(--border);
+    z-index:20; flex-direction:column; overflow:hidden;
+    animation:slideIn 0.2s ease;
+  }
+  .agent-detail.open { display:flex; }
+  @keyframes slideIn { from{transform:translateX(100%)} to{transform:translateX(0)} }
+
+  .detail-header {
+    padding:16px 20px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:14px; flex-shrink:0;
+  }
+  .detail-header .back-btn {
+    width:28px; height:28px; border-radius:6px; border:1px solid var(--border);
+    background:none; color:var(--muted); cursor:pointer; font-size:14px;
+    display:flex; align-items:center; justify-content:center; transition:all .15s;
+  }
+  .detail-header .back-btn:hover { color:var(--text); border-color:var(--accent); }
+  .detail-header .agent-info { flex:1; }
+  .detail-header .agent-name { font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .detail-header .agent-role { font-size:11px; color:var(--muted); margin-top:2px; }
+  .detail-header .status-pill { font-size:10px; padding:3px 10px; border-radius:8px; font-weight:600; }
+  .detail-header .status-pill.online { color:var(--green); background:rgba(34,197,94,0.1); }
+
+  /* Detail stats */
+  .detail-stats {
+    display:flex; gap:1px; background:var(--border); flex-shrink:0;
+  }
+  .stat-card {
+    flex:1; padding:12px 16px; background:var(--surface); text-align:center;
+  }
+  .stat-card .stat-value { font-size:18px; font-weight:700; color:var(--text); }
+  .stat-card .stat-label { font-size:9px; color:var(--muted); margin-top:2px; text-transform:uppercase; letter-spacing:0.5px; }
+
+  /* Detail tabs */
+  .detail-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .detail-tab {
+    flex:1; padding:10px; font-size:11px; font-weight:600; color:var(--muted);
+    cursor:pointer; text-align:center; border:none; background:none;
+    border-bottom:2px solid transparent; transition:all .15s;
+  }
+  .detail-tab:hover { color:var(--text); }
+  .detail-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+  /* Detail content */
+  .detail-content { flex:1; overflow-y:auto; }
+  .detail-section { display:none; }
+  .detail-section.active { display:block; }
+
+  /* Timeline */
+  .timeline { padding:12px 16px; }
+  .tl-item {
+    display:flex; gap:12px; padding:10px 0;
+    border-bottom:1px solid rgba(255,255,255,0.03);
+    font-size:12px;
+  }
+  .tl-item:last-child { border-bottom:none; }
+  .tl-icon { width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; background:var(--surface2); }
+  .tl-icon.msg { background:rgba(34,197,94,0.1); }
+  .tl-icon.tool { background:rgba(167,139,250,0.1); }
+  .tl-icon.think { background:rgba(59,130,246,0.1); }
+  .tl-icon.sys { background:rgba(251,191,36,0.1); }
+  .tl-body { flex:1; min-width:0; }
+  .tl-title { font-weight:600; color:var(--text); margin-bottom:2px; display:flex; align-items:center; gap:6px; }
+  .tl-title .tool-badge { font-size:9px; padding:1px 6px; border-radius:4px; background:rgba(167,139,250,0.15); color:var(--purple); font-weight:500; }
+  .tl-preview { color:var(--muted); line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; }
+  .tl-preview.expanded { -webkit-line-clamp:unset; }
+  .tl-time { font-size:10px; color:var(--muted); margin-top:3px; }
+  .tl-expand { font-size:10px; color:var(--accent); cursor:pointer; margin-top:2px; }
+  .tl-expand:hover { text-decoration:underline; }
+
+  /* Sessions list */
+  .sessions-list { padding:12px 16px; }
+  .session-item {
+    padding:10px 12px; border:1px solid var(--border); border-radius:8px;
+    margin-bottom:8px; cursor:default;
+  }
+  .session-item .sess-header { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  .session-item .sess-label { font-size:12px; font-weight:600; }
+  .session-item .sess-kind { font-size:9px; padding:2px 6px; border-radius:4px; background:rgba(59,130,246,0.1); color:var(--blue); }
+  .session-item .sess-time { font-size:10px; color:var(--muted); }
+  .session-item .sess-model { font-size:10px; color:var(--muted); }
+
+  /* Loading */
+  .detail-loading { padding:40px; text-align:center; color:var(--muted); font-size:13px; }
+
+  /* ═══ Right Panel (Chat) ═══ */
   .right-panel {
-    flex:0 0 400px; display:flex; flex-direction:column; overflow:hidden;
+    flex:0 0 380px; display:flex; flex-direction:column; overflow:hidden;
     background:var(--surface); border-left:1px solid var(--border);
   }
-
-  /* Tabs */
-  .panel-tabs {
-    display:flex; border-bottom:1px solid var(--border); flex-shrink:0;
-  }
-  .panel-tab {
-    flex:1; padding:10px 16px; font-size:12px; font-weight:600;
-    color:var(--muted); cursor:pointer; text-align:center;
-    border-bottom:2px solid transparent; transition:all .15s;
-    background:none; border-top:none; border-left:none; border-right:none;
-  }
-  .panel-tab:hover { color:var(--text); }
-  .panel-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-
-  /* Tab content */
-  .tab-content { flex:1; display:none; flex-direction:column; overflow:hidden; }
-  .tab-content.active { display:flex; }
-
-  /* Chat tab */
+  .chat-header { padding:10px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; flex-shrink:0; }
+  .chat-header h3 { font-size:13px; font-weight:700; }
+  .chat-header .channel { font-size:11px; color:var(--muted); }
   .messages { flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:2px; }
   .msg { padding:5px 0; line-height:1.5; font-size:13px; animation:fadeIn 0.2s ease; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
@@ -199,62 +197,29 @@
   .msg .content { color:var(--text); }
   .msg .content code { background:rgba(255,255,255,0.06); padding:1px 4px; border-radius:3px; font-size:12px; }
   .msg-system { font-size:11px; color:var(--muted); text-align:center; padding:8px 0; font-style:italic; }
-
   .typing-line { font-size:11px; color:var(--muted); padding:4px 16px; display:none; }
   .typing-line.active { display:block; }
   .typing-dots span { animation:blink 1.4s infinite; }
   .typing-dots span:nth-child(2) { animation-delay:0.2s; }
   .typing-dots span:nth-child(3) { animation-delay:0.4s; }
   @keyframes blink { 0%,100%{opacity:0.2} 50%{opacity:1} }
-
-  .chat-input {
-    padding:12px 16px; border-top:1px solid var(--border);
-    display:flex; gap:8px; flex-shrink:0;
-  }
-  .chat-input input {
-    flex:1; padding:10px 14px; background:var(--bg); border:1px solid var(--border);
-    border-radius:8px; color:var(--text); font-size:13px; outline:none; font-family:inherit;
-  }
+  .chat-input { padding:12px 16px; border-top:1px solid var(--border); display:flex; gap:8px; flex-shrink:0; }
+  .chat-input input { flex:1; padding:10px 14px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:13px; outline:none; font-family:inherit; }
   .chat-input input:focus { border-color:var(--accent); }
   .chat-input input::placeholder { color:var(--muted); }
-  .chat-input button {
-    padding:10px 16px; background:var(--accent); color:#000; border:none;
-    border-radius:8px; font-weight:700; font-size:13px; cursor:pointer;
-  }
+  .chat-input button { padding:10px 16px; background:var(--accent); color:#000; border:none; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer; }
   .chat-input button:hover { filter:brightness(1.1); }
 
-  /* Activity log tab */
-  .activity-log { flex:1; overflow-y:auto; padding:12px 16px; }
-  .log-entry {
-    padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03);
-    font-size:12px; display:flex; gap:10px; align-items:flex-start;
-  }
-  .log-entry .log-icon { font-size:14px; flex-shrink:0; margin-top:1px; }
-  .log-entry .log-body { flex:1; min-width:0; }
-  .log-entry .log-action { color:var(--text); line-height:1.4; }
-  .log-entry .log-action .agent-name { color:var(--accent); font-weight:600; }
-  .log-entry .log-action .tool-name { color:var(--purple); font-weight:500; }
-  .log-entry .log-time { font-size:10px; color:var(--muted); margin-top:2px; }
-  .log-empty { text-align:center; color:var(--muted); padding:40px 20px; font-size:13px; }
-
-  /* Upsell banner */
-  .upsell {
-    padding:12px 16px; background:linear-gradient(90deg,rgba(251,191,36,0.08),rgba(251,191,36,0.02));
-    border-top:1px solid var(--border); flex-shrink:0;
-    display:flex; align-items:center; gap:10px; cursor:pointer;
-    transition:background .15s;
-  }
+  /* Upsell */
+  .upsell { padding:12px 16px; background:linear-gradient(90deg,rgba(251,191,36,0.08),rgba(251,191,36,0.02)); border-top:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; gap:10px; cursor:pointer; transition:background .15s; }
   .upsell:hover { background:rgba(251,191,36,0.1); }
   .upsell .upsell-icon { font-size:18px; }
   .upsell .upsell-text { flex:1; }
   .upsell .upsell-title { font-size:11px; font-weight:700; color:var(--accent); }
   .upsell .upsell-desc { font-size:10px; color:var(--muted); margin-top:1px; }
-  .upsell .upsell-btn {
-    padding:5px 12px; background:var(--accent); color:#000; border:none;
-    border-radius:6px; font-size:10px; font-weight:700; cursor:pointer;
-  }
+  .upsell .upsell-btn { padding:5px 12px; background:var(--accent); color:#000; border:none; border-radius:6px; font-size:10px; font-weight:700; cursor:pointer; }
 
-  /* ═══ Waitlist Gate ═══ */
+  /* Waitlist */
   .waitlist-gate { display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; }
   .waitlist-gate.active { display:flex; }
   .waitlist-gate .big-emoji { font-size:80px; margin-bottom:24px; }
@@ -276,7 +241,7 @@
 <body>
 
 <div class="topbar">
-  <span class="logo">🦞 AGENT ARENA HQ</span>
+  <span class="logo" onclick="closeDetail()">🦞 AGENT ARENA HQ</span>
   <a href="index.html">Home</a>
   <a href="agents.html">Agents</a>
   <a href="app.html">Dashboard</a>
@@ -285,7 +250,6 @@
   <span class="badge offline" id="statusBadge">● Offline</span>
 </div>
 
-<!-- Waitlist -->
 <div class="waitlist-gate" id="waitlistGate">
   <div class="big-emoji">🦞</div>
   <h1>Agent Arena HQ</h1>
@@ -297,14 +261,12 @@
   <div class="success-msg" id="waitlistSuccess">✅ You're on the list!</div>
   <div class="preview-cards">
     <div class="preview-card"><div class="emoji">🏢</div><div class="title">Virtual Office</div><div class="desc">See your agents at their desks</div></div>
-    <div class="preview-card"><div class="emoji">📋</div><div class="title">Activity Log</div><div class="desc">Every action, every tool call</div></div>
+    <div class="preview-card"><div class="emoji">📋</div><div class="title">Control Plane</div><div class="desc">See every action in real-time</div></div>
     <div class="preview-card"><div class="emoji">🔒</div><div class="title">100% Local</div><div class="desc">Agents never leave your machine</div></div>
   </div>
 </div>
 
-<!-- HQ -->
 <div class="main" id="mainLayout" style="display:none;">
-
   <!-- Office -->
   <div class="office" id="office">
     <div class="wall"></div>
@@ -312,19 +274,15 @@
     <div class="wall-item poster p1">📊 Q1 Goals</div>
     <div class="wall-item poster p2">🚀 Ship It</div>
     <div class="wall-item window"></div>
-    <div class="wall-item whiteboard" id="whiteboard">📋 Sprint<br>→ Launch v1<br>→ Get users<br>→ Revenue</div>
-
+    <div class="wall-item whiteboard">📋 Sprint<br>→ Launch v1<br>→ Get users<br>→ Revenue</div>
     <div class="deco plant1">🪴</div>
     <div class="deco plant2">🌿</div>
     <div class="deco cat" id="officeCat" title="Click me!">😺</div>
     <div class="deco coffee">☕</div>
     <div class="deco clock-w" id="wallClock">🕐</div>
     <div class="deco rug"></div>
-
     <div class="desk-area" id="deskArea"></div>
-
     <div class="floor"></div>
-
     <div class="meeting-bar">
       <span class="label">🎙️ Team Standup</span>
       <span class="parts" id="meetingParts">No agents online</span>
@@ -332,35 +290,52 @@
       <button class="start-btn" id="startBtn" onclick="startMeeting()">Start Meeting</button>
       <button class="end-btn" id="endBtn" onclick="endMeeting()">End Meeting</button>
     </div>
+
+    <!-- Agent Detail Overlay (inside office) -->
+    <div class="agent-detail" id="agentDetail">
+      <div class="detail-header">
+        <button class="back-btn" onclick="closeDetail()">←</button>
+        <div class="agent-info">
+          <div class="agent-name" id="detailName">🤖 Agent</div>
+          <div class="agent-role" id="detailRole">Role</div>
+        </div>
+        <span class="status-pill online" id="detailStatus">● Online</span>
+      </div>
+      <div class="detail-stats" id="detailStats">
+        <div class="stat-card"><div class="stat-value" id="statSessions">-</div><div class="stat-label">Sessions</div></div>
+        <div class="stat-card"><div class="stat-value" id="statMessages">-</div><div class="stat-label">Messages</div></div>
+        <div class="stat-card"><div class="stat-value" id="statTools">-</div><div class="stat-label">Tool Calls</div></div>
+      </div>
+      <div class="detail-tabs">
+        <button class="detail-tab active" onclick="switchDetailTab('timeline')">🕐 Timeline</button>
+        <button class="detail-tab" onclick="switchDetailTab('sessions')">📂 Sessions</button>
+      </div>
+      <div class="detail-content">
+        <div class="detail-section active" id="sectionTimeline">
+          <div class="detail-loading" id="timelineLoading">Loading activity...</div>
+          <div class="timeline" id="timeline"></div>
+        </div>
+        <div class="detail-section" id="sectionSessions">
+          <div class="sessions-list" id="sessionsList"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Right Panel -->
+  <!-- Right Panel: Chat -->
   <div class="right-panel">
-    <div class="panel-tabs">
-      <button class="panel-tab active" onclick="switchTab('chat')">💬 Chat</button>
-      <button class="panel-tab" onclick="switchTab('activity')">📋 Activity</button>
+    <div class="chat-header">
+      <h3>💬 #general</h3>
+      <span class="channel">Team Chat</span>
     </div>
-
-    <!-- Chat Tab -->
-    <div class="tab-content active" id="tabChat">
-      <div class="messages" id="messages"></div>
-      <div class="typing-line" id="typingLine">
-        <span id="typingWho"></span> is typing<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
-      </div>
-      <div class="chat-input">
-        <input type="text" id="chatInput" placeholder="Message your team..." autocomplete="off">
-        <button onclick="sendMessage()">Send</button>
-      </div>
+    <div class="messages" id="messages"></div>
+    <div class="typing-line" id="typingLine">
+      <span id="typingWho"></span> is typing<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
     </div>
-
-    <!-- Activity Tab -->
-    <div class="tab-content" id="tabActivity">
-      <div class="activity-log" id="activityLog">
-        <div class="log-empty">Activity will appear here as your agents work.</div>
-      </div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Message your team..." autocomplete="off">
+      <button onclick="sendMessage()">Send</button>
     </div>
-
-    <!-- Upsell -->
     <div class="upsell" onclick="window.location.href='agents.html'">
       <div class="upsell-icon">⚡</div>
       <div class="upsell-text">
@@ -373,429 +348,300 @@
 </div>
 
 <script>
-let ws = null, agents = [], registeredAgents = [], sessions = {}, streamBuffers = {};
-let meetingActive = false, activityEntries = [];
-const LOCAL = `${location.protocol}//${location.host}`;
+let ws=null, agents=[], registeredAgents=[], sessions={}, streamBuffers={}, selectedAgent=null;
+const LOCAL=`${location.protocol}//${location.host}`;
 
 async function init() {
-  updateClock(); setInterval(updateClock, 30000);
+  updateClock(); setInterval(updateClock,30000);
   setupInput(); setupCat();
   await checkConnection();
 }
 
 async function checkConnection() {
   try {
-    const res = await fetch(`${LOCAL}/api/agents`, { signal: AbortSignal.timeout(3000) });
-    if (!res.ok) throw 0;
+    const res=await fetch(`${LOCAL}/api/agents`,{signal:AbortSignal.timeout(3000)});
+    if(!res.ok) throw 0;
     updateStatus(true);
-    document.getElementById('mainLayout').style.display = 'flex';
-    await loadAgents();
-    connectWS();
-    loadChat();
-    loadActivity();
-    await fetchLiveActivity();
-    updateUpsell();
-    // Poll activity every 30s
-    setInterval(fetchLiveActivity, 30000);
-  } catch {
-    document.getElementById('waitlistGate').classList.add('active');
-    updateStatus(false);
-  }
+    document.getElementById('mainLayout').style.display='flex';
+    await loadAgents(); connectWS(); loadChat(); updateUpsell();
+  } catch { document.getElementById('waitlistGate').classList.add('active'); updateStatus(false); }
 }
 
 async function loadAgents() {
-  const [a, r] = await Promise.all([
-    fetch(`${LOCAL}/api/agents`).then(r=>r.json()),
-    fetch(`${LOCAL}/api/agents/registered`).then(r=>r.json())
-  ]);
-  agents = a; registeredAgents = r;
-  renderDesks();
-  updateMeetingParts();
+  const [a,r]=await Promise.all([fetch(`${LOCAL}/api/agents`).then(r=>r.json()),fetch(`${LOCAL}/api/agents/registered`).then(r=>r.json())]);
+  agents=a; registeredAgents=r; renderDesks(); updateMeetingParts();
+}
+
+function isInstalled(a) {
+  const regIds=new Set(registeredAgents.map(x=>x.id));
+  return regIds.has(a.name.replace(/-agent$/,''))||regIds.has(a.agentId);
 }
 
 function renderDesks() {
-  const area = document.getElementById('deskArea');
-  const regIds = new Set(registeredAgents.map(a => a.id));
-  const isInstalled = (a) => regIds.has(a.name.replace(/-agent$/, '')) || regIds.has(a.agentId);
-  const installed = agents.filter(isInstalled);
-  const uninstalled = agents.filter(a => !isInstalled(a));
+  const area=document.getElementById('deskArea');
+  const installed=agents.filter(isInstalled);
+  const uninstalled=agents.filter(a=>!isInstalled(a));
 
-  let html = installed.map(agent => {
-    const id = agent.agentId || agent.name.replace(/-agent$/, '');
+  let html=installed.map(agent=>{
+    const id=agent.agentId||agent.name.replace(/-agent$/,'');
     return `
-      <div class="desk active" data-agent="${agent.name}" onclick="focusAgent('${agent.name}')">
+      <div class="desk active" data-agent="${agent.name}" onclick="openAgentDetail('${agent.name}')">
         <div class="speech-bubble" id="bubble-${id}"></div>
-        <div class="agent-avatar">
-          ${agent.emoji || '🤖'}
-          <div class="status-dot online" id="dot-${id}"></div>
-        </div>
-        <div class="agent-label">${agent.displayName || agent.name}</div>
+        <div class="agent-avatar">${agent.emoji||'🤖'}<div class="status-dot online" id="dot-${id}"></div></div>
+        <div class="agent-label">${agent.displayName||agent.name}</div>
         <div class="desk-obj"><div class="desk-monitor"><div class="glow"></div></div></div>
       </div>`;
   }).join('');
 
-  // Empty desks for uninstalled (one-click install)
-  html += uninstalled.map(agent => `
-    <div class="desk empty" data-agent="${agent.name}" onclick="installAgent('${agent.name}')" title="Click to hire ${agent.displayName || agent.name}">
-      <div class="agent-avatar" style="filter:grayscale(1)">
-        ${agent.emoji || '🤖'}
-        <div class="status-dot offline"></div>
-      </div>
-      <div class="agent-label">${agent.displayName || agent.name}<br><span style="font-size:8px;color:var(--accent)">Click to hire</span></div>
+  html+=uninstalled.map(agent=>`
+    <div class="desk empty" data-agent="${agent.name}" onclick="installAgent('${agent.name}')">
+      <div class="agent-avatar" style="filter:grayscale(1)">${agent.emoji||'🤖'}<div class="status-dot offline"></div></div>
+      <div class="agent-label">${agent.displayName||agent.name}<br><span style="font-size:8px;color:var(--accent)">Click to hire</span></div>
       <div class="desk-obj"><div class="desk-monitor"><div class="glow"></div></div></div>
     </div>`).join('');
 
-  // Add agent CTA
-  html += `
-    <div class="add-agent-desk" onclick="window.location.href='agents.html'" title="Add another agent to your team">
-      <div class="add-circle">+</div>
-      <div class="add-label">Add Agent</div>
-    </div>`;
-
-  area.innerHTML = html;
+  html+=`<div class="add-agent-desk" onclick="window.location.href='agents.html'"><div class="add-circle">+</div><div class="add-label">Add Agent</div></div>`;
+  area.innerHTML=html;
 }
 
-// ── One-click install ──
-async function installAgent(agentName) {
-  const agent = agents.find(a => a.name === agentName);
-  const name = agent?.displayName || agentName;
-  
-  if (!confirm(`Hire ${name}? This will install them into your OpenClaw workspace.`)) return;
-  
-  // Show installing state
-  const desk = document.querySelector(`.desk[data-agent="${agentName}"]`);
-  if (desk) {
-    const label = desk.querySelector('.agent-label');
-    if (label) label.innerHTML = `${name}<br><span style="font-size:8px;color:var(--accent)">Installing...</span>`;
-  }
-  
-  addActivityEntry(agent?.emoji || '🤖', name, 'being hired...', new Date());
-  
+// ═══ Agent Detail ═══
+async function openAgentDetail(agentName) {
+  const agent=agents.find(a=>a.name===agentName);
+  if(!agent) return;
+  selectedAgent=agent;
+
+  // Highlight desk
+  document.querySelectorAll('.desk').forEach(d=>d.classList.remove('selected'));
+  document.querySelector(`.desk[data-agent="${agentName}"]`)?.classList.add('selected');
+
+  // Fill header
+  document.getElementById('detailName').innerHTML=`${agent.emoji||'🤖'} ${agent.displayName||agent.name}`;
+  document.getElementById('detailRole').textContent=agent.title||agent.description||'';
+
+  // Show panel
+  document.getElementById('agentDetail').classList.add('open');
+
+  // Reset
+  document.getElementById('timeline').innerHTML='';
+  document.getElementById('timelineLoading').style.display='block';
+  document.getElementById('statSessions').textContent='-';
+  document.getElementById('statMessages').textContent='-';
+  document.getElementById('statTools').textContent='-';
+  switchDetailTab('timeline');
+
+  // Fetch activity
   try {
-    const res = await fetch(`${LOCAL}/api/agents/${agentName}/install`, { method: 'POST' });
-    const data = await res.json();
-    
-    if (data.ok) {
-      addActivityEntry('✅', name, 'hired and ready!', new Date());
-      addSystemMsg(`✅ ${name} has joined the team!`);
-      // Reload agents to update desks
-      setTimeout(async () => {
-        await loadAgents();
-        updateUpsell();
-      }, 2000);
-    } else {
-      throw new Error(data.error || 'Install failed');
-    }
+    const res=await fetch(`${LOCAL}/api/agents/${agentName}/activity`);
+    const data=await res.json();
+    renderAgentActivity(data);
   } catch(e) {
-    addActivityEntry('❌', name, `hire failed: ${e.message}`, new Date());
-    alert(`Failed to install ${name}: ${e.message}`);
-    if (desk) {
-      const label = desk.querySelector('.agent-label');
-      if (label) label.innerHTML = `${name}<br><span style="font-size:8px;color:var(--accent)">Click to hire</span>`;
+    document.getElementById('timelineLoading').textContent='Failed to load activity';
+  }
+}
+
+function renderAgentActivity(data) {
+  const {sessions:sess, history}=data;
+  document.getElementById('timelineLoading').style.display='none';
+
+  // Stats
+  document.getElementById('statSessions').textContent=sess.length;
+  let msgCount=0, toolCount=0;
+
+  // Build timeline from history
+  const tl=document.getElementById('timeline');
+  if(!history||!history.length) {
+    tl.innerHTML='<div class="detail-loading">No recent activity found.</div>';
+  } else {
+    let html='';
+    for(const msg of history.reverse()) {
+      const role=msg.role||'unknown';
+      const content=extractMsgText(msg);
+      const time=msg.timestamp?new Date(msg.timestamp):null;
+      const timeStr=time?time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
+
+      if(role==='assistant') {
+        msgCount++;
+        // Check for tool calls
+        const toolCalls=msg.tool_calls||msg.toolCalls||(Array.isArray(msg.content)?msg.content.filter(c=>c.type==='tool_use'):null);
+        if(toolCalls&&toolCalls.length) {
+          for(const tc of toolCalls) {
+            toolCount++;
+            const toolName=tc.function?.name||tc.name||tc.tool||'tool';
+            const toolInput=tc.function?.arguments||tc.input||'';
+            const preview=typeof toolInput==='string'?toolInput.slice(0,200):JSON.stringify(toolInput).slice(0,200);
+            html+=`<div class="tl-item">
+              <div class="tl-icon tool">🔧</div>
+              <div class="tl-body">
+                <div class="tl-title">Used tool <span class="tool-badge">${esc(toolName)}</span></div>
+                <div class="tl-preview">${esc(preview)}</div>
+                <div class="tl-time">${timeStr}</div>
+              </div></div>`;
+          }
+        }
+        if(content) {
+          html+=`<div class="tl-item">
+            <div class="tl-icon msg">💬</div>
+            <div class="tl-body">
+              <div class="tl-title">Sent a message</div>
+              <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc(content.slice(0,500))}</div>
+              ${content.length>200?'<div class="tl-expand" onclick="this.previousElementSibling.classList.toggle(\'expanded\')">show more</div>':''}
+              <div class="tl-time">${timeStr}</div>
+            </div></div>`;
+        }
+      } else if(role==='user') {
+        if(content) {
+          html+=`<div class="tl-item">
+            <div class="tl-icon sys">👤</div>
+            <div class="tl-body">
+              <div class="tl-title">Received message</div>
+              <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc(content.slice(0,300))}</div>
+              <div class="tl-time">${timeStr}</div>
+            </div></div>`;
+        }
+      } else if(role==='tool') {
+        const preview=content?content.slice(0,200):'(result)';
+        html+=`<div class="tl-item">
+          <div class="tl-icon tool">📄</div>
+          <div class="tl-body">
+            <div class="tl-title">Tool result</div>
+            <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc(preview)}</div>
+            <div class="tl-time">${timeStr}</div>
+          </div></div>`;
+      }
     }
+    tl.innerHTML=html||'<div class="detail-loading">No activity to display.</div>';
   }
+
+  document.getElementById('statMessages').textContent=msgCount;
+  document.getElementById('statTools').textContent=toolCount;
+
+  // Sessions list
+  const sl=document.getElementById('sessionsList');
+  sl.innerHTML=sess.map(s=>{
+    const t=s.updatedAt?timeAgo(new Date(s.updatedAt)):'';
+    const label=s.label||s.key?.split(':').pop()||'session';
+    return `<div class="session-item">
+      <div class="sess-header">
+        <span class="sess-label">${esc(label)}</span>
+        <span class="sess-kind">${s.kind||'chat'}</span>
+      </div>
+      <div class="sess-time">${t}${s.model?' · '+s.model:''}</div>
+    </div>`;
+  }).join('')||'<div class="detail-loading">No sessions found.</div>';
 }
 
-function focusAgent(name) {
-  switchTab('chat');
-  const agent = agents.find(a => a.name === name);
-  document.getElementById('chatInput').placeholder = `Message ${agent?.displayName || name}...`;
-  document.getElementById('chatInput').focus();
+function extractMsgText(msg) {
+  if(typeof msg.content==='string') return msg.content;
+  if(Array.isArray(msg.content)) return msg.content.filter(c=>c.type==='text').map(c=>c.text).join('');
+  return msg.text||'';
 }
 
-// ── Tabs ──
-function switchTab(tab) {
-  document.querySelectorAll('.panel-tab').forEach((t, i) => {
-    t.classList.toggle('active', (i === 0 && tab === 'chat') || (i === 1 && tab === 'activity'));
+function closeDetail() {
+  document.getElementById('agentDetail').classList.remove('open');
+  document.querySelectorAll('.desk').forEach(d=>d.classList.remove('selected'));
+  selectedAgent=null;
+}
+
+function switchDetailTab(tab) {
+  document.querySelectorAll('.detail-tab').forEach((t,i)=>{
+    t.classList.toggle('active',(i===0&&tab==='timeline')||(i===1&&tab==='sessions'));
   });
-  document.getElementById('tabChat').classList.toggle('active', tab === 'chat');
-  document.getElementById('tabActivity').classList.toggle('active', tab === 'activity');
+  document.getElementById('sectionTimeline').classList.toggle('active',tab==='timeline');
+  document.getElementById('sectionSessions').classList.toggle('active',tab==='sessions');
 }
 
-// ── WebSocket ──
+// ═══ Install ═══
+async function installAgent(agentName) {
+  const agent=agents.find(a=>a.name===agentName);
+  if(!confirm(`Hire ${agent?.displayName||agentName}? This will install them into your workspace.`)) return;
+  const desk=document.querySelector(`.desk[data-agent="${agentName}"]`);
+  if(desk) desk.querySelector('.agent-label').innerHTML=`${agent?.displayName||agentName}<br><span style="font-size:8px;color:var(--accent)">Installing...</span>`;
+  try {
+    const res=await fetch(`${LOCAL}/api/agents/${agentName}/install`,{method:'POST'});
+    const data=await res.json();
+    if(data.ok) { addSystemMsg(`✅ ${agent?.displayName||agentName} has joined!`); setTimeout(()=>{loadAgents();updateUpsell()},2000); }
+    else throw new Error(data.error);
+  } catch(e) { alert('Install failed: '+e.message); }
+}
+
+// ═══ WebSocket ═══
 function connectWS() {
-  if (ws && ws.readyState === WebSocket.OPEN) return;
-  ws = new WebSocket(`ws://${location.host}`);
-  ws.onopen = () => updateStatus(true);
-  ws.onclose = () => { updateStatus(false); setTimeout(connectWS, 3000); };
-  ws.onerror = e => console.error('WS:', e);
-  ws.onmessage = e => { try { handleMsg(JSON.parse(e.data)); } catch(err) { console.error(err); } };
+  if(ws&&ws.readyState===WebSocket.OPEN) return;
+  ws=new WebSocket(`ws://${location.host}`);
+  ws.onopen=()=>updateStatus(true);
+  ws.onclose=()=>{updateStatus(false);setTimeout(connectWS,3000)};
+  ws.onmessage=e=>{try{handleMsg(JSON.parse(e.data))}catch(err){console.error(err)}};
 }
-
 function handleMsg(msg) {
-  if (msg.type === 'status') updateStatus(msg.connected);
-  if (msg.type === 'chat-delta') onDelta(msg);
-  if (msg.type === 'chat-final') onFinal(msg);
-  // Log tool usage from events
-  if (msg.type === 'tool-use' || msg.type === 'agent-event') logActivity(msg);
+  if(msg.type==='status') updateStatus(msg.connected);
+  if(msg.type==='chat-delta') onDelta(msg);
+  if(msg.type==='chat-final') onFinal(msg);
 }
-
 function onDelta(msg) {
-  const text = extractText(msg.message);
-  if (!text) return;
-  streamBuffers[msg.runId] = (streamBuffers[msg.runId] || '') + text;
-  if (msg.sessionKey) sessions[msg.agentPkg] = msg.sessionKey;
-
-  const agent = agents.find(a => a.name === msg.agentPkg);
-  const id = msg.agentPkg.replace(/-agent$/, '');
-  showTyping(agent?.displayName || id);
-
-  const bubble = document.getElementById(`bubble-${id}`);
-  if (bubble) { bubble.textContent = (streamBuffers[msg.runId]||'').slice(-60); bubble.classList.add('visible'); }
-
-  const dot = document.getElementById(`dot-${id}`);
-  if (dot) dot.className = 'status-dot busy';
+  const text=extractText(msg.message); if(!text) return;
+  streamBuffers[msg.runId]=(streamBuffers[msg.runId]||'')+text;
+  if(msg.sessionKey) sessions[msg.agentPkg]=msg.sessionKey;
+  const agent=agents.find(a=>a.name===msg.agentPkg);
+  const id=agent?.agentId||msg.agentPkg.replace(/-agent$/,'');
+  showTyping(agent?.displayName||id);
+  const bubble=document.getElementById(`bubble-${id}`);
+  if(bubble){bubble.textContent=(streamBuffers[msg.runId]||'').slice(-60);bubble.classList.add('visible');}
+  const dot=document.getElementById(`dot-${id}`);
+  if(dot) dot.className='status-dot busy';
 }
-
 function onFinal(msg) {
-  const text = streamBuffers[msg.runId] || extractText(msg.message);
+  const text=streamBuffers[msg.runId]||extractText(msg.message);
   delete streamBuffers[msg.runId];
-  if (msg.sessionKey) sessions[msg.agentPkg] = msg.sessionKey;
-
-  const agent = agents.find(a => a.name === msg.agentPkg);
-  const id = msg.agentPkg.replace(/-agent$/, '');
-  const name = agent?.displayName || id;
-
-  if (text) {
-    addChatMsg(name, text, agent?.emoji || '🤖');
-    // Log as activity too
-    addActivityEntry(agent?.emoji || '🤖', name, 'sent a message', new Date());
-    saveChat();
-  }
-
+  if(msg.sessionKey) sessions[msg.agentPkg]=msg.sessionKey;
+  const agent=agents.find(a=>a.name===msg.agentPkg);
+  const id=agent?.agentId||msg.agentPkg.replace(/-agent$/,'');
+  if(text){addChatMsg(agent?.displayName||id,text,agent?.emoji||'🤖');saveChat();}
   hideTyping();
-  const bubble = document.getElementById(`bubble-${id}`);
-  if (bubble) setTimeout(() => bubble.classList.remove('visible'), 3000);
-  const dot = document.getElementById(`dot-${id}`);
-  if (dot) dot.className = 'status-dot online';
+  const bubble=document.getElementById(`bubble-${id}`);
+  if(bubble) setTimeout(()=>bubble.classList.remove('visible'),3000);
+  const dot=document.getElementById(`dot-${id}`);
+  if(dot) dot.className='status-dot online';
 }
+function extractText(m){if(typeof m==='string')return m;if(Array.isArray(m))return m.filter(p=>p.type==='text').map(p=>p.text).join('');if(m?.content)return extractText(m.content);return m?.text||'';}
 
-function extractText(m) {
-  if (typeof m === 'string') return m;
-  if (Array.isArray(m)) return m.filter(p=>p.type==='text').map(p=>p.text).join('');
-  if (m?.content) return extractText(m.content);
-  return m?.text || '';
-}
-
-// ── Chat ──
-function sendMessage() {
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
-  input.value = '';
-  addChatMsg('You', text, '👤');
-
-  const regIds2 = new Set(registeredAgents.map(a => a.id));
-  const isInst = (a) => regIds2.has(a.name.replace(/-agent$/, '')) || regIds2.has(a.agentId);
-  agents.filter(isInst).forEach(agent => {
-    ws.send(JSON.stringify({ type:'chat', agentPkg:agent.name, message:text, sessionKey:sessions[agent.name]||null }));
+// ═══ Chat ═══
+function sendMessage(){
+  const input=document.getElementById('chatInput');const text=input.value.trim();
+  if(!text||!ws||ws.readyState!==WebSocket.OPEN)return;
+  input.value=''; addChatMsg('You',text,'👤');
+  agents.filter(isInstalled).forEach(agent=>{
+    ws.send(JSON.stringify({type:'chat',agentPkg:agent.name,message:text,sessionKey:sessions[agent.name]||null}));
   });
   saveChat();
 }
-
-function addChatMsg(sender, text, emoji) {
-  const c = document.getElementById('messages');
-  const el = document.createElement('div');
-  el.className = 'msg';
-  const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  const color = sender === 'You' ? 'var(--accent)' : 'var(--green)';
-  let html = escapeHtml(text).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>');
-  el.innerHTML = `<span class="time">${now}</span><span class="sender" style="color:${color}">${emoji} ${sender}</span><span class="content">${html}</span>`;
-  c.appendChild(el);
-  c.scrollTop = c.scrollHeight;
+function addChatMsg(sender,text,emoji){
+  const c=document.getElementById('messages');const el=document.createElement('div');el.className='msg';
+  const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const color=sender==='You'?'var(--accent)':'var(--green)';
+  let html=esc(text).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>');
+  el.innerHTML=`<span class="time">${now}</span><span class="sender" style="color:${color}">${emoji} ${sender}</span><span class="content">${html}</span>`;
+  c.appendChild(el);c.scrollTop=c.scrollHeight;
 }
+function addSystemMsg(text){const c=document.getElementById('messages');const el=document.createElement('div');el.className='msg-system';el.textContent=text;c.appendChild(el);c.scrollTop=c.scrollHeight;}
+function showTyping(name){document.getElementById('typingWho').textContent=name;document.getElementById('typingLine').classList.add('active');}
+function hideTyping(){document.getElementById('typingLine').classList.remove('active');}
+function saveChat(){localStorage.setItem('hq-chat',document.getElementById('messages').innerHTML);localStorage.setItem('hq-sessions',JSON.stringify(sessions));}
+function loadChat(){const s=localStorage.getItem('hq-chat');if(s)document.getElementById('messages').innerHTML=s;const ss=localStorage.getItem('hq-sessions');if(ss)sessions=JSON.parse(ss);document.getElementById('messages').scrollTop=document.getElementById('messages').scrollHeight;}
 
-function addSystemMsg(text) {
-  const c = document.getElementById('messages');
-  const el = document.createElement('div');
-  el.className = 'msg-system';
-  el.textContent = text;
-  c.appendChild(el);
-  c.scrollTop = c.scrollHeight;
-}
+// ═══ Meeting ═══
+function startMeeting(){document.getElementById('startBtn').style.display='none';document.getElementById('endBtn').style.display='block';addSystemMsg('🎙️ Team standup started');const inp=document.getElementById('chatInput');const old=inp.value;inp.value="Quick standup: What are you working on? Any blockers? Keep it brief.";sendMessage();inp.value=old;}
+function endMeeting(){document.getElementById('startBtn').style.display='block';document.getElementById('endBtn').style.display='none';addSystemMsg('🎙️ Standup ended');}
 
-function showTyping(name) { document.getElementById('typingWho').textContent = name; document.getElementById('typingLine').classList.add('active'); }
-function hideTyping() { document.getElementById('typingLine').classList.remove('active'); }
-
-// ── Activity Log ──
-function addActivityEntry(emoji, agentName, action, time) {
-  const log = document.getElementById('activityLog');
-  // Clear empty state
-  const empty = log.querySelector('.log-empty');
-  if (empty) empty.remove();
-
-  const entry = document.createElement('div');
-  entry.className = 'log-entry';
-  const t = time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  entry.innerHTML = `
-    <div class="log-icon">${emoji}</div>
-    <div class="log-body">
-      <div class="log-action"><span class="agent-name">${agentName}</span> ${escapeHtml(action)}</div>
-      <div class="log-time">${t}</div>
-    </div>`;
-  log.prepend(entry);
-
-  // Keep max 200 entries
-  while (log.children.length > 200) log.lastChild.remove();
-  saveActivity();
-}
-
-async function fetchLiveActivity() {
-  try {
-    const res = await fetch(`${LOCAL}/api/activity`);
-    const data = await res.json();
-    if (!data.length) return;
-    
-    const log = document.getElementById('activityLog');
-    const empty = log.querySelector('.log-empty');
-    if (empty) empty.remove();
-    
-    // Only add new entries we haven't seen
-    const existing = new Set(Array.from(log.querySelectorAll('.log-entry')).map(e => e.dataset.key));
-    
-    for (const item of data) {
-      if (existing.has(item.sessionKey)) continue;
-      
-      const agent = agents.find(a => a.name === `${item.agentId}-agent`) || agents.find(a => a.name.includes(item.agentId));
-      const emoji = agent?.emoji || '🤖';
-      const name = agent?.displayName || item.agentId;
-      const time = new Date(item.updatedAt);
-      const ago = timeAgo(time);
-      
-      const entry = document.createElement('div');
-      entry.className = 'log-entry';
-      entry.dataset.key = item.sessionKey;
-      entry.innerHTML = `
-        <div class="log-icon">${emoji}</div>
-        <div class="log-body">
-          <div class="log-action"><span class="agent-name">${name}</span> active session — <span class="tool-name">${item.kind || 'chat'}</span></div>
-          <div class="log-time">${ago}</div>
-        </div>`;
-      log.prepend(entry);
-    }
-  } catch(e) { /* silent */ }
-}
-
-function timeAgo(date) {
-  const s = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (s < 60) return 'just now';
-  if (s < 3600) return `${Math.floor(s/60)}m ago`;
-  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
-  return `${Math.floor(s/86400)}d ago`;
-}
-
-function logActivity(msg) {
-  const agent = agents.find(a => a.name === msg.agentPkg);
-  const name = agent?.displayName || msg.agentPkg || 'Agent';
-  const emoji = agent?.emoji || '🤖';
-  let action = msg.event || msg.tool || 'performed an action';
-  if (msg.type === 'tool-use') action = `used <span class="tool-name">${msg.tool || 'tool'}</span>`;
-  addActivityEntry(emoji, name, action, new Date());
-}
-
-function saveActivity() {
-  const html = document.getElementById('activityLog').innerHTML;
-  localStorage.setItem('hq-activity', html);
-}
-function loadActivity() {
-  const saved = localStorage.getItem('hq-activity');
-  if (saved) document.getElementById('activityLog').innerHTML = saved;
-}
-
-// ── Meeting ──
-function startMeeting() {
-  meetingActive = true;
-  document.getElementById('startBtn').style.display = 'none';
-  document.getElementById('endBtn').style.display = 'block';
-  addSystemMsg('🎙️ Team standup started');
-  addActivityEntry('🎙️', 'System', 'Team standup started', new Date());
-  const input = document.getElementById('chatInput');
-  const old = input.value;
-  input.value = "Quick standup: What are you working on? Any blockers? Keep it brief.";
-  sendMessage();
-  input.value = old;
-}
-
-function endMeeting() {
-  meetingActive = false;
-  document.getElementById('startBtn').style.display = 'block';
-  document.getElementById('endBtn').style.display = 'none';
-  addSystemMsg('🎙️ Standup ended');
-}
-
-// ── Persistence ──
-function saveChat() {
-  localStorage.setItem('hq-chat', document.getElementById('messages').innerHTML);
-  localStorage.setItem('hq-sessions', JSON.stringify(sessions));
-}
-function loadChat() {
-  const s = localStorage.getItem('hq-chat');
-  if (s) document.getElementById('messages').innerHTML = s;
-  const ss = localStorage.getItem('hq-sessions');
-  if (ss) sessions = JSON.parse(ss);
-  document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
-}
-
-// ── Upsell ──
-function updateUpsell() {
-  const rIds2 = new Set(registeredAgents.map(a => a.id));
-  const isInst2 = (a) => rIds2.has(a.name.replace(/-agent$/, '')) || rIds2.has(a.agentId);
-  const installedCount = agents.filter(isInst2).length;
-  const available = agents.length - installedCount;
-  const desc = document.getElementById('upsellDesc');
-  if (available > 0) {
-    desc.textContent = `${available} more agent${available>1?'s':''} available — expand your team`;
-  } else {
-    desc.textContent = 'Browse the marketplace for new agents';
-  }
-}
-
-// ── Helpers ──
-function updateStatus(on) {
-  const b = document.getElementById('statusBadge');
-  b.textContent = on ? '● Online' : '● Offline';
-  b.className = `badge ${on ? 'online' : 'offline'}`;
-}
-
-function updateClock() {
-  const now = new Date();
-  document.getElementById('clock').textContent = now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  const h = now.getHours() % 12;
-  const clocks = ['🕛','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚'];
-  const el = document.getElementById('wallClock');
-  if (el) el.textContent = clocks[h];
-}
-
-function updateMeetingParts() {
-  const rIds = new Set(registeredAgents.map(a => a.id));
-  const online = agents.filter(a => rIds.has(a.name.replace(/-agent$/, '')) || rIds.has(a.agentId));
-  document.getElementById('meetingParts').textContent =
-    online.length > 0 ? `${online.map(a=>a.emoji||'🤖').join(' ')} ${online.length} agent${online.length>1?'s':''} ready` : 'No agents online';
-}
-
-function setupInput() {
-  document.getElementById('chatInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-  });
-}
-
-function setupCat() {
-  const cat = document.getElementById('officeCat');
-  const faces = ['😺','😸','😹','😻','😼','😽','🙀','😿','😾'];
-  let i = 0;
-  cat.addEventListener('click', () => { i = (i+1)%faces.length; cat.textContent = faces[i]; });
-}
-
-async function submitWaitlist() {
-  const email = document.getElementById('waitlistEmail').value.trim();
-  if (!email || !email.includes('@')) return alert('Enter a valid email.');
-  try { await fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,source:'hq',timestamp:new Date().toISOString()})}); }
-  catch { const l=JSON.parse(localStorage.getItem('waitlist-emails')||'[]'); l.push({email,timestamp:new Date().toISOString()}); localStorage.setItem('waitlist-emails',JSON.stringify(l)); }
-  document.getElementById('waitlistForm').style.display='none';
-  document.getElementById('waitlistSuccess').classList.add('show');
-}
-
-function escapeHtml(t) { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+// ═══ Helpers ═══
+function updateStatus(on){const b=document.getElementById('statusBadge');b.textContent=on?'● Online':'● Offline';b.className=`badge ${on?'online':'offline'}`;}
+function updateClock(){const now=new Date();document.getElementById('clock').textContent=now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});const h=now.getHours()%12;const clocks=['🕛','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚'];const el=document.getElementById('wallClock');if(el)el.textContent=clocks[h];}
+function updateMeetingParts(){const online=agents.filter(isInstalled);document.getElementById('meetingParts').textContent=online.length>0?`${online.map(a=>a.emoji||'🤖').join(' ')} ${online.length} agent${online.length>1?'s':''} ready`:'No agents online';}
+function updateUpsell(){const c=agents.filter(isInstalled).length;const a=agents.length-c;document.getElementById('upsellDesc').textContent=a>0?`${a} more agent${a>1?'s':''} available`:'Browse the marketplace';}
+function setupInput(){document.getElementById('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});}
+function setupCat(){const cat=document.getElementById('officeCat');const f=['😺','😸','😹','😻','😼','😽','🙀','😿','😾'];let i=0;cat.addEventListener('click',()=>{i=(i+1)%f.length;cat.textContent=f[i];});}
+function timeAgo(d){const s=Math.floor((Date.now()-d.getTime())/1000);if(s<60)return'just now';if(s<3600)return`${Math.floor(s/60)}m ago`;if(s<86400)return`${Math.floor(s/3600)}h ago`;return`${Math.floor(s/86400)}d ago`;}
+function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+async function submitWaitlist(){const email=document.getElementById('waitlistEmail').value.trim();if(!email||!email.includes('@'))return alert('Enter a valid email.');try{await fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,source:'hq',timestamp:new Date().toISOString()})});}catch{const l=JSON.parse(localStorage.getItem('waitlist-emails')||'[]');l.push({email,timestamp:new Date().toISOString()});localStorage.setItem('waitlist-emails',JSON.stringify(l));}document.getElementById('waitlistForm').style.display='none';document.getElementById('waitlistSuccess').classList.add('show');}
 
 init();
 </script>
