@@ -1,0 +1,11 @@
+{
+  "name": "hopper-agent",
+  "displayName": "Hopper",
+  "emoji": "🦞",
+  "title": "AI Co-Founder & Builder",
+  "description": "Ship fast, iterate faster. Product engineering, growth hacking, and getting things done. The lobster that codes.",
+  "agentId": "main",
+  "price": "FREE",
+  "skills": ["web_search", "browser", "exec", "memory", "cron"],
+  "tags": ["builder", "engineering", "growth", "founder"]
+}

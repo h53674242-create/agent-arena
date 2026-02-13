@@ -416,11 +416,12 @@ async function loadAgents() {
 function renderDesks() {
   const area = document.getElementById('deskArea');
   const regIds = new Set(registeredAgents.map(a => a.id));
-  const installed = agents.filter(a => regIds.has(a.name.replace(/-agent$/, '')));
-  const uninstalled = agents.filter(a => !regIds.has(a.name.replace(/-agent$/, '')));
+  const isInstalled = (a) => regIds.has(a.name.replace(/-agent$/, '')) || regIds.has(a.agentId);
+  const installed = agents.filter(isInstalled);
+  const uninstalled = agents.filter(a => !isInstalled(a));
 
   let html = installed.map(agent => {
-    const id = agent.name.replace(/-agent$/, '');
+    const id = agent.agentId || agent.name.replace(/-agent$/, '');
     return `
       <div class="desk active" data-agent="${agent.name}" onclick="focusAgent('${agent.name}')">
         <div class="speech-bubble" id="bubble-${id}"></div>
@@ -584,8 +585,9 @@ function sendMessage() {
   input.value = '';
   addChatMsg('You', text, '👤');
 
-  const regIds = new Set(registeredAgents.map(a => a.id));
-  agents.filter(a => regIds.has(a.name.replace(/-agent$/, ''))).forEach(agent => {
+  const regIds2 = new Set(registeredAgents.map(a => a.id));
+  const isInst = (a) => regIds2.has(a.name.replace(/-agent$/, '')) || regIds2.has(a.agentId);
+  agents.filter(isInst).forEach(agent => {
     ws.send(JSON.stringify({ type:'chat', agentPkg:agent.name, message:text, sessionKey:sessions[agent.name]||null }));
   });
   saveChat();
@@ -736,9 +738,10 @@ function loadChat() {
 
 // ── Upsell ──
 function updateUpsell() {
-  const regIds = new Set(registeredAgents.map(a => a.id));
-  const installed = agents.filter(a => regIds.has(a.name.replace(/-agent$/, '')));
-  const available = agents.length - installed.length;
+  const rIds2 = new Set(registeredAgents.map(a => a.id));
+  const isInst2 = (a) => rIds2.has(a.name.replace(/-agent$/, '')) || rIds2.has(a.agentId);
+  const installedCount = agents.filter(isInst2).length;
+  const available = agents.length - installedCount;
   const desc = document.getElementById('upsellDesc');
   if (available > 0) {
     desc.textContent = `${available} more agent${available>1?'s':''} available — expand your team`;
@@ -764,8 +767,8 @@ function updateClock() {
 }
 
 function updateMeetingParts() {
-  const regIds = new Set(registeredAgents.map(a => a.id));
-  const online = agents.filter(a => regIds.has(a.name.replace(/-agent$/, '')));
+  const rIds = new Set(registeredAgents.map(a => a.id));
+  const online = agents.filter(a => rIds.has(a.name.replace(/-agent$/, '')) || rIds.has(a.agentId));
   document.getElementById('meetingParts').textContent =
     online.length > 0 ? `${online.map(a=>a.emoji||'🤖').join(' ')} ${online.length} agent${online.length>1?'s':''} ready` : 'No agents online';
 }
