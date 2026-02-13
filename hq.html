@@ -867,7 +867,8 @@ async function startOnboarding(agentName) {
 
   await sleep(500);
 
-  // Show celebration
+  // Clear onboarding content then show celebration
+  document.getElementById('hireOnboarding').innerHTML='';
   showCelebration(agent);
 }
 
