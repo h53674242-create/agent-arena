@@ -333,14 +333,16 @@
   <div class="hero-badge fade-up fade-up-d1">⚡ NOW IN PUBLIC BETA</div>
   <h1 class="fade-up fade-up-d2">Hire <span class="highlight">AI Agents</span><br>That Actually Work</h1>
   <p class="fade-up fade-up-d3">Pre-configured AI teammates deployed to your machine in 60 seconds. They write code, create content, guard your servers — and they never leave your machine.</p>
-  <div class="hero-actions fade-up fade-up-d4">
-    <a href="agents.html" class="btn-primary">🎮 Browse Agents</a>
-    <a href="hq.html" class="btn-secondary">🏢 Launch HQ</a>
-  </div>
-  <div class="hero-install fade-up fade-up-d4" onclick="copyInstall()">
-    <div class="install-label">Install your first agent — it's free</div>
-    <span id="installCode">curl -fsSL raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s founder-agent</span>
-    <span class="copy-hint" id="copyHint">📋 copy</span>
+  <div class="hero-actions fade-up fade-up-d4" style="flex-direction:column;align-items:center;gap:16px;">
+    <div style="display:flex;gap:12px;">
+      <a href="agents.html" class="btn-primary">🎮 Browse Agents</a>
+      <a href="#waitlist" class="btn-secondary">📬 Join Waitlist</a>
+    </div>
+    <form class="waitlist-form" onsubmit="handleHeroWaitlist(event)" style="max-width:440px;width:100%;margin-top:8px;">
+      <input type="email" placeholder="you@example.com" required id="heroEmail" style="flex:1;padding:12px 16px;background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;">
+      <button type="submit" style="padding:12px 20px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;">Get Early Access 🦞</button>
+    </form>
+    <div id="heroWaitlistSuccess" style="display:none;padding:10px 20px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;color:#22c55e;font-size:13px;">🦞 You're in! We'll ping you when we launch.</div>
   </div>
   <div class="social-proof fade-up fade-up-d4">
     <div class="proof-item"><div class="proof-num">9</div><div class="proof-label">Agents</div></div>
@@ -486,7 +488,7 @@
 </section>
 
 <!-- ═══════════════ WAITLIST / CTA ═══════════════ -->
-<section class="section waitlist-section">
+<section class="section waitlist-section" id="waitlist">
   <div class="waitlist-inner">
     <span style="font-size:48px;display:block;margin-bottom:16px;">📬</span>
     <h2 style="font-size:clamp(24px,4vw,36px);font-weight:800;margin-bottom:12px;">Get Early Access</h2>
@@ -546,7 +548,7 @@
     <p style="font-size:16px;color:var(--muted);margin-bottom:32px;line-height:1.6;">Start free with the Founder Agent. It ships code, manages repos, and has opinions about your architecture.</p>
     <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
       <a href="agents.html" class="btn-primary">🎮 Browse Agents</a>
-      <a href="hq.html" class="btn-secondary">🏢 Launch HQ</a>
+      <a href="#waitlist" class="btn-secondary">📬 Join Waitlist</a>
     </div>
   </div>
 </section>
@@ -561,7 +563,7 @@
     <div class="footer-col">
       <h4>Product</h4>
       <a href="agents.html">Browse Agents</a>
-      <a href="hq.html">Launch HQ</a>
+      <a href="#waitlist">Join Waitlist</a>
       <a href="#how">How It Works</a>
     </div>
     <div class="footer-col">
@@ -637,6 +639,16 @@ function toggleFaq(el) {
 }
 
 // Waitlist form
+async function handleHeroWaitlist(e) {
+  e.preventDefault();
+  var email = document.getElementById('heroEmail').value.trim();
+  if (!email) return;
+  try { await fetch('https://formsubmit.co/ajax/hopper@openclaw.ai', { method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'}, body:JSON.stringify({email:email,source:'hero',_subject:'Agent Arena Waitlist (Hero)'})}); } catch(err){}
+  try { await fetch('/api/waitlist', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:email,source:'hero',timestamp:new Date().toISOString()}), signal:AbortSignal.timeout(2000)}); } catch(err){}
+  document.getElementById('heroWaitlistSuccess').style.display = 'block';
+  e.target.style.display = 'none';
+}
+
 async function handleWaitlist(e) {
   e.preventDefault();
   var email = document.getElementById('waitlistEmail').value.trim();
@@ -666,21 +678,26 @@ async function handleWaitlist(e) {
 }
 
 // Scroll fade-in for sections
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.style.opacity = '1';
-      entry.target.style.transform = 'translateY(0)';
-    }
-  });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.section').forEach(el => {
+document.querySelectorAll('.section').forEach(function(el, i) {
   el.style.opacity = '0';
   el.style.transform = 'translateY(30px)';
   el.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
-  observer.observe(el);
 });
+
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.05, rootMargin: '50px' });
+
+// Observe after a tick so initial intersection fires
+setTimeout(function() {
+  document.querySelectorAll('.section').forEach(function(el) { observer.observe(el); });
+}, 50);
 </script>
 </body>
 </html>
