@@ -93,15 +93,21 @@
   .meeting-bar .start-btn:hover { filter:brightness(1.1); }
   .meeting-bar .end-btn { background:var(--red); color:#fff; display:none; }
 
-  /* ═══ Agent Detail Panel (overlay on office) ═══ */
-  .agent-detail {
-    display:none; position:absolute; top:0; right:0; bottom:0; width:420px;
-    background:var(--surface); border-left:1px solid var(--border);
-    z-index:20; flex-direction:column; overflow:hidden;
-    animation:slideIn 0.2s ease;
+  /* ═══ Agent Detail Modal ═══ */
+  .agent-detail-overlay {
+    display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,0.7); z-index:50; align-items:center; justify-content:center;
+    backdrop-filter:blur(4px);
   }
-  .agent-detail.open { display:flex; }
-  @keyframes slideIn { from{transform:translateX(100%)} to{transform:translateX(0)} }
+  .agent-detail-overlay.open { display:flex; }
+  .agent-detail {
+    width:700px; max-width:90vw; max-height:85vh;
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    display:flex; flex-direction:column; overflow:hidden;
+    animation:modalIn 0.2s ease;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  @keyframes modalIn { from{opacity:0;transform:scale(0.95) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
 
   .detail-header {
     padding:16px 20px; border-bottom:1px solid var(--border);
@@ -291,7 +297,10 @@
       <button class="end-btn" id="endBtn" onclick="endMeeting()">End Meeting</button>
     </div>
 
-    <!-- Agent Detail Overlay (inside office) -->
+  </div><!-- end .office -->
+
+  <!-- Agent Detail Modal -->
+  <div class="agent-detail-overlay" id="agentDetailOverlay" onclick="if(event.target===this)closeDetail()">
     <div class="agent-detail" id="agentDetail">
       <div class="detail-header">
         <button class="back-btn" onclick="closeDetail()">←</button>
@@ -320,7 +329,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </div><!-- end modal overlay -->
 
   <!-- Right Panel: Chat -->
   <div class="right-panel">
@@ -418,8 +427,8 @@ async function openAgentDetail(agentName) {
   document.getElementById('detailName').innerHTML=`${agent.emoji||'🤖'} ${agent.displayName||agent.name}`;
   document.getElementById('detailRole').textContent=agent.title||agent.description||'';
 
-  // Show panel
-  document.getElementById('agentDetail').classList.add('open');
+  // Show modal
+  document.getElementById('agentDetailOverlay').classList.add('open');
 
   // Reset
   document.getElementById('timeline').innerHTML='';
@@ -532,7 +541,7 @@ function extractMsgText(msg) {
 }
 
 function closeDetail() {
-  document.getElementById('agentDetail').classList.remove('open');
+  document.getElementById('agentDetailOverlay').classList.remove('open');
   document.querySelectorAll('.desk').forEach(d=>d.classList.remove('selected'));
   selectedAgent=null;
 }
