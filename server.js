@@ -321,6 +321,68 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // API: install agent (one-click from UI)
+  const installMatch = url.pathname.match(/^\/api\/agents\/([a-z0-9-]+)\/install$/);
+  if (installMatch && req.method === 'POST') {
+    const name = installMatch[1];
+    const pkgDir = path.join(PACKAGES, name);
+    if (!fs.existsSync(path.join(pkgDir, 'agent.json'))) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Agent package not found' }));
+      return;
+    }
+    try {
+      const installScript = path.join(BASE, 'installer', 'install.sh');
+      const result = execSync(`bash "${installScript}" "${name}" --from "${pkgDir}"`, {
+        env: { ...process.env, SKIP_RESTART: '1' },
+        timeout: 30000,
+        encoding: 'utf8',
+      });
+      // Also restart gateway to pick up new agent
+      try { execSync('openclaw gateway restart', { timeout: 15000, encoding: 'utf8' }); } catch(e) {}
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, output: result }));
+    } catch(e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Install failed: ' + e.message }));
+    }
+    return;
+  }
+
+  // API: activity feed — recent session events from gateway
+  if (url.pathname === '/api/activity') {
+    if (!gateway?.connected) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify([]));
+      return;
+    }
+    try {
+      const result = await gateway.request('sessions.list', { limit: 20 });
+      const sessionList = result.sessions || result || [];
+      const activity = [];
+      for (const s of sessionList) {
+        const agentId = s.key?.split(':')?.[1] || 'unknown';
+        activity.push({
+          type: 'session',
+          agentId,
+          sessionKey: s.key,
+          kind: s.kind,
+          label: s.label,
+          updatedAt: s.updatedAt,
+          model: s.model,
+        });
+      }
+      // Sort by most recent
+      activity.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(activity));
+    } catch(e) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify([]));
+    }
+    return;
+  }
+
   // API: signup
   if ((url.pathname === '/api/signup' || url.pathname === '/api/waitlist') && req.method === 'POST') {
     let body = '';

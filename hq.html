@@ -393,7 +393,10 @@ async function checkConnection() {
     connectWS();
     loadChat();
     loadActivity();
+    await fetchLiveActivity();
     updateUpsell();
+    // Poll activity every 30s
+    setInterval(fetchLiveActivity, 30000);
   } catch {
     document.getElementById('waitlistGate').classList.add('active');
     updateStatus(false);
@@ -430,14 +433,14 @@ function renderDesks() {
       </div>`;
   }).join('');
 
-  // Empty desks for uninstalled
+  // Empty desks for uninstalled (one-click install)
   html += uninstalled.map(agent => `
-    <div class="desk empty" onclick="window.location.href='agents.html'" title="Install ${agent.displayName || agent.name}">
+    <div class="desk empty" data-agent="${agent.name}" onclick="installAgent('${agent.name}')" title="Click to hire ${agent.displayName || agent.name}">
       <div class="agent-avatar" style="filter:grayscale(1)">
         ${agent.emoji || '🤖'}
         <div class="status-dot offline"></div>
       </div>
-      <div class="agent-label">${agent.displayName || agent.name}</div>
+      <div class="agent-label">${agent.displayName || agent.name}<br><span style="font-size:8px;color:var(--accent)">Click to hire</span></div>
       <div class="desk-obj"><div class="desk-monitor"><div class="glow"></div></div></div>
     </div>`).join('');
 
@@ -449,6 +452,47 @@ function renderDesks() {
     </div>`;
 
   area.innerHTML = html;
+}
+
+// ── One-click install ──
+async function installAgent(agentName) {
+  const agent = agents.find(a => a.name === agentName);
+  const name = agent?.displayName || agentName;
+  
+  if (!confirm(`Hire ${name}? This will install them into your OpenClaw workspace.`)) return;
+  
+  // Show installing state
+  const desk = document.querySelector(`.desk[data-agent="${agentName}"]`);
+  if (desk) {
+    const label = desk.querySelector('.agent-label');
+    if (label) label.innerHTML = `${name}<br><span style="font-size:8px;color:var(--accent)">Installing...</span>`;
+  }
+  
+  addActivityEntry(agent?.emoji || '🤖', name, 'being hired...', new Date());
+  
+  try {
+    const res = await fetch(`${LOCAL}/api/agents/${agentName}/install`, { method: 'POST' });
+    const data = await res.json();
+    
+    if (data.ok) {
+      addActivityEntry('✅', name, 'hired and ready!', new Date());
+      addSystemMsg(`✅ ${name} has joined the team!`);
+      // Reload agents to update desks
+      setTimeout(async () => {
+        await loadAgents();
+        updateUpsell();
+      }, 2000);
+    } else {
+      throw new Error(data.error || 'Install failed');
+    }
+  } catch(e) {
+    addActivityEntry('❌', name, `hire failed: ${e.message}`, new Date());
+    alert(`Failed to install ${name}: ${e.message}`);
+    if (desk) {
+      const label = desk.querySelector('.agent-label');
+      if (label) label.innerHTML = `${name}<br><span style="font-size:8px;color:var(--accent)">Click to hire</span>`;
+    }
+  }
 }
 
 function focusAgent(name) {
@@ -592,6 +636,50 @@ function addActivityEntry(emoji, agentName, action, time) {
   // Keep max 200 entries
   while (log.children.length > 200) log.lastChild.remove();
   saveActivity();
+}
+
+async function fetchLiveActivity() {
+  try {
+    const res = await fetch(`${LOCAL}/api/activity`);
+    const data = await res.json();
+    if (!data.length) return;
+    
+    const log = document.getElementById('activityLog');
+    const empty = log.querySelector('.log-empty');
+    if (empty) empty.remove();
+    
+    // Only add new entries we haven't seen
+    const existing = new Set(Array.from(log.querySelectorAll('.log-entry')).map(e => e.dataset.key));
+    
+    for (const item of data) {
+      if (existing.has(item.sessionKey)) continue;
+      
+      const agent = agents.find(a => a.name === `${item.agentId}-agent`) || agents.find(a => a.name.includes(item.agentId));
+      const emoji = agent?.emoji || '🤖';
+      const name = agent?.displayName || item.agentId;
+      const time = new Date(item.updatedAt);
+      const ago = timeAgo(time);
+      
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.dataset.key = item.sessionKey;
+      entry.innerHTML = `
+        <div class="log-icon">${emoji}</div>
+        <div class="log-body">
+          <div class="log-action"><span class="agent-name">${name}</span> active session — <span class="tool-name">${item.kind || 'chat'}</span></div>
+          <div class="log-time">${ago}</div>
+        </div>`;
+      log.prepend(entry);
+    }
+  } catch(e) { /* silent */ }
+}
+
+function timeAgo(date) {
+  const s = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
 }
 
 function logActivity(msg) {
