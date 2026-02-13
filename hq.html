@@ -246,7 +246,7 @@
   .hire-modal {
     width:640px; max-width:90vw; max-height:85vh;
     background:var(--surface); border:1px solid var(--border); border-radius:12px;
-    display:flex; flex-direction:column; overflow:hidden;
+    display:flex; flex-direction:column; overflow-y:auto;
     animation:modalIn 0.2s ease; box-shadow:0 20px 60px rgba(0,0,0,0.5);
   }
   .hire-modal-header {
@@ -266,7 +266,7 @@
   .hire-view.active { display:block; }
 
   /* Browse view */
-  .hire-list { flex:1; overflow-y:auto; padding:16px; }
+  .hire-list { overflow-y:auto; padding:16px; max-height:60vh; }
   .hire-card {
     padding:20px; border:1px solid var(--border); border-radius:10px;
     margin-bottom:12px; cursor:pointer; transition:all .15s;
