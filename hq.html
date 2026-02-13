@@ -236,6 +236,52 @@
   .upsell .upsell-desc { font-size:10px; color:var(--muted); margin-top:1px; }
   .upsell .upsell-btn { padding:5px 12px; background:var(--accent); color:#000; border:none; border-radius:6px; font-size:10px; font-weight:700; cursor:pointer; }
 
+  /* Hire Modal */
+  .hire-overlay {
+    display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,0.7); z-index:50; align-items:center; justify-content:center;
+    backdrop-filter:blur(4px);
+  }
+  .hire-overlay.open { display:flex; }
+  .hire-modal {
+    width:600px; max-width:90vw; max-height:80vh;
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    display:flex; flex-direction:column; overflow:hidden;
+    animation:modalIn 0.2s ease; box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  .hire-modal-header {
+    padding:20px 24px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:12px;
+  }
+  .hire-modal-header h2 { font-size:18px; font-weight:700; flex:1; }
+  .hire-modal-header .close-btn {
+    width:32px; height:32px; border-radius:8px; border:1px solid var(--border);
+    background:none; color:var(--muted); font-size:16px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .hire-modal-header .close-btn:hover { color:var(--text); border-color:var(--accent); }
+  .hire-list { flex:1; overflow-y:auto; padding:16px; }
+  .hire-card {
+    display:flex; align-items:center; gap:16px; padding:16px;
+    border:1px solid var(--border); border-radius:10px; margin-bottom:12px;
+    transition:border-color .15s;
+  }
+  .hire-card:hover { border-color:rgba(251,191,36,0.3); }
+  .hire-card .hire-emoji { font-size:32px; }
+  .hire-card .hire-info { flex:1; }
+  .hire-card .hire-name { font-size:14px; font-weight:700; margin-bottom:2px; }
+  .hire-card .hire-desc { font-size:12px; color:var(--muted); line-height:1.4; }
+  .hire-card .hire-price { font-size:11px; color:var(--green); font-weight:600; margin-top:4px; }
+  .hire-card .hire-btn {
+    padding:8px 20px; background:var(--accent); color:#000; border:none;
+    border-radius:8px; font-weight:700; font-size:12px; cursor:pointer;
+    white-space:nowrap; transition:filter .15s;
+  }
+  .hire-card .hire-btn:hover { filter:brightness(1.1); }
+  .hire-card .hire-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .hire-card .hire-btn.installed { background:var(--surface2); color:var(--muted); border:1px solid var(--border); cursor:default; }
+  .hire-empty { text-align:center; color:var(--muted); padding:40px; font-size:14px; }
+
   /* Waitlist */
   .waitlist-gate { display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; }
   .waitlist-gate.active { display:flex; }
@@ -340,7 +386,18 @@
         </div>
       </div>
     </div>
-  </div><!-- end modal overlay -->
+  </div><!-- end agent detail modal -->
+
+  <!-- Hire Modal -->
+  <div class="hire-overlay" id="hireOverlay" onclick="if(event.target===this)closeHireModal()">
+    <div class="hire-modal">
+      <div class="hire-modal-header">
+        <h2>⚡ Hire an Agent</h2>
+        <button class="close-btn" onclick="closeHireModal()">✕</button>
+      </div>
+      <div class="hire-list" id="hireList"></div>
+    </div>
+  </div>
 
   <!-- Right Panel: Chat -->
   <div class="right-panel">
@@ -356,7 +413,7 @@
       <input type="text" id="chatInput" placeholder="Message your team..." autocomplete="off">
       <button onclick="sendMessage()">Send</button>
     </div>
-    <div class="upsell" onclick="window.location.href='agents.html'">
+    <div class="upsell" onclick="openHireModal()">
       <div class="upsell-icon">⚡</div>
       <div class="upsell-text">
         <div class="upsell-title">Grow Your Team</div>
@@ -423,7 +480,7 @@ function renderDesks() {
   }).join('');
 
   // No greyed-out desks — uninstalled agents only available via Hire page
-  html+=`<div class="add-agent-desk" onclick="window.location.href='agents.html'"><div class="add-circle">+</div><div class="add-label">Add Agent</div></div>`;
+  html+=`<div class="add-agent-desk" onclick="openHireModal()"><div class="add-circle">+</div><div class="add-label">Hire Agent</div></div>`;
   area.innerHTML=html;
 }
 
@@ -566,6 +623,61 @@ function switchDetailTab(tab) {
   });
   document.getElementById('sectionTimeline').classList.toggle('active',tab==='timeline');
   document.getElementById('sectionSessions').classList.toggle('active',tab==='sessions');
+}
+
+// ═══ Hire Modal ═══
+function openHireModal() {
+  const list=document.getElementById('hireList');
+  const installedSet=new Set(agents.filter(isInstalled).map(a=>a.name));
+
+  list.innerHTML=agents.map(agent=>{
+    const installed=installedSet.has(agent.name);
+    const price=typeof agent.price==='object'?`$${agent.price.amount}/${agent.price.interval}`:(agent.price||'FREE');
+    return `<div class="hire-card">
+      <div class="hire-emoji">${agent.emoji||'🤖'}</div>
+      <div class="hire-info">
+        <div class="hire-name">${agent.displayName||agent.name}</div>
+        <div class="hire-desc">${agent.title||agent.description||''}</div>
+        <div class="hire-price">${price}</div>
+      </div>
+      ${installed
+        ?'<button class="hire-btn installed" disabled>On Team ✓</button>'
+        :`<button class="hire-btn" id="hire-btn-${agent.name}" onclick="hireFromModal('${agent.name}')">Hire</button>`
+      }
+    </div>`;
+  }).join('')||'<div class="hire-empty">No agents available</div>';
+
+  document.getElementById('hireOverlay').classList.add('open');
+}
+
+function closeHireModal() {
+  document.getElementById('hireOverlay').classList.remove('open');
+}
+
+async function hireFromModal(agentName) {
+  const agent=agents.find(a=>a.name===agentName);
+  const name=agent?.displayName||agentName;
+  const btn=document.getElementById(`hire-btn-${agentName}`);
+  if(btn){btn.textContent='Hiring...';btn.disabled=true;}
+
+  try {
+    const res=await fetch(`${LOCAL}/api/agents/${agentName}/install`,{method:'POST'});
+    const data=await res.json();
+    if(data.ok) {
+      if(btn){btn.textContent='On Team ✓';btn.className='hire-btn installed';}
+      addSystemMsg(`✅ ${name} has joined the team!`);
+      // Wait for gateway restart then reload desks
+      setTimeout(async()=>{
+        await loadAgents();
+        updateUpsell();
+        // Refresh the hire modal too
+        openHireModal();
+      },3000);
+    } else throw new Error(data.error);
+  } catch(e) {
+    alert('Hire failed: '+e.message);
+    if(btn){btn.textContent='Hire';btn.disabled=false;}
+  }
 }
 
 // ═══ Fire Agent ═══
