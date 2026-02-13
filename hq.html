@@ -616,7 +616,8 @@ function handleMsg(msg) {
 }
 function onDelta(msg) {
   const text=extractText(msg.message); if(!text) return;
-  streamBuffers[msg.runId]=(streamBuffers[msg.runId]||'')+text;
+  // chat-delta contains FULL cumulative text, not incremental
+  streamBuffers[msg.runId]=text;
   if(msg.sessionKey) sessions[msg.agentPkg]=msg.sessionKey;
   const agent=agents.find(a=>a.name===msg.agentPkg);
   const id=agent?.agentId||msg.agentPkg.replace(/-agent$/,'');
