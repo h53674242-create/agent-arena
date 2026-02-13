@@ -83,6 +83,17 @@
   .add-agent-desk:hover .add-circle { border-style:solid; background:rgba(251,191,36,0.05); }
   .add-label { margin-top:6px; font-size:10px; font-weight:600; color:var(--accent); }
 
+  /* Fire button */
+  .fire-btn {
+    position:absolute; top:-6px; right:8px; width:20px; height:20px;
+    border-radius:50%; background:var(--surface); border:1px solid var(--border);
+    color:var(--muted); font-size:11px; cursor:pointer; z-index:5;
+    display:none; align-items:center; justify-content:center; transition:all .15s;
+    line-height:1;
+  }
+  .desk:hover .fire-btn { display:flex; }
+  .fire-btn:hover { background:var(--red); color:#fff; border-color:var(--red); }
+
   /* Meeting bar */
   .meeting-bar { position:absolute; bottom:0; left:0; right:0; z-index:8; background:rgba(17,17,24,0.95); border-top:1px solid var(--border); padding:8px 16px; display:flex; align-items:center; gap:12px; backdrop-filter:blur(8px); }
   .meeting-bar .label { font-size:11px; color:var(--accent); font-weight:700; }
@@ -349,9 +360,9 @@
       <div class="upsell-icon">⚡</div>
       <div class="upsell-text">
         <div class="upsell-title">Grow Your Team</div>
-        <div class="upsell-desc" id="upsellDesc">Add more agents to your office</div>
+        <div class="upsell-desc" id="upsellDesc">Hire more agents for your team</div>
       </div>
-      <button class="upsell-btn">Browse Agents</button>
+      <button class="upsell-btn">Hire Agents</button>
     </div>
   </div>
 </div>
@@ -403,6 +414,7 @@ function renderDesks() {
     const id=agent.agentId||agent.name.replace(/-agent$/,'');
     return `
       <div class="desk active" data-agent="${agent.name}" onclick="openAgentDetail('${agent.name}')">
+        <button class="fire-btn" onclick="event.stopPropagation();fireAgent('${agent.name}')" title="Remove from team">✕</button>
         <div class="speech-bubble" id="bubble-${id}"></div>
         <div class="agent-avatar">${agent.emoji||'🤖'}<div class="status-dot online" id="dot-${id}"></div></div>
         <div class="agent-label">${agent.displayName||agent.name}</div>
@@ -562,6 +574,19 @@ function switchDetailTab(tab) {
   document.getElementById('sectionSessions').classList.toggle('active',tab==='sessions');
 }
 
+// ═══ Fire Agent ═══
+async function fireAgent(agentName) {
+  const agent=agents.find(a=>a.name===agentName);
+  const name=agent?.displayName||agentName;
+  if(!confirm(`Are you sure you want to remove ${name} from your team?\n\nTheir workspace and memory files will be kept, but they'll no longer be active.`)) return;
+  try {
+    const res=await fetch(`${LOCAL}/api/agents/${agentName}/fire`,{method:'POST'});
+    const data=await res.json();
+    if(data.ok) { addSystemMsg(`👋 ${name} has left the team.`); setTimeout(()=>{loadAgents();updateUpsell()},2000); }
+    else throw new Error(data.error);
+  } catch(e) { alert('Failed to remove: '+e.message); }
+}
+
 // ═══ Install ═══
 async function installAgent(agentName) {
   const agent=agents.find(a=>a.name===agentName);
@@ -648,7 +673,7 @@ function endMeeting(){document.getElementById('startBtn').style.display='block';
 function updateStatus(on){const b=document.getElementById('statusBadge');b.textContent=on?'● Online':'● Offline';b.className=`badge ${on?'online':'offline'}`;}
 function updateClock(){const now=new Date();document.getElementById('clock').textContent=now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});const h=now.getHours()%12;const clocks=['🕛','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚'];const el=document.getElementById('wallClock');if(el)el.textContent=clocks[h];}
 function updateMeetingParts(){const online=agents.filter(isInstalled);document.getElementById('meetingParts').textContent=online.length>0?`${online.map(a=>a.emoji||'🤖').join(' ')} ${online.length} agent${online.length>1?'s':''} ready`:'No agents online';}
-function updateUpsell(){const c=agents.filter(isInstalled).length;const a=agents.length-c;document.getElementById('upsellDesc').textContent=a>0?`${a} more agent${a>1?'s':''} available`:'Browse the marketplace';}
+function updateUpsell(){const c=agents.filter(isInstalled).length;const a=agents.length-c;document.getElementById('upsellDesc').textContent=a>0?`${a} more agent${a>1?'s':''} available`:'Hire from the marketplace';}
 function setupInput(){document.getElementById('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});}
 function setupCat(){const cat=document.getElementById('officeCat');const f=['😺','😸','😹','😻','😼','😽','🙀','😿','😾'];let i=0;cat.addEventListener('click',()=>{i=(i+1)%f.length;cat.textContent=f[i];});}
 function timeAgo(d){const s=Math.floor((Date.now()-d.getTime())/1000);if(s<60)return'just now';if(s<3600)return`${Math.floor(s/60)}m ago`;if(s<86400)return`${Math.floor(s/3600)}h ago`;return`${Math.floor(s/86400)}d ago`;}

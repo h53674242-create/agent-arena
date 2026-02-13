@@ -321,6 +321,40 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // API: fire/uninstall agent
+  const fireMatch = url.pathname.match(/^\/api\/agents\/([a-z0-9-]+)\/fire$/);
+  if (fireMatch && req.method === 'POST') {
+    const name = fireMatch[1];
+    const manifestPath = path.join(PACKAGES, name, 'agent.json');
+    if (!fs.existsSync(manifestPath)) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Agent not found' }));
+      return;
+    }
+    try {
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      const agentId = manifest.agentId || name.replace(/-agent$/, '');
+      
+      // Remove from gateway config
+      const configPath = path.join(require('os').homedir(), '.openclaw/openclaw.json');
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (config.agents?.list) {
+        config.agents.list = config.agents.list.filter(a => a.id !== agentId);
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+      }
+      
+      // Restart gateway
+      try { execSync('openclaw gateway restart', { timeout: 15000, encoding: 'utf8' }); } catch(e) {}
+      
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, agentId }));
+    } catch(e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Fire failed: ' + e.message }));
+    }
+    return;
+  }
+
   // API: install agent (one-click from UI)
   const installMatch = url.pathname.match(/^\/api\/agents\/([a-z0-9-]+)\/install$/);
   if (installMatch && req.method === 'POST') {
