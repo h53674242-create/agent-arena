@@ -26,13 +26,14 @@
   .topbar .clock { font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; }
 
   /* === Main Layout === */
-  .main-layout { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .main-layout { flex:1; display:flex; flex-direction:row; overflow:hidden; }
 
   /* === Office Scene === */
   .office-scene {
-    flex: 0 0 320px; position:relative; overflow:hidden;
+    flex:1; position:relative; overflow:hidden;
     background: linear-gradient(180deg, #1e1b2e 0%, #151320 100%);
-    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    min-width:0;
   }
 
   /* Floor */
@@ -194,7 +195,7 @@
 
   /* === Chat Panel === */
   .chat-panel {
-    flex:1; display:flex; flex-direction:column; overflow:hidden;
+    flex:0 0 380px; display:flex; flex-direction:column; overflow:hidden;
     background:var(--surface);
   }
 
@@ -300,11 +301,11 @@
 
   /* Resize handle */
   .resize-handle {
-    height:6px; background:var(--bg); cursor:ns-resize; flex-shrink:0;
+    width:6px; background:var(--bg); cursor:ew-resize; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
-    border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    border-left:1px solid var(--border); border-right:1px solid var(--border);
   }
-  .resize-handle::after { content:''; width:30px; height:2px; background:var(--border); border-radius:2px; }
+  .resize-handle::after { content:''; height:30px; width:2px; background:var(--border); border-radius:2px; }
   .resize-handle:hover::after { background:var(--accent); }
 </style>
 </head>
@@ -691,20 +692,20 @@ function updateMeetingParticipants() {
 // ── Resize handle ──
 function setupResize() {
   const handle = document.getElementById('resizeHandle');
-  const scene = document.getElementById('officeScene');
-  let startY, startH;
+  const chat = document.querySelector('.chat-panel');
+  let startX, startW;
   
   handle.addEventListener('mousedown', (e) => {
-    startY = e.clientY;
-    startH = scene.offsetHeight;
+    startX = e.clientX;
+    startW = chat.offsetWidth;
     document.addEventListener('mousemove', onResize);
     document.addEventListener('mouseup', stopResize);
     e.preventDefault();
   });
   
   function onResize(e) {
-    const newH = Math.max(150, Math.min(600, startH + e.clientY - startY));
-    scene.style.flex = `0 0 ${newH}px`;
+    const newW = Math.max(280, Math.min(700, startW - (e.clientX - startX)));
+    chat.style.flex = `0 0 ${newW}px`;
   }
   function stopResize() {
     document.removeEventListener('mousemove', onResize);
