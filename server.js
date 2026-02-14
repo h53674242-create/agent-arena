@@ -254,6 +254,83 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // API: list workspace files for an agent
+  const filesMatch = url.pathname.match(/^\/api\/agents\/([a-z0-9-]+)\/files$/);
+  if (filesMatch) {
+    const name = filesMatch[1];
+    const manifestPath = path.join(PACKAGES, name, 'agent.json');
+    if (!fs.existsSync(manifestPath)) { res.writeHead(404); res.end('Agent not found'); return; }
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    const agentId = manifest.agentId || name.replace(/-agent$/, '');
+    const home = require('os').homedir();
+    const workspace = path.join(home, `.openclaw/workspace-${agentId}`);
+    // Special case for main agent
+    const wsPath = agentId === 'main' ? path.join(home, '.openclaw/workspace') : workspace;
+    
+    if (!fs.existsSync(wsPath)) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify([]));
+      return;
+    }
+
+    // Recursively list files (max 3 levels deep, skip node_modules/.git)
+    function listFiles(dir, prefix = '', depth = 0) {
+      if (depth > 3) return [];
+      const results = [];
+      try {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+          const relPath = prefix ? `${prefix}/${entry.name}` : entry.name;
+          if (entry.isDirectory()) {
+            results.push({ name: relPath, type: 'dir' });
+            results.push(...listFiles(path.join(dir, entry.name), relPath, depth + 1));
+          } else {
+            const stat = fs.statSync(path.join(dir, entry.name));
+            results.push({ name: relPath, type: 'file', size: stat.size, mtime: stat.mtimeMs });
+          }
+        }
+      } catch(e) {}
+      return results;
+    }
+
+    const files = listFiles(wsPath);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(files));
+    return;
+  }
+
+  // API: read a specific workspace file for an agent
+  const fileReadMatch = url.pathname.match(/^\/api\/agents\/([a-z0-9-]+)\/file\/(.+)$/);
+  if (fileReadMatch) {
+    const name = fileReadMatch[1];
+    const filePath = decodeURIComponent(fileReadMatch[2]);
+    const manifestPath = path.join(PACKAGES, name, 'agent.json');
+    if (!fs.existsSync(manifestPath)) { res.writeHead(404); res.end('Agent not found'); return; }
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    const agentId = manifest.agentId || name.replace(/-agent$/, '');
+    const home = require('os').homedir();
+    const wsPath = agentId === 'main' ? path.join(home, '.openclaw/workspace') : path.join(home, `.openclaw/workspace-${agentId}`);
+    
+    // Security: prevent path traversal
+    const fullPath = path.resolve(wsPath, filePath);
+    if (!fullPath.startsWith(path.resolve(wsPath))) {
+      res.writeHead(403); res.end('Access denied'); return;
+    }
+
+    if (!fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
+      res.writeHead(404); res.end('File not found'); return;
+    }
+
+    try {
+      const content = fs.readFileSync(fullPath, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(content);
+    } catch(e) {
+      res.writeHead(500); res.end('Read error');
+    }
+    return;
+  }
+
   // API: download agent as tar.gz
   const dlMatch = url.pathname.match(/^\/api\/agents\/([a-z0-9-]+)\/download$/);
   if (dlMatch) {
