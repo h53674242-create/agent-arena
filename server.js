@@ -716,6 +716,93 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ═══ Gateway Chat Proxy (for HuddleClaw chat app) ═══
+  if (url.pathname === '/api/gateway/chat' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        const gwUrl = `http://localhost:${GATEWAY_PORT}/v1/chat/completions`;
+        const isStream = payload.stream === true;
+
+        const gwReq = http.request(gwUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${GATEWAY_TOKEN}`,
+            'x-openclaw-agent-id': payload.agentId || 'main'
+          }
+        }, (gwRes) => {
+          const headers = {
+            'Content-Type': gwRes.headers['content-type'] || 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          };
+          if (isStream) headers['Cache-Control'] = 'no-cache';
+          res.writeHead(gwRes.statusCode, headers);
+          gwRes.pipe(res);
+        });
+
+        gwReq.on('error', (e) => {
+          res.writeHead(502, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Gateway unavailable: ' + e.message }));
+        });
+
+        // Forward the body but strip our custom field
+        const fwd = { ...payload };
+        delete fwd.agentId;
+        gwReq.end(JSON.stringify(fwd));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid request' }));
+      }
+    });
+    return;
+  }
+
+  // ═══ Gateway Connection Test ═══
+  if (url.pathname === '/api/gateway/test' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', () => {
+      try {
+        const { gwUrl, gwToken } = JSON.parse(body) || {};
+        const testUrl = `${gwUrl || 'http://localhost:' + GATEWAY_PORT}/v1/chat/completions`;
+        const token = gwToken || GATEWAY_TOKEN;
+
+        const gwReq = http.request(testUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }, (gwRes) => {
+          let data = '';
+          gwRes.on('data', c => data += c);
+          gwRes.on('end', () => {
+            res.writeHead(gwRes.statusCode, { 'Content-Type': 'application/json' });
+            res.end(data);
+          });
+        });
+
+        gwReq.on('error', (e) => {
+          res.writeHead(502, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Cannot reach gateway: ' + e.message }));
+        });
+
+        gwReq.end(JSON.stringify({
+          model: 'openclaw:main',
+          messages: [{ role: 'user', content: 'Reply with only: CONNECTED' }],
+          max_tokens: 10
+        }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid request' }));
+      }
+    });
+    return;
+  }
+
   // Static files
   let filePath = url.pathname === '/' ? '/index.html' : url.pathname;
   let fullPath = path.join(BASE, filePath);
