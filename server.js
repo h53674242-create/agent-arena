@@ -210,6 +210,84 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return; }
 
+  // API: output feed — all agents' content files for review queue
+  if (url.pathname === '/api/output-feed') {
+    const home = require('os').homedir();
+    const agentWorkspaces = {
+      creator: { path: path.join(home, '.openclaw/workspace-creator'), emoji: '🔥', name: 'Creator' },
+      founder: { path: path.join(home, '.openclaw/workspace-founder'), emoji: '📈', name: 'Founder' },
+      devops:  { path: path.join(home, '.openclaw/workspace-devops'),  emoji: '🔒', name: 'DevOps' },
+      sales:   { path: path.join(home, '.openclaw/workspace-sales'),   emoji: '💰', name: 'Sales' },
+    };
+    const contentDirs = ['content', 'research', 'crm', 'strategy', 'security'];
+    const categoryMap = {
+      'tweets-ready': 'tweets-ready', 'drafts': 'drafts', 'tiktok-scripts': 'tiktok-scripts',
+      'research': 'research', 'strategy': 'strategy', 'crm': 'outreach', 'security': 'security',
+      'content': 'content',
+    };
+
+    function classifyCategory(relPath) {
+      const parts = relPath.split('/');
+      for (const part of parts) {
+        if (categoryMap[part]) return categoryMap[part];
+      }
+      return 'content';
+    }
+
+    const allFiles = [];
+    for (const [agentId, info] of Object.entries(agentWorkspaces)) {
+      for (const dir of contentDirs) {
+        const dirPath = path.join(info.path, dir);
+        if (!fs.existsSync(dirPath)) continue;
+        function scanDir(d, prefix) {
+          try {
+            for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+              if (entry.name.startsWith('.')) continue;
+              const full = path.join(d, entry.name);
+              const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+              if (entry.isDirectory()) { scanDir(full, rel); continue; }
+              if (!entry.name.endsWith('.md')) continue;
+              try {
+                const stat = fs.statSync(full);
+                const content = fs.readFileSync(full, 'utf8');
+                allFiles.push({
+                  agentId, agentEmoji: info.emoji, agentName: info.name,
+                  filename: entry.name, path: `${dir}/${rel}`,
+                  category: classifyCategory(`${dir}/${rel}`),
+                  mtime: stat.mtimeMs, size: stat.size,
+                  preview: content.slice(0, 500),
+                  fullPath: full,
+                });
+              } catch(e) {}
+            }
+          } catch(e) {}
+        }
+        scanDir(dirPath, '');
+      }
+    }
+    allFiles.sort((a, b) => b.mtime - a.mtime);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(allFiles));
+    return;
+  }
+
+  // API: read output file content
+  const outputFileMatch = url.pathname.match(/^\/api\/output-file\/([a-z]+)\/(.+)$/);
+  if (outputFileMatch) {
+    const agentId = outputFileMatch[1];
+    const filePath = decodeURIComponent(outputFileMatch[2]);
+    const home = require('os').homedir();
+    const wsPath = path.join(home, `.openclaw/workspace-${agentId}`);
+    const fullPath = path.resolve(wsPath, filePath);
+    if (!fullPath.startsWith(path.resolve(wsPath))) { res.writeHead(403); res.end('Access denied'); return; }
+    if (!fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) { res.writeHead(404); res.end('Not found'); return; }
+    try {
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(fs.readFileSync(fullPath, 'utf8'));
+    } catch(e) { res.writeHead(500); res.end('Read error'); }
+    return;
+  }
+
   // API: registered agents (from gateway config) — must be before /api/agents/:name
   if (url.pathname === '/api/agents/registered') {
     try {

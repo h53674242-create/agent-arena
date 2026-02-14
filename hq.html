@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦞</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agent HQ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -495,6 +496,48 @@ input,button,textarea { font-family:inherit; }
 .cc-btn-create { background:var(--accent); color:var(--bg); }
 .cc-btn-create:hover { filter:brightness(1.1); }
 
+/* Output Feed */
+.output-feed { padding:16px 20px; overflow-y:auto; flex:1; }
+.output-filters { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+.output-filter {
+  padding:4px 10px; font-size:11px; font-weight:600; border-radius:12px;
+  border:1px solid var(--border); background:none; color:var(--text2);
+  cursor:pointer; transition:all .15s;
+}
+.output-filter:hover { border-color:var(--text2); color:var(--text); }
+.output-filter.active { border-color:var(--accent); background:var(--accent-dim); color:var(--accent); }
+.output-card {
+  padding:12px 14px; border:1px solid var(--border); border-radius:var(--radius);
+  margin-bottom:8px; cursor:pointer; transition:all .15s;
+}
+.output-card:hover { border-color:rgba(240,180,41,0.3); background:var(--surface); }
+.output-card.expanded { background:var(--surface); border-color:var(--border2); }
+.oc-header { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.oc-agent { font-size:12px; font-weight:700; display:flex; align-items:center; gap:4px; }
+.oc-file { font-size:12px; font-family:'JetBrains Mono',monospace; color:var(--text2); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.oc-time { font-size:10px; color:var(--muted); font-family:'JetBrains Mono',monospace; white-space:nowrap; }
+.oc-badge {
+  font-size:9px; font-weight:700; padding:2px 6px; border-radius:3px; white-space:nowrap;
+}
+.oc-badge.tweets-ready { background:var(--green-dim); color:var(--green); }
+.oc-badge.tiktok-scripts { background:var(--purple-dim); color:var(--purple); }
+.oc-badge.outreach { background:var(--accent-dim); color:var(--accent); }
+.oc-badge.research { background:var(--blue-dim); color:var(--blue); }
+.oc-badge.strategy { background:rgba(244,114,182,0.1); color:var(--pink); }
+.oc-badge.drafts { background:var(--accent-dim); color:var(--accent); }
+.oc-badge.content { background:rgba(255,255,255,0.05); color:var(--text2); }
+.oc-badge.security { background:var(--red-dim); color:var(--red); }
+.oc-preview { font-size:12px; color:var(--muted); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin-top:4px; }
+.oc-full-content {
+  display:none; margin-top:12px; padding-top:12px; border-top:1px solid var(--border);
+  font-size:13px; line-height:1.6; color:var(--text); max-height:500px; overflow-y:auto;
+}
+.oc-full-content.show { display:block; }
+.oc-full-content h1,.oc-full-content h2,.oc-full-content h3 { color:var(--accent); margin:12px 0 6px; }
+.oc-full-content code { font-family:'JetBrains Mono',monospace; font-size:12px; background:var(--surface2); padding:1px 4px; border-radius:3px; }
+.oc-full-content strong { color:var(--text); }
+.output-count { font-size:11px; color:var(--muted); margin-bottom:12px; }
+
 /* Hide view utility */
 .view-hidden { display:none !important; }
 </style>
@@ -535,6 +578,10 @@ input,button,textarea { font-family:inherit; }
           <div class="nav-item" data-channel="activity" onclick="switchChannel('activity')">
             <span class="nav-icon">📋</span>
             <span class="nav-label">activity-log</span>
+          </div>
+          <div class="nav-item" data-channel="output" onclick="switchChannel('output')">
+            <span class="nav-icon">📂</span>
+            <span class="nav-label">output-review</span>
           </div>
         </div>
       </div>
@@ -766,6 +813,9 @@ function renderSidebar() {
   </div>
   <div class="nav-item${currentChannel==='activity'?' active':''}" data-channel="activity" onclick="switchChannel('activity')">
     <span class="nav-icon">📋</span><span class="nav-label">activity-log</span>
+  </div>
+  <div class="nav-item${currentChannel==='output'?' active':''}" data-channel="output" onclick="switchChannel('output')">
+    <span class="nav-icon">📂</span><span class="nav-label">output-review</span>
   </div>`;
   for(const ch of customChannels) {
     const memberEmojis=ch.agents.map(id=>{const a=agents.find(x=>getAgentId(x)===id);return a?.emoji||'🤖';}).join('');
@@ -827,6 +877,11 @@ function switchChannel(ch) {
     topic.textContent='Team-wide chat — all agents see your messages';
     input.placeholder='Message #general...';
     inputArea.style.display='';
+  } else if(ch==='output') {
+    icon.textContent='📂'; name.textContent='output-review';
+    topic.textContent='Review queue — all agent work products';
+    inputArea.style.display='none';
+    loadOutputFeed();
   } else if(ch==='activity') {
     icon.textContent='📋'; name.textContent='activity-log';
     topic.textContent='Compliance changelog — all agent actions recorded';
@@ -869,7 +924,7 @@ function renderCurrentChannel() {
 
   let html='<div class="spacer"></div>';
 
-  if(currentChannel==='activity') return; // handled by loadActivityLog
+  if(currentChannel==='activity' || currentChannel==='output') return; // handled by dedicated loaders
 
   if(msgs.length===0) {
     html+=`<div class="msg-system-line"><span>${getChannelWelcome()}</span></div>`;
@@ -1469,6 +1524,98 @@ function timeAgo(d){const s=Math.floor((Date.now()-d)/1000);if(s<60)return'just 
 function esc(t){const d=document.createElement('div');d.textContent=t||'';return d.innerHTML;}
 function renderMarkdown(t) {
   return esc(t).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank">$1</a>');
+}
+
+// ═══ Output Feed ═══
+let outputFeedData = [];
+let outputFilterAgent = 'all';
+let outputFilterCategory = 'all';
+
+async function loadOutputFeed() {
+  const area = document.getElementById('messagesArea');
+  area.innerHTML = '<div class="spacer"></div><div style="padding:20px;color:var(--muted);font-size:13px">Loading output files...</div>';
+  try {
+    const res = await fetch(`${LOCAL}/api/output-feed`);
+    outputFeedData = await res.json();
+    renderOutputFeed();
+  } catch(e) {
+    area.innerHTML = '<div class="spacer"></div><div style="padding:20px;color:var(--muted)">Failed to load output feed</div>';
+  }
+}
+
+function renderOutputFeed() {
+  const area = document.getElementById('messagesArea');
+  const agents = [...new Set(outputFeedData.map(f => f.agentId))];
+  const categories = [...new Set(outputFeedData.map(f => f.category))];
+
+  let filtered = outputFeedData;
+  if (outputFilterAgent !== 'all') filtered = filtered.filter(f => f.agentId === outputFilterAgent);
+  if (outputFilterCategory !== 'all') filtered = filtered.filter(f => f.category === outputFilterCategory);
+
+  let html = '<div class="output-feed">';
+  // Filters
+  html += '<div class="output-filters">';
+  html += `<button class="output-filter${outputFilterAgent==='all'?' active':''}" onclick="setOutputFilter('agent','all')">All Agents</button>`;
+  for (const a of agents) {
+    const info = outputFeedData.find(f => f.agentId === a);
+    html += `<button class="output-filter${outputFilterAgent===a?' active':''}" onclick="setOutputFilter('agent','${a}')">${info?.agentEmoji||'🤖'} ${info?.agentName||a}</button>`;
+  }
+  html += '</div><div class="output-filters">';
+  html += `<button class="output-filter${outputFilterCategory==='all'?' active':''}" onclick="setOutputFilter('category','all')">All Types</button>`;
+  for (const c of categories) {
+    html += `<button class="output-filter${outputFilterCategory===c?' active':''}" onclick="setOutputFilter('category','${c}')">${esc(c)}</button>`;
+  }
+  html += '</div>';
+  html += `<div class="output-count">${filtered.length} files</div>`;
+
+  // Cards
+  for (let i = 0; i < filtered.length; i++) {
+    const f = filtered[i];
+    const age = f.mtime ? timeAgo(new Date(f.mtime)) : '';
+    html += `<div class="output-card" id="oc-${i}" onclick="toggleOutputCard(${i},'${f.agentId}','${encodeURIComponent(f.path)}')">
+      <div class="oc-header">
+        <span class="oc-agent">${f.agentEmoji} ${f.agentName}</span>
+        <span class="oc-badge ${f.category}">${f.category}</span>
+        <span class="oc-file">${esc(f.filename)}</span>
+        <span class="oc-time">${age}</span>
+      </div>
+      <div class="oc-preview">${esc(f.preview.slice(0, 200))}</div>
+      <div class="oc-full-content" id="oc-full-${i}"></div>
+    </div>`;
+  }
+
+  if (filtered.length === 0) {
+    html += '<div style="padding:40px;text-align:center;color:var(--muted)">📭 No output files found</div>';
+  }
+  html += '</div>';
+  area.innerHTML = html;
+}
+
+function setOutputFilter(type, value) {
+  if (type === 'agent') outputFilterAgent = value;
+  if (type === 'category') outputFilterCategory = value;
+  renderOutputFeed();
+}
+
+async function toggleOutputCard(idx, agentId, encodedPath) {
+  const el = document.getElementById(`oc-full-${idx}`);
+  const card = document.getElementById(`oc-${idx}`);
+  if (el.classList.contains('show')) {
+    el.classList.remove('show');
+    card.classList.remove('expanded');
+    return;
+  }
+  card.classList.add('expanded');
+  el.innerHTML = '<div style="color:var(--muted);font-size:12px">Loading...</div>';
+  el.classList.add('show');
+  try {
+    const res = await fetch(`${LOCAL}/api/output-file/${agentId}/${encodedPath}`);
+    if (!res.ok) throw new Error('Not found');
+    const text = await res.text();
+    el.innerHTML = renderFileMarkdown(text);
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--red)">Failed to load</div>';
+  }
 }
 
 init();
