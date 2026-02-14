@@ -1,23 +1,23 @@
 {
   "name": "devops-agent",
-  "displayName": "DevOps Agent",
+  "agentId": "devops",
+  "displayName": "DevOps",
   "version": "1.0.0",
-  "emoji": "🛡️",
-  "title": "Infrastructure Guardian",
-  "description": "Monitors your servers, hardens your security, deploys your code, and wakes you up only when something is actually on fire. Paranoid about security. As it should be.",
+  "emoji": "🔒",
+  "title": "Security Guardian",
+  "description": "Monitors infrastructure, scans for vulnerabilities, hardens systems, and keeps bad actors out. Thinks like an attacker so you don't have to.",
   "creator": "@hopper",
   "creatorUrl": "https://x.com/Hopper1430990",
   "price": { "amount": 10, "currency": "USD", "interval": "month" },
-  "skills": ["healthcheck", "weather"],
-  "clawhubSkills": [],
-  "tags": ["devops", "security", "monitoring", "infrastructure", "deployment"],
+  "skills": ["ssh-essentials", "healthcheck"],
+  "tags": ["security", "infrastructure", "monitoring", "devops"],
   "stats": {
-    "server_monitoring": 9,
-    "security_hardening": 9,
-    "deployment_speed": 8,
-    "incident_response": 8,
-    "log_analysis": 7,
-    "uptime_obsession": 10
+    "security_scanning": 9,
+    "infrastructure": 8,
+    "threat_detection": 8,
+    "hardening": 9,
+    "incident_response": 7,
+    "automation": 8
   },
   "minOpenClawVersion": "0.1.0"
 }

@@ -3,510 +3,556 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🦞 Agent Arena HQ</title>
+<title>Agent HQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Satoshi:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap');
-  :root {
-    --bg: #08080c; --surface: #111118; --surface2: #1a1a24;
-    --border: #2a2a3a; --text: #e4e4e7; --muted: #71717a;
-    --accent: #fbbf24; --green: #22c55e; --red: #ef4444; --blue: #3b82f6;
-    --purple: #a78bfa;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); height:100vh; overflow:hidden; display:flex; flex-direction:column; }
+:root {
+  --bg: #0a0a0f; --bg2: #0e0e15; --surface: #13131c; --surface2: #1a1a26;
+  --surface3: #22222f; --border: #2a2a3a; --border2: #353548;
+  --text: #e8e8ed; --text2: #a0a0b0; --muted: #6a6a7a;
+  --accent: #f0b429; --accent2: #d49b20; --accent-dim: rgba(240,180,41,0.08);
+  --green: #34d399; --green-dim: rgba(52,211,153,0.1);
+  --red: #f87171; --red-dim: rgba(248,113,113,0.1);
+  --blue: #60a5fa; --blue-dim: rgba(96,165,250,0.1);
+  --purple: #a78bfa; --purple-dim: rgba(167,139,250,0.1);
+  --pink: #f472b6;
+  --sidebar-w: 250px;
+  --radius: 8px; --radius-sm: 5px; --radius-lg: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Satoshi',system-ui,sans-serif; background:var(--bg); color:var(--text); height:100vh; overflow:hidden; }
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--border2); }
+::selection { background:rgba(240,180,41,0.25); }
+input,button,textarea { font-family:inherit; }
 
-  /* Top Bar */
-  .topbar { padding:10px 20px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px; flex-shrink:0; z-index:10; }
-  .topbar .logo { font-family:'Press Start 2P',monospace; font-size:11px; color:var(--accent); cursor:pointer; }
-  .topbar a { color:var(--muted); text-decoration:none; font-size:13px; transition:color .15s; }
-  .topbar a:hover { color:var(--text); }
-  .topbar .spacer { flex:1; }
-  .topbar .badge { font-size:10px; padding:4px 10px; border-radius:10px; font-weight:600; }
-  .topbar .badge.online { color:var(--green); background:rgba(34,197,94,0.1); }
-  .topbar .badge.offline { color:var(--red); background:rgba(239,68,68,0.1); }
-  .topbar .clock { font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; }
+/* ═══ Layout ═══ */
+.app { display:flex; height:100vh; }
 
-  /* Main */
-  .main { flex:1; display:flex; overflow:hidden; }
+/* ═══ Sidebar ═══ */
+.sidebar {
+  width:var(--sidebar-w); background:var(--bg2); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; flex-shrink:0; user-select:none;
+}
+.sidebar-header {
+  padding:16px 16px 12px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:10px;
+}
+.sidebar-header .logo {
+  font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700;
+  color:var(--accent); letter-spacing:-0.5px;
+}
+.sidebar-header .status-dot-sm {
+  width:8px; height:8px; border-radius:50%; background:var(--green);
+  box-shadow:0 0 6px rgba(52,211,153,0.4);
+}
+.sidebar-header .status-dot-sm.off { background:var(--red); box-shadow:0 0 6px rgba(248,113,113,0.4); }
 
-  /* ═══ Office ═══ */
-  .office {
-    flex:1; position:relative; overflow:hidden; min-width:0;
-    background: linear-gradient(180deg, #1e1b2e 0%, #151320 50%, #13111f 100%);
-    transition: flex 0.3s ease;
-  }
-  .office .wall { position:absolute; top:0; left:0; right:0; height:90px; background:linear-gradient(180deg,#2a2545,#1e1b2e); border-bottom:2px solid rgba(251,191,36,0.06); }
-  .wall-item { position:absolute; z-index:2; }
-  .wall-item.title { top:16px; left:50%; transform:translateX(-50%); font-family:'Press Start 2P',monospace; font-size:9px; color:var(--accent); background:rgba(0,0,0,0.4); padding:8px 16px; border-radius:4px; border:1px solid rgba(251,191,36,0.15); }
-  .wall-item.poster { padding:6px 12px; border-radius:3px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); font-size:9px; color:var(--muted); }
-  .wall-item.p1 { top:20px; left:40px; }
-  .wall-item.p2 { top:20px; right:40px; }
-  .wall-item.window { top:10px; right:180px; width:70px; height:50px; background:linear-gradient(180deg,#1a2040,#2a3060); border:2px solid rgba(255,255,255,0.08); border-radius:4px; }
-  .wall-item.window::after { content:'✦ · ✧'; position:absolute; top:12px; left:12px; font-size:7px; color:rgba(255,255,255,0.3); }
-  .wall-item.whiteboard { top:10px; left:180px; width:100px; height:55px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:3px; font-size:7px; padding:5px; color:var(--muted); line-height:1.4; overflow:hidden; }
-  .office .floor { position:absolute; bottom:0; left:0; right:0; height:40px; background:linear-gradient(180deg,#13111f,#0d0b18); border-top:1px solid rgba(255,255,255,0.03); }
-  .deco { position:absolute; z-index:2; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
-  .deco.plant1 { bottom:50px; left:30px; font-size:28px; }
-  .deco.plant2 { bottom:50px; right:40px; font-size:22px; }
-  .deco.cat { bottom:45px; left:80px; font-size:20px; cursor:pointer; transition:transform .2s; }
-  .deco.cat:hover { transform:scale(1.2) rotate(-5deg); }
-  .deco.coffee { top:60px; left:50px; font-size:14px; }
-  .deco.clock-w { top:18px; left:50%; margin-left:120px; font-size:14px; }
-  .deco.rug { bottom:42px; left:50%; transform:translateX(-50%); width:500px; height:20px; background:rgba(167,139,250,0.04); border-radius:50%; border:1px solid rgba(167,139,250,0.06); }
+.sidebar-nav { flex:1; overflow-y:auto; padding:8px 0; }
 
-  /* Desks */
-  .desk-area { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:flex; gap:32px; z-index:4; }
-  .desk { width:140px; position:relative; cursor:pointer; transition:transform 0.2s; display:flex; flex-direction:column; align-items:center; }
-  .desk:hover { transform:translateY(-3px); }
-  .desk.selected .agent-avatar { border-color:var(--accent) !important; box-shadow:0 0 20px rgba(251,191,36,0.3) !important; }
-  .agent-avatar { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; background:rgba(17,17,24,0.9); border:2px solid var(--border); transition:all 0.3s; position:relative; }
-  .desk.active .agent-avatar { border-color:var(--green); box-shadow:0 0 16px rgba(34,197,94,0.2); }
-  .desk.empty .agent-avatar { border:2px dashed var(--border); opacity:0.4; }
-  .status-dot { position:absolute; bottom:0; right:0; width:10px; height:10px; border-radius:50%; border:2px solid var(--bg); }
-  .status-dot.online { background:var(--green); }
-  .status-dot.offline { background:var(--muted); }
-  .status-dot.busy { background:var(--accent); animation:pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .agent-label { margin-top:6px; font-size:10px; font-weight:600; text-align:center; color:var(--text); white-space:nowrap; }
-  .desk.empty .agent-label { color:var(--muted); }
-  .desk-obj { margin-top:6px; width:100px; height:30px; background:linear-gradient(180deg,#3d3355,#2d2545); border:1px solid rgba(255,255,255,0.06); border-radius:5px; position:relative; box-shadow:0 4px 12px rgba(0,0,0,0.3); }
-  .desk-monitor { position:absolute; top:-20px; left:50%; transform:translateX(-50%); width:40px; height:28px; background:linear-gradient(180deg,#0a0a12,#12121e); border:1px solid rgba(255,255,255,0.08); border-radius:3px; }
-  .desk-monitor .glow { position:absolute; inset:3px 3px 5px 3px; background:rgba(59,130,246,0.06); border-radius:1px; }
-  .desk.active .desk-monitor .glow { background:rgba(34,197,94,0.12); }
-  .desk-monitor::after { content:''; position:absolute; bottom:-3px; left:50%; transform:translateX(-50%); width:10px; height:3px; background:#2d2545; border-radius:0 0 2px 2px; }
-  .speech-bubble { position:absolute; top:-20px; left:50%; transform:translateX(-50%); background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:5px 10px; font-size:9px; color:var(--muted); white-space:nowrap; max-width:180px; overflow:hidden; text-overflow:ellipsis; opacity:0; transition:opacity 0.3s; z-index:6; }
-  .speech-bubble::after { content:''; position:absolute; bottom:-4px; left:50%; transform:translateX(-50%); border-left:4px solid transparent; border-right:4px solid transparent; border-top:4px solid var(--surface); }
-  .speech-bubble.visible { opacity:1; }
-  .add-agent-desk { width:140px; display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:transform 0.2s; opacity:0.5; }
-  .add-agent-desk:hover { opacity:0.8; transform:translateY(-3px); }
-  .add-circle { width:44px; height:44px; border-radius:50%; border:2px dashed var(--accent); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--accent); }
-  .add-agent-desk:hover .add-circle { border-style:solid; background:rgba(251,191,36,0.05); }
-  .add-label { margin-top:6px; font-size:10px; font-weight:600; color:var(--accent); }
+.nav-section { padding:0 12px; margin-bottom:4px; }
+.nav-section-title {
+  font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px;
+  color:var(--muted); padding:8px 4px 4px; display:flex; align-items:center; gap:6px;
+}
+.nav-section-title .section-action {
+  margin-left:auto; font-size:12px; cursor:pointer; opacity:0; transition:opacity .15s;
+  color:var(--text2);
+}
+.nav-section:hover .section-action { opacity:1; }
+.nav-section-title .section-action:hover { color:var(--accent); }
 
-  /* Fire button */
-  .fire-btn {
-    position:absolute; top:-6px; right:8px; width:20px; height:20px;
-    border-radius:50%; background:var(--surface); border:1px solid var(--border);
-    color:var(--muted); font-size:11px; cursor:pointer; z-index:5;
-    display:none; align-items:center; justify-content:center; transition:all .15s;
-    line-height:1;
-  }
-  .desk:hover .fire-btn { display:flex; }
-  .fire-btn:hover { background:var(--red); color:#fff; border-color:var(--red); }
+.nav-item {
+  display:flex; align-items:center; gap:8px; padding:5px 8px; margin:1px 0;
+  border-radius:var(--radius-sm); cursor:pointer; transition:all .1s;
+  font-size:13px; color:var(--text2); position:relative;
+}
+.nav-item:hover { background:var(--surface); color:var(--text); }
+.nav-item.active { background:var(--accent-dim); color:var(--accent); font-weight:600; }
+.nav-item .nav-icon { width:18px; text-align:center; font-size:13px; flex-shrink:0; }
+.nav-item .nav-label { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nav-item .nav-badge {
+  font-size:9px; font-weight:700; padding:1px 5px; border-radius:8px;
+  background:var(--accent); color:var(--bg); min-width:16px; text-align:center;
+}
+.nav-item .status-indicator {
+  width:6px; height:6px; border-radius:50%; flex-shrink:0;
+}
+.nav-item .status-indicator.online { background:var(--green); }
+.nav-item .status-indicator.offline { background:var(--muted); }
+.nav-item .status-indicator.busy { background:var(--accent); animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  /* Meeting bar */
-  .meeting-bar { position:absolute; bottom:0; left:0; right:0; z-index:8; background:rgba(17,17,24,0.95); border-top:1px solid var(--border); padding:8px 16px; display:flex; align-items:center; gap:12px; backdrop-filter:blur(8px); }
-  .meeting-bar .label { font-size:11px; color:var(--accent); font-weight:700; }
-  .meeting-bar .parts { font-size:10px; color:var(--muted); }
-  .meeting-bar .spacer { flex:1; }
-  .meeting-bar button { padding:6px 14px; border:none; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; }
-  .meeting-bar .start-btn { background:var(--green); color:#000; }
-  .meeting-bar .start-btn:hover { filter:brightness(1.1); }
-  .meeting-bar .end-btn { background:var(--red); color:#fff; display:none; }
+.nav-divider { height:1px; background:var(--border); margin:8px 12px; }
 
-  /* ═══ Agent Detail Modal ═══ */
-  .agent-detail-overlay {
-    display:none; position:fixed; top:0; left:0; right:0; bottom:0;
-    background:rgba(0,0,0,0.7); z-index:50; align-items:center; justify-content:center;
-    backdrop-filter:blur(4px);
-  }
-  .agent-detail-overlay.open { display:flex; }
-  .agent-detail {
-    width:700px; max-width:90vw; max-height:85vh;
-    background:var(--surface); border:1px solid var(--border); border-radius:12px;
-    display:flex; flex-direction:column; overflow:hidden;
-    animation:modalIn 0.2s ease;
-    box-shadow:0 20px 60px rgba(0,0,0,0.5);
-  }
-  @keyframes modalIn { from{opacity:0;transform:scale(0.95) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+/* Sidebar footer */
+.sidebar-footer {
+  padding:12px; border-top:1px solid var(--border);
+  display:flex; align-items:center; gap:8px;
+}
+.sidebar-footer .user-avatar {
+  width:30px; height:30px; border-radius:var(--radius-sm); background:var(--surface2);
+  display:flex; align-items:center; justify-content:center; font-size:16px;
+}
+.sidebar-footer .user-info { flex:1; min-width:0; }
+.sidebar-footer .user-name { font-size:12px; font-weight:600; }
+.sidebar-footer .user-role { font-size:10px; color:var(--muted); }
+.sidebar-footer .settings-btn {
+  width:28px; height:28px; border-radius:var(--radius-sm); border:none;
+  background:none; color:var(--muted); cursor:pointer; font-size:14px;
+  display:flex; align-items:center; justify-content:center; transition:all .15s;
+}
+.sidebar-footer .settings-btn:hover { color:var(--text); background:var(--surface); }
 
-  .detail-header {
-    padding:16px 20px; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:14px; flex-shrink:0;
-  }
-  .detail-header .back-btn {
-    width:28px; height:28px; border-radius:6px; border:1px solid var(--border);
-    background:none; color:var(--muted); cursor:pointer; font-size:14px;
-    display:flex; align-items:center; justify-content:center; transition:all .15s;
-  }
-  .detail-header .back-btn:hover { color:var(--text); border-color:var(--accent); }
-  .detail-header .agent-info { flex:1; }
-  .detail-header .agent-name { font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px; }
-  .detail-header .agent-role { font-size:11px; color:var(--muted); margin-top:2px; }
-  .detail-header .status-pill { font-size:10px; padding:3px 10px; border-radius:8px; font-weight:600; }
-  .detail-header .status-pill.online { color:var(--green); background:rgba(34,197,94,0.1); }
+/* ═══ Main Content ═══ */
+.main-content { flex:1; display:flex; flex-direction:column; min-width:0; }
 
-  /* Detail stats */
-  .detail-stats {
-    display:flex; gap:1px; background:var(--border); flex-shrink:0;
-  }
-  .stat-card {
-    flex:1; padding:12px 16px; background:var(--surface); text-align:center;
-  }
-  .stat-card .stat-value { font-size:18px; font-weight:700; color:var(--text); }
-  .stat-card .stat-label { font-size:9px; color:var(--muted); margin-top:2px; text-transform:uppercase; letter-spacing:0.5px; }
+/* Channel Header */
+.channel-header {
+  padding:12px 20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:12px; flex-shrink:0;
+  background:var(--bg);
+}
+.channel-header .ch-icon { font-size:16px; }
+.channel-header .ch-info { flex:1; }
+.channel-header .ch-name { font-size:14px; font-weight:700; display:flex; align-items:center; gap:6px; }
+.channel-header .ch-topic { font-size:11px; color:var(--muted); margin-top:1px; }
+.channel-header .ch-actions { display:flex; gap:4px; }
+.ch-action-btn {
+  width:32px; height:32px; border-radius:var(--radius-sm); border:1px solid var(--border);
+  background:none; color:var(--text2); cursor:pointer; font-size:14px;
+  display:flex; align-items:center; justify-content:center; transition:all .15s;
+}
+.ch-action-btn:hover { color:var(--text); border-color:var(--accent); background:var(--accent-dim); }
+.ch-action-btn.active { color:var(--accent); border-color:var(--accent); background:var(--accent-dim); }
 
-  /* Detail tabs */
-  .detail-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
-  .detail-tab {
-    flex:1; padding:10px; font-size:11px; font-weight:600; color:var(--muted);
-    cursor:pointer; text-align:center; border:none; background:none;
-    border-bottom:2px solid transparent; transition:all .15s;
-  }
-  .detail-tab:hover { color:var(--text); }
-  .detail-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+/* Messages Area */
+.messages-area { flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; }
+.messages-area .spacer { flex:1; }
 
-  /* Detail content */
-  .detail-content { flex:1; overflow-y:auto; }
-  .detail-section { display:none; }
-  .detail-section.active { display:block; }
+/* Message styles */
+.message-group { display:flex; gap:10px; padding:4px 0; margin:2px 0; border-radius:var(--radius); }
+.message-group:hover { background:rgba(255,255,255,0.015); }
+.message-group .msg-avatar {
+  width:34px; height:34px; border-radius:var(--radius-sm); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+  background:var(--surface2); margin-top:2px;
+}
+.message-group .msg-body { flex:1; min-width:0; }
+.message-group .msg-header { display:flex; align-items:baseline; gap:8px; margin-bottom:2px; }
+.message-group .msg-sender { font-size:13px; font-weight:700; }
+.message-group .msg-sender.you { color:var(--accent); }
+.message-group .msg-sender.agent { color:var(--green); }
+.message-group .msg-sender.system { color:var(--muted); font-weight:500; font-style:italic; }
+.message-group .msg-time { font-size:10px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+.message-group .msg-text {
+  font-size:13.5px; line-height:1.55; color:var(--text);
+  word-wrap:break-word; overflow-wrap:break-word;
+}
+.message-group .msg-text code {
+  font-family:'JetBrains Mono',monospace; font-size:12px;
+  background:var(--surface2); padding:1px 5px; border-radius:3px; border:1px solid var(--border);
+}
+.message-group .msg-text strong { font-weight:700; color:var(--text); }
+.message-group .msg-text a { color:var(--blue); text-decoration:none; }
+.message-group .msg-text a:hover { text-decoration:underline; }
 
-  /* Timeline */
-  .timeline { padding:12px 16px; }
-  .tl-item {
-    display:flex; gap:12px; padding:10px 0;
-    border-bottom:1px solid rgba(255,255,255,0.03);
-    font-size:12px;
-  }
-  .tl-item:last-child { border-bottom:none; }
-  .tl-icon { width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; background:var(--surface2); }
-  .tl-icon.msg { background:rgba(34,197,94,0.1); }
-  .tl-icon.tool { background:rgba(167,139,250,0.1); }
-  .tl-icon.think { background:rgba(59,130,246,0.1); }
-  .tl-icon.sys { background:rgba(251,191,36,0.1); }
-  .tl-body { flex:1; min-width:0; }
-  .tl-title { font-weight:600; color:var(--text); margin-bottom:2px; display:flex; align-items:center; gap:6px; }
-  .tl-title .tool-badge { font-size:9px; padding:1px 6px; border-radius:4px; background:rgba(167,139,250,0.15); color:var(--purple); font-weight:500; }
-  .tl-preview { color:var(--muted); line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; }
-  .tl-preview.expanded { -webkit-line-clamp:unset; }
-  .tl-time { font-size:10px; color:var(--muted); margin-top:3px; }
-  .tl-expand { font-size:10px; color:var(--accent); cursor:pointer; margin-top:2px; }
-  .tl-expand:hover { text-decoration:underline; }
+.msg-system-line {
+  display:flex; align-items:center; gap:12px; padding:6px 0; margin:4px 0;
+}
+.msg-system-line::before, .msg-system-line::after {
+  content:''; flex:1; height:1px; background:var(--border);
+}
+.msg-system-line span { font-size:11px; color:var(--muted); white-space:nowrap; }
 
-  /* Sessions list */
-  .sessions-list { padding:12px 16px; }
-  .session-item {
-    padding:10px 12px; border:1px solid var(--border); border-radius:8px;
-    margin-bottom:8px; cursor:default;
-  }
-  .session-item .sess-header { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
-  .session-item .sess-label { font-size:12px; font-weight:600; }
-  .session-item .sess-kind { font-size:9px; padding:2px 6px; border-radius:4px; background:rgba(59,130,246,0.1); color:var(--blue); }
-  .session-item .sess-time { font-size:10px; color:var(--muted); }
-  .session-item .sess-model { font-size:10px; color:var(--muted); }
+/* Typing indicator */
+.typing-bar {
+  padding:4px 20px 8px; font-size:11px; color:var(--muted); min-height:24px;
+  flex-shrink:0; display:flex; align-items:center; gap:4px;
+}
+.typing-bar:empty { visibility:hidden; }
+.typing-dots span { animation:blink 1.4s infinite; }
+.typing-dots span:nth-child(2) { animation-delay:0.2s; }
+.typing-dots span:nth-child(3) { animation-delay:0.4s; }
+@keyframes blink { 0%,100%{opacity:0.2} 50%{opacity:1} }
 
-  /* Loading */
-  .detail-loading { padding:40px; text-align:center; color:var(--muted); font-size:13px; }
+/* Chat Input */
+.chat-input-area {
+  padding:12px 16px 16px; flex-shrink:0; border-top:1px solid var(--border);
+}
+.chat-input-wrapper {
+  display:flex; align-items:flex-end; gap:8px;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+  padding:4px 4px 4px 14px; transition:border-color .15s;
+}
+.chat-input-wrapper:focus-within { border-color:var(--accent); }
+.chat-input-wrapper textarea {
+  flex:1; background:none; border:none; color:var(--text); font-size:13.5px;
+  resize:none; outline:none; padding:8px 0; max-height:120px; min-height:20px;
+  line-height:1.4;
+}
+.chat-input-wrapper textarea::placeholder { color:var(--muted); }
+.send-btn {
+  width:34px; height:34px; border-radius:var(--radius); border:none;
+  background:var(--accent); color:var(--bg); cursor:pointer; font-size:15px;
+  display:flex; align-items:center; justify-content:center; transition:all .15s;
+  flex-shrink:0;
+}
+.send-btn:hover { filter:brightness(1.1); transform:scale(1.05); }
+.send-btn:active { transform:scale(0.95); }
 
-  /* ═══ Right Panel (Chat) ═══ */
-  .right-panel {
-    flex:0 0 380px; display:flex; flex-direction:column; overflow:hidden;
-    background:var(--surface); border-left:1px solid var(--border);
-  }
-  .chat-header { padding:10px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; flex-shrink:0; }
-  .chat-header h3 { font-size:13px; font-weight:700; }
-  .chat-header .channel { font-size:11px; color:var(--muted); }
-  .messages { flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:2px; }
-  .msg { padding:5px 0; line-height:1.5; font-size:13px; animation:fadeIn 0.2s ease; }
-  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-  .msg .time { font-size:10px; color:var(--muted); margin-right:6px; }
-  .msg .sender { font-weight:700; font-size:12px; margin-right:6px; }
-  .msg .content { color:var(--text); }
-  .msg .content code { background:rgba(255,255,255,0.06); padding:1px 4px; border-radius:3px; font-size:12px; }
-  .msg-system { font-size:11px; color:var(--muted); text-align:center; padding:8px 0; font-style:italic; }
-  .typing-line { font-size:11px; color:var(--muted); padding:4px 16px; display:none; }
-  .typing-line.active { display:block; }
-  .typing-dots span { animation:blink 1.4s infinite; }
-  .typing-dots span:nth-child(2) { animation-delay:0.2s; }
-  .typing-dots span:nth-child(3) { animation-delay:0.4s; }
-  @keyframes blink { 0%,100%{opacity:0.2} 50%{opacity:1} }
-  .chat-input { padding:12px 16px; border-top:1px solid var(--border); display:flex; gap:8px; flex-shrink:0; }
-  .chat-input input { flex:1; padding:10px 14px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:13px; outline:none; font-family:inherit; }
-  .chat-input input:focus { border-color:var(--accent); }
-  .chat-input input::placeholder { color:var(--muted); }
-  .chat-input button { padding:10px 16px; background:var(--accent); color:#000; border:none; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer; }
-  .chat-input button:hover { filter:brightness(1.1); }
+/* ═══ Office Panel (right) ═══ */
+.office-panel {
+  width:0; overflow:hidden; border-left:1px solid var(--border);
+  background:linear-gradient(180deg, #1e1b2e 0%, #151320 50%, #13111f 100%);
+  transition:width .3s ease; flex-shrink:0; position:relative;
+}
+.office-panel.open { width:360px; }
+.office-panel .office-inner { width:360px; height:100%; position:relative; overflow:hidden; }
 
-  /* Upsell */
-  .upsell { padding:12px 16px; background:linear-gradient(90deg,rgba(251,191,36,0.08),rgba(251,191,36,0.02)); border-top:1px solid var(--border); flex-shrink:0; display:flex; align-items:center; gap:10px; cursor:pointer; transition:background .15s; }
-  .upsell:hover { background:rgba(251,191,36,0.1); }
-  .upsell .upsell-icon { font-size:18px; }
-  .upsell .upsell-text { flex:1; }
-  .upsell .upsell-title { font-size:11px; font-weight:700; color:var(--accent); }
-  .upsell .upsell-desc { font-size:10px; color:var(--muted); margin-top:1px; }
-  .upsell .upsell-btn { padding:5px 12px; background:var(--accent); color:#000; border:none; border-radius:6px; font-size:10px; font-weight:700; cursor:pointer; }
+/* Office elements */
+.office-wall { position:absolute; top:0; left:0; right:0; height:80px; background:linear-gradient(180deg,#2a2545,#1e1b2e); border-bottom:2px solid rgba(251,191,36,0.06); }
+.office-title { position:absolute; top:14px; left:50%; transform:translateX(-50%); font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--accent); background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:3px; border:1px solid rgba(251,191,36,0.15); z-index:2; white-space:nowrap; }
+.office-floor { position:absolute; bottom:0; left:0; right:0; height:30px; background:linear-gradient(180deg,#13111f,#0d0b18); border-top:1px solid rgba(255,255,255,0.03); }
+.office-desk-area { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:flex; flex-wrap:wrap; gap:20px; z-index:4; justify-content:center; max-width:340px; }
+.office-desk {
+  width:70px; display:flex; flex-direction:column; align-items:center;
+  cursor:pointer; transition:transform .2s;
+}
+.office-desk:hover { transform:translateY(-2px); }
+.office-desk .od-avatar {
+  width:32px; height:32px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-size:16px; background:rgba(17,17,24,0.9);
+  border:2px solid var(--green); position:relative;
+}
+.office-desk .od-dot {
+  position:absolute; bottom:-1px; right:-1px; width:8px; height:8px;
+  border-radius:50%; background:var(--green); border:2px solid #1e1b2e;
+}
+.office-desk .od-name { margin-top:4px; font-size:8px; font-weight:600; color:var(--text2); text-align:center; }
+.office-desk .od-table {
+  margin-top:3px; width:50px; height:16px;
+  background:linear-gradient(180deg,#3d3355,#2d2545); border:1px solid rgba(255,255,255,0.06);
+  border-radius:3px; box-shadow:0 2px 8px rgba(0,0,0,0.3);
+}
+.office-deco { position:absolute; z-index:2; }
+.office-deco.plant1 { bottom:40px; left:20px; font-size:20px; }
+.office-deco.plant2 { bottom:40px; right:20px; font-size:16px; }
+.office-deco.cat { bottom:35px; left:55px; font-size:14px; cursor:pointer; }
+.office-deco.window { top:10px; right:30px; width:50px; height:35px; background:linear-gradient(180deg,#1a2040,#2a3060); border:2px solid rgba(255,255,255,0.08); border-radius:3px; }
+.office-deco.whiteboard { top:10px; left:30px; width:70px; height:40px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:2px; font-size:6px; padding:4px; color:var(--muted); line-height:1.3; overflow:hidden; }
 
-  /* Hire Modal */
-  .hire-overlay {
-    display:none; position:fixed; top:0; left:0; right:0; bottom:0;
-    background:rgba(0,0,0,0.7); z-index:50; align-items:center; justify-content:center;
-    backdrop-filter:blur(4px); overflow-y:auto; padding:20px 0;
-  }
-  .hire-overlay.open { display:flex; }
-  .hire-modal {
-    width:640px; max-width:90vw; max-height:85vh;
-    background:var(--surface); border:1px solid var(--border); border-radius:12px;
-    display:flex; flex-direction:column; overflow:hidden;
-    animation:modalIn 0.2s ease; box-shadow:0 20px 60px rgba(0,0,0,0.5);
-  }
-  .hire-modal-header {
-    padding:20px 24px; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:12px;
-  }
-  .hire-modal-header h2 { font-size:18px; font-weight:700; flex:1; }
-  .hire-modal-header .close-btn {
-    width:32px; height:32px; border-radius:8px; border:1px solid var(--border);
-    background:none; color:var(--muted); font-size:16px; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .hire-modal-header .close-btn:hover { color:var(--text); border-color:var(--accent); }
+/* ═══ Agent Detail Modal ═══ */
+.modal-overlay {
+  display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,0.6); z-index:50; align-items:center; justify-content:center;
+  backdrop-filter:blur(6px);
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  width:640px; max-width:90vw; max-height:85vh;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg);
+  display:flex; flex-direction:column; overflow:hidden;
+  animation:modalSlide .25s ease; box-shadow:0 24px 80px rgba(0,0,0,0.5);
+}
+@keyframes modalSlide { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
 
-  /* Hire views */
-  .hire-view { display:none; flex:1; min-height:0; overflow-y:auto; }
-  .hire-view.active { display:flex; flex-direction:column; }
+.modal-header {
+  padding:16px 20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:12px;
+}
+.modal-header h2 { flex:1; font-size:16px; font-weight:700; }
+.modal-close {
+  width:30px; height:30px; border-radius:var(--radius-sm); border:1px solid var(--border);
+  background:none; color:var(--muted); cursor:pointer; font-size:14px;
+  display:flex; align-items:center; justify-content:center; transition:all .15s;
+}
+.modal-close:hover { color:var(--text); border-color:var(--text2); }
 
-  /* Browse view */
-  .hire-list { flex:1; overflow-y:auto; padding:16px; min-height:0; }
-  .hire-card {
-    padding:20px; border:1px solid var(--border); border-radius:10px;
-    margin-bottom:12px; cursor:pointer; transition:all .15s;
-  }
-  .hire-card:hover { border-color:rgba(251,191,36,0.3); background:rgba(251,191,36,0.02); }
-  .hire-card.on-team { cursor:default; }
-  .hire-card .hire-top { display:flex; align-items:center; gap:14px; margin-bottom:10px; }
-  .hire-card .hire-emoji { font-size:36px; }
-  .hire-card .hire-meta { flex:1; }
-  .hire-card .hire-name { font-size:15px; font-weight:700; }
-  .hire-card .hire-title { font-size:12px; color:var(--muted); margin-top:1px; }
-  .hire-card .hire-price { font-size:12px; padding:3px 10px; border-radius:6px; font-weight:700; }
-  .hire-card .hire-price.free { color:var(--green); background:rgba(34,197,94,0.1); }
-  .hire-card .hire-price.paid { color:var(--accent); background:rgba(251,191,36,0.1); }
-  .hire-card .on-team-badge { font-size:11px; color:var(--green); font-weight:600; }
-  .hire-card .hire-desc { font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:10px; }
-  .hire-skills { display:flex; flex-wrap:wrap; gap:6px; }
-  .hire-skill { padding:3px 8px; background:var(--surface2); border:1px solid var(--border); border-radius:5px; font-size:10px; color:var(--text); }
+/* Detail modal content */
+.detail-stats { display:flex; gap:1px; background:var(--border); flex-shrink:0; }
+.detail-stat { flex:1; padding:12px 16px; background:var(--surface); text-align:center; }
+.detail-stat .val { font-size:18px; font-weight:700; font-family:'JetBrains Mono',monospace; }
+.detail-stat .lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
 
-  /* Detail view */
-  .hire-detail { padding:24px; overflow-y:auto; flex:1; }
-  .hire-detail .hd-hero { text-align:center; margin-bottom:24px; }
-  .hire-detail .hd-emoji { font-size:64px; margin-bottom:12px; }
-  .hire-detail .hd-name { font-size:24px; font-weight:700; }
-  .hire-detail .hd-title { font-size:14px; color:var(--muted); margin-top:4px; }
-  .hire-detail .hd-price { display:inline-block; margin-top:10px; padding:5px 14px; border-radius:8px; font-weight:700; font-size:13px; }
-  .hire-detail .hd-section { margin-bottom:20px; }
-  .hire-detail .hd-section h3 { font-size:13px; font-weight:700; color:var(--accent); margin-bottom:8px; }
-  .hire-detail .hd-section p { font-size:13px; color:var(--muted); line-height:1.6; }
-  .hire-detail .hd-skills { display:flex; flex-wrap:wrap; gap:8px; }
-  .hire-detail .hd-skill { padding:5px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:6px; font-size:11px; }
-  .hire-detail .hd-hire-btn {
-    display:block; width:100%; padding:14px; background:var(--accent); color:#000; border:none;
-    border-radius:10px; font-weight:700; font-size:15px; cursor:pointer; margin-top:20px;
-    transition:filter .15s;
-  }
-  .hire-detail .hd-hire-btn:hover { filter:brightness(1.1); }
-  .hire-detail .hd-back { background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; margin-bottom:16px; }
-  .hire-detail .hd-back:hover { color:var(--text); }
+.detail-tabs { display:flex; border-bottom:1px solid var(--border); }
+.detail-tab {
+  flex:1; padding:10px; font-size:11px; font-weight:600; color:var(--muted);
+  cursor:pointer; text-align:center; border:none; background:none;
+  border-bottom:2px solid transparent; transition:all .15s;
+}
+.detail-tab:hover { color:var(--text); }
+.detail-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 
-  /* Onboarding view */
-  .onboarding { padding:40px 24px; text-align:center; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-  .onboarding .ob-emoji { font-size:80px; margin-bottom:20px; animation:bounce 0.6s ease infinite alternate; }
-  @keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-10px)} }
-  .onboarding .ob-title { font-size:20px; font-weight:700; margin-bottom:8px; }
-  .onboarding .ob-subtitle { font-size:14px; color:var(--muted); margin-bottom:24px; }
-  .onboarding .ob-steps { text-align:left; max-width:300px; margin:0 auto; }
-  .ob-step { display:flex; align-items:center; gap:12px; padding:8px 0; font-size:13px; color:var(--muted); transition:color 0.3s; }
-  .ob-step.done { color:var(--green); }
-  .ob-step.active { color:var(--text); }
-  .ob-step .ob-check { width:20px; text-align:center; }
-  .ob-progress { width:200px; height:4px; background:var(--border); border-radius:2px; margin-top:20px; overflow:hidden; }
-  .ob-progress .ob-bar { height:100%; background:var(--accent); border-radius:2px; transition:width 0.5s ease; width:0%; }
+.detail-body { flex:1; overflow-y:auto; }
+.detail-section { display:none; }
+.detail-section.active { display:block; }
 
-  /* Celebration */
-  .celebration { padding:40px; text-align:center; }
-  .celebration .cel-emoji { font-size:80px; margin-bottom:16px; animation:celebratePop 0.5s ease; }
-  @keyframes celebratePop { 0%{transform:scale(0)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
-  .celebration h2 { font-size:22px; font-weight:700; margin-bottom:8px; }
-  .celebration p { font-size:14px; color:var(--muted); margin-bottom:24px; }
-  .celebration .cel-btn {
-    padding:12px 32px; background:var(--accent); color:#000; border:none;
-    border-radius:10px; font-weight:700; font-size:14px; cursor:pointer;
-  }
-  .confetti { position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:100; }
-  .confetti-piece { position:absolute; width:8px; height:8px; border-radius:2px; animation:confettiFall 2s ease forwards; }
-  @keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
+.timeline-item {
+  display:flex; gap:10px; padding:10px 16px;
+  border-bottom:1px solid rgba(255,255,255,0.03); font-size:12px;
+}
+.tl-icon { width:26px; height:26px; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
+.tl-icon.msg { background:var(--green-dim); }
+.tl-icon.tool { background:var(--purple-dim); }
+.tl-icon.sys { background:var(--accent-dim); }
+.tl-body { flex:1; min-width:0; }
+.tl-title { font-weight:600; display:flex; align-items:center; gap:6px; margin-bottom:1px; }
+.tl-title .tool-tag { font-size:9px; padding:1px 5px; border-radius:3px; background:var(--purple-dim); color:var(--purple); }
+.tl-preview { color:var(--muted); line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; cursor:pointer; }
+.tl-preview.expanded { -webkit-line-clamp:unset; }
+.tl-time { font-size:10px; color:var(--muted); margin-top:2px; font-family:'JetBrains Mono',monospace; }
 
-  /* Confirm Modal */
-  .confirm-overlay {
-    display:none; position:fixed; top:0; left:0; right:0; bottom:0;
-    background:rgba(0,0,0,0.7); z-index:60; align-items:center; justify-content:center;
-    backdrop-filter:blur(4px);
-  }
-  .confirm-overlay.open { display:flex; }
-  .confirm-box {
-    width:400px; max-width:90vw; background:var(--surface); border:1px solid var(--border);
-    border-radius:12px; padding:28px; text-align:center;
-    animation:modalIn 0.2s ease; box-shadow:0 20px 60px rgba(0,0,0,0.5);
-  }
-  .confirm-box .conf-emoji { font-size:40px; margin-bottom:12px; }
-  .confirm-box h3 { font-size:16px; font-weight:700; margin-bottom:8px; }
-  .confirm-box p { font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:20px; }
-  .confirm-box .conf-btns { display:flex; gap:12px; justify-content:center; }
-  .confirm-box .conf-btn {
-    padding:10px 24px; border:none; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer;
-  }
-  .confirm-box .conf-cancel { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
-  .confirm-box .conf-cancel:hover { border-color:var(--text); }
-  .confirm-box .conf-danger { background:var(--red); color:#fff; }
-  .confirm-box .conf-danger:hover { filter:brightness(1.1); }
+.sessions-list { padding:8px 16px; }
+.session-card {
+  padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius);
+  margin-bottom:6px;
+}
+.session-card .sc-header { display:flex; align-items:center; gap:8px; }
+.session-card .sc-label { font-size:12px; font-weight:600; }
+.session-card .sc-kind { font-size:9px; padding:2px 6px; border-radius:3px; background:var(--blue-dim); color:var(--blue); }
+.session-card .sc-time { font-size:10px; color:var(--muted); margin-top:2px; }
 
-  /* Waitlist */
-  .waitlist-gate { display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; }
-  .waitlist-gate.active { display:flex; }
-  .waitlist-gate .big-emoji { font-size:80px; margin-bottom:24px; }
-  .waitlist-gate h1 { font-family:'Press Start 2P',monospace; font-size:20px; color:var(--accent); margin-bottom:16px; line-height:1.4; }
-  .waitlist-gate p { font-size:15px; color:var(--muted); line-height:1.6; max-width:480px; margin-bottom:32px; }
-  .waitlist-gate .form-row { display:flex; gap:12px; max-width:400px; width:100%; }
-  .waitlist-gate input { flex:1; padding:14px 18px; background:var(--surface); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; outline:none; }
-  .waitlist-gate input:focus { border-color:var(--accent); }
-  .waitlist-gate .join-btn { padding:14px 24px; background:var(--accent); color:#000; border:none; border-radius:8px; font-weight:700; font-size:14px; cursor:pointer; white-space:nowrap; }
-  .waitlist-gate .success-msg { display:none; font-size:18px; color:var(--green); }
-  .waitlist-gate .success-msg.show { display:block; }
-  .waitlist-gate .preview-cards { display:flex; gap:16px; margin-top:40px; flex-wrap:wrap; justify-content:center; }
-  .waitlist-gate .preview-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; width:160px; text-align:center; }
-  .waitlist-gate .preview-card .emoji { font-size:28px; margin-bottom:8px; }
-  .waitlist-gate .preview-card .title { font-size:12px; font-weight:700; margin-bottom:4px; }
-  .waitlist-gate .preview-card .desc { font-size:10px; color:var(--muted); }
+/* Hire Modal */
+.hire-card {
+  padding:16px; border:1px solid var(--border); border-radius:var(--radius);
+  margin:8px 16px; cursor:pointer; transition:all .15s;
+}
+.hire-card:hover { border-color:rgba(240,180,41,0.3); background:var(--accent-dim); }
+.hire-card.on-team { cursor:default; opacity:0.6; }
+.hire-card .hc-top { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+.hire-card .hc-emoji { font-size:28px; }
+.hire-card .hc-meta { flex:1; }
+.hire-card .hc-name { font-size:14px; font-weight:700; }
+.hire-card .hc-title { font-size:11px; color:var(--muted); }
+.hire-card .hc-price { font-size:11px; padding:3px 8px; border-radius:var(--radius-sm); font-weight:700; }
+.hire-card .hc-price.free { color:var(--green); background:var(--green-dim); }
+.hire-card .hc-price.paid { color:var(--accent); background:var(--accent-dim); }
+.hire-card .hc-desc { font-size:12px; color:var(--text2); line-height:1.5; }
+.hire-card .on-team-badge { font-size:10px; color:var(--green); font-weight:600; }
+
+.hire-detail-view { padding:20px; overflow-y:auto; }
+.hd-hero { text-align:center; margin-bottom:20px; }
+.hd-hero .hd-emoji { font-size:56px; }
+.hd-hero .hd-name { font-size:22px; font-weight:800; margin-top:8px; }
+.hd-hero .hd-title { font-size:13px; color:var(--muted); margin-top:4px; }
+.hd-section { margin-bottom:16px; }
+.hd-section h3 { font-size:12px; font-weight:700; color:var(--accent); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; }
+.hd-section p { font-size:13px; color:var(--text2); line-height:1.5; }
+.hd-skills { display:flex; flex-wrap:wrap; gap:6px; }
+.hd-skill { padding:3px 8px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); font-size:10px; }
+.hd-hire-btn {
+  display:block; width:100%; padding:12px; background:var(--accent); color:var(--bg);
+  border:none; border-radius:var(--radius); font-weight:700; font-size:14px;
+  cursor:pointer; margin-top:16px; transition:filter .15s;
+}
+.hd-hire-btn:hover { filter:brightness(1.1); }
+.hd-back { background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; margin-bottom:12px; }
+.hd-back:hover { color:var(--text); }
+
+/* Onboarding */
+.onboarding-view { padding:40px 20px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.ob-emoji { font-size:64px; margin-bottom:16px; animation:bounce .6s ease infinite alternate; }
+@keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-8px)} }
+.ob-title { font-size:18px; font-weight:700; margin-bottom:6px; }
+.ob-subtitle { font-size:13px; color:var(--muted); margin-bottom:20px; }
+.ob-steps { text-align:left; max-width:260px; }
+.ob-step { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:12px; color:var(--muted); transition:color .3s; }
+.ob-step.done { color:var(--green); }
+.ob-step.active { color:var(--text); }
+.ob-step .ob-check { width:18px; text-align:center; font-size:12px; }
+.ob-progress { width:180px; height:3px; background:var(--border); border-radius:2px; margin-top:16px; overflow:hidden; }
+.ob-progress .ob-bar { height:100%; background:var(--accent); border-radius:2px; transition:width .5s ease; width:0%; }
+
+/* Celebration */
+.celebration-view { padding:40px; text-align:center; }
+.cel-emoji { font-size:64px; animation:celebratePop .5s ease; }
+@keyframes celebratePop { 0%{transform:scale(0)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
+.celebration-view h2 { font-size:20px; font-weight:700; margin:12px 0 6px; }
+.celebration-view p { font-size:13px; color:var(--muted); margin-bottom:20px; }
+.cel-btn { padding:10px 28px; background:var(--accent); color:var(--bg); border:none; border-radius:var(--radius); font-weight:700; font-size:13px; cursor:pointer; }
+
+.confetti { position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:100; }
+.confetti-piece { position:absolute; width:8px; height:8px; border-radius:2px; animation:confettiFall 2s ease forwards; }
+@keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
+
+/* Confirm */
+.confirm-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:60; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+.confirm-overlay.open { display:flex; }
+.confirm-box { width:380px; max-width:90vw; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; text-align:center; animation:modalSlide .2s ease; }
+.confirm-box .conf-emoji { font-size:36px; margin-bottom:10px; }
+.confirm-box h3 { font-size:15px; font-weight:700; margin-bottom:6px; }
+.confirm-box p { font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:16px; }
+.conf-btns { display:flex; gap:10px; justify-content:center; }
+.conf-btn { padding:8px 20px; border:none; border-radius:var(--radius); font-weight:700; font-size:12px; cursor:pointer; }
+.conf-cancel { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+.conf-cancel:hover { border-color:var(--text2); }
+.conf-danger { background:var(--red); color:#fff; }
+.conf-danger:hover { filter:brightness(1.1); }
+
+/* Waitlist */
+.waitlist-page { display:none; flex:1; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; background:var(--bg); }
+.waitlist-page.active { display:flex; }
+.waitlist-page .wl-emoji { font-size:64px; margin-bottom:20px; }
+.waitlist-page h1 { font-family:'JetBrains Mono',monospace; font-size:18px; color:var(--accent); margin-bottom:12px; }
+.waitlist-page p { font-size:14px; color:var(--muted); line-height:1.5; max-width:440px; margin-bottom:24px; }
+.waitlist-page .wl-form { display:flex; gap:10px; max-width:380px; width:100%; }
+.waitlist-page input { flex:1; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-size:13px; outline:none; }
+.waitlist-page input:focus { border-color:var(--accent); }
+.waitlist-page .wl-btn { padding:12px 20px; background:var(--accent); color:var(--bg); border:none; border-radius:var(--radius); font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap; }
+.waitlist-page .wl-success { display:none; font-size:16px; color:var(--green); }
+.waitlist-page .wl-success.show { display:block; }
+
+/* Hide view utility */
+.view-hidden { display:none !important; }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <span class="logo" onclick="closeDetail()">🦞 AGENT ARENA HQ</span>
-  <a href="index.html">Home</a>
-  <a href="agents.html">Agents</a>
-  <a href="app.html">Dashboard</a>
-  <div class="spacer"></div>
-  <span class="clock" id="clock"></span>
-  <span class="badge offline" id="statusBadge">● Offline</span>
+<div class="waitlist-page" id="waitlistPage">
+  <div class="wl-emoji">🦞</div>
+  <h1>Agent HQ</h1>
+  <p>Your AI team's workspace. Manage agents, watch them coordinate, and grow your business — all from one place.</p>
+  <div class="wl-form" id="wlForm">
+    <input type="email" id="wlEmail" placeholder="you@example.com">
+    <button class="wl-btn" onclick="submitWaitlist()">Get Early Access 🦞</button>
+  </div>
+  <div class="wl-success" id="wlSuccess">✅ You're on the list!</div>
 </div>
 
-<div class="waitlist-gate" id="waitlistGate">
-  <div class="big-emoji">🦞</div>
-  <h1>Agent Arena HQ</h1>
-  <p>Your AI team's virtual office. Watch them work, join meetings, and collaborate in real-time.</p>
-  <div class="form-row" id="waitlistForm">
-    <input type="email" id="waitlistEmail" placeholder="you@example.com">
-    <button class="join-btn" onclick="submitWaitlist()">Get Early Access 🦞</button>
-  </div>
-  <div class="success-msg" id="waitlistSuccess">✅ You're on the list!</div>
-  <div class="preview-cards">
-    <div class="preview-card"><div class="emoji">🏢</div><div class="title">Virtual Office</div><div class="desc">See your agents at their desks</div></div>
-    <div class="preview-card"><div class="emoji">📋</div><div class="title">Control Plane</div><div class="desc">See every action in real-time</div></div>
-    <div class="preview-card"><div class="emoji">🔒</div><div class="title">100% Local</div><div class="desc">Agents never leave your machine</div></div>
-  </div>
-</div>
+<div class="app" id="app" style="display:none">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span class="status-dot-sm" id="gatewayDot"></span>
+      <span class="logo">AGENT HQ</span>
+    </div>
 
-<div class="main" id="mainLayout" style="display:none;">
-  <!-- Office -->
-  <div class="office" id="office">
-    <div class="wall"></div>
-    <div class="wall-item title">AGENT ARENA HQ</div>
-    <div class="wall-item poster p1">📊 Q1 Goals</div>
-    <div class="wall-item poster p2">🚀 Ship It</div>
-    <div class="wall-item window"></div>
-    <div class="wall-item whiteboard">📋 Sprint<br>→ Launch v1<br>→ Get users<br>→ Revenue</div>
-    <div class="deco plant1">🪴</div>
-    <div class="deco plant2">🌿</div>
-    <div class="deco cat" id="officeCat" title="Click me!">😺</div>
-    <div class="deco coffee">☕</div>
-    <div class="deco clock-w" id="wallClock">🕐</div>
-    <div class="deco rug"></div>
-    <div class="desk-area" id="deskArea"></div>
-    <div class="floor"></div>
-    <div class="meeting-bar">
-      <span class="label">🎙️ Team Standup</span>
-      <span class="parts" id="meetingParts">No agents online</span>
+    <div class="sidebar-nav" id="sidebarNav">
+      <!-- Channels -->
+      <div class="nav-section">
+        <div class="nav-section-title">Channels</div>
+        <div class="nav-item active" data-channel="general" onclick="switchChannel('general')">
+          <span class="nav-icon">#</span>
+          <span class="nav-label">general</span>
+        </div>
+        <div class="nav-item" data-channel="activity" onclick="switchChannel('activity')">
+          <span class="nav-icon">📋</span>
+          <span class="nav-label">activity-log</span>
+        </div>
+      </div>
+
+      <div class="nav-divider"></div>
+
+      <!-- Direct Messages -->
+      <div class="nav-section">
+        <div class="nav-section-title">
+          Direct Messages
+          <span class="section-action" onclick="openHireModal()" title="Hire agent">+</span>
+        </div>
+        <div id="dmList"></div>
+      </div>
+
+      <div class="nav-divider"></div>
+
+      <!-- Agent Comms -->
+      <div class="nav-section">
+        <div class="nav-section-title">Agent Comms</div>
+        <div id="agentCommsList"></div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-avatar">👤</div>
+      <div class="user-info">
+        <div class="user-name">You</div>
+        <div class="user-role">Owner</div>
+      </div>
+      <button class="settings-btn" onclick="toggleOffice()" title="Toggle office view">🏢</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="channel-header">
+      <span class="ch-icon" id="chIcon">#</span>
+      <div class="ch-info">
+        <div class="ch-name" id="chName">general</div>
+        <div class="ch-topic" id="chTopic">Team-wide chat — all agents see your messages</div>
+      </div>
+      <div class="ch-actions">
+        <button class="ch-action-btn" onclick="toggleOffice()" title="Toggle office" id="officeToggle">🏢</button>
+        <button class="ch-action-btn" onclick="openHireModal()" title="Hire agent">⚡</button>
+      </div>
+    </div>
+
+    <div class="messages-area" id="messagesArea">
       <div class="spacer"></div>
-      <button class="start-btn" id="startBtn" onclick="startMeeting()">Start Meeting</button>
-      <button class="end-btn" id="endBtn" onclick="endMeeting()">End Meeting</button>
     </div>
 
-  </div><!-- end .office -->
+    <div class="typing-bar" id="typingBar"></div>
 
-  <!-- Agent Detail Modal -->
-  <div class="agent-detail-overlay" id="agentDetailOverlay" onclick="if(event.target===this)closeDetail()">
-    <div class="agent-detail" id="agentDetail">
-      <div class="detail-header">
-        <button class="back-btn" onclick="closeDetail()">←</button>
-        <div class="agent-info">
-          <div class="agent-name" id="detailName">🤖 Agent</div>
-          <div class="agent-role" id="detailRole">Role</div>
-        </div>
-        <span class="status-pill online" id="detailStatus">● Online</span>
+    <div class="chat-input-area" id="chatInputArea">
+      <div class="chat-input-wrapper">
+        <textarea id="chatInput" placeholder="Message #general..." rows="1" autocomplete="off"></textarea>
+        <button class="send-btn" onclick="sendMessage()">↑</button>
       </div>
-      <div class="detail-stats" id="detailStats">
-        <div class="stat-card"><div class="stat-value" id="statSessions">-</div><div class="stat-label">Sessions</div></div>
-        <div class="stat-card"><div class="stat-value" id="statMessages">-</div><div class="stat-label">Messages</div></div>
-        <div class="stat-card"><div class="stat-value" id="statTools">-</div><div class="stat-label">Tool Calls</div></div>
-      </div>
-      <div class="detail-tabs">
-        <button class="detail-tab active" onclick="switchDetailTab('timeline')">🕐 Timeline</button>
-        <button class="detail-tab" onclick="switchDetailTab('sessions')">📂 Sessions</button>
-      </div>
-      <div class="detail-content">
-        <div class="detail-section active" id="sectionTimeline">
-          <div class="detail-loading" id="timelineLoading">Loading activity...</div>
-          <div class="timeline" id="timeline"></div>
-        </div>
-        <div class="detail-section" id="sectionSessions">
-          <div class="sessions-list" id="sessionsList"></div>
-        </div>
-      </div>
-    </div>
-  </div><!-- end agent detail modal -->
-
-  <!-- Hire Modal -->
-  <div class="hire-overlay" id="hireOverlay" onclick="if(event.target===this)closeHireModal()">
-    <div class="hire-modal">
-      <div class="hire-modal-header" id="hireModalHeader">
-        <h2 id="hireModalTitle">⚡ Hire an Agent</h2>
-        <button class="close-btn" onclick="closeHireModal()">✕</button>
-      </div>
-      <!-- Browse View -->
-      <div class="hire-view active" id="hireBrowse">
-        <div class="hire-list" id="hireList"></div>
-      </div>
-      <!-- Detail View -->
-      <div class="hire-view hire-detail" id="hireDetailView"></div>
-      <!-- Onboarding View -->
-      <div class="hire-view onboarding" id="hireOnboarding"></div>
-      <!-- Celebration View -->
-      <div class="hire-view celebration" id="hireCelebration"></div>
     </div>
   </div>
 
-  <!-- Right Panel: Chat -->
-  <div class="right-panel">
-    <div class="chat-header">
-      <h3>💬 #general</h3>
-      <span class="channel">Team Chat</span>
+  <!-- Office Panel -->
+  <div class="office-panel" id="officePanel">
+    <div class="office-inner">
+      <div class="office-wall"></div>
+      <div class="office-title">AGENT HQ</div>
+      <div class="office-deco whiteboard">📋 Sprint<br>→ Ship v1<br>→ Get users<br>→ Revenue</div>
+      <div class="office-deco window"></div>
+      <div class="office-deco plant1">🪴</div>
+      <div class="office-deco plant2">🌿</div>
+      <div class="office-deco cat" id="officeCat">😺</div>
+      <div class="office-desk-area" id="officeDesks"></div>
+      <div class="office-floor"></div>
     </div>
-    <div class="messages" id="messages"></div>
-    <div class="typing-line" id="typingLine">
-      <span id="typingWho"></span> is typing<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+  </div>
+</div>
+
+<!-- Agent Detail Modal -->
+<div class="modal-overlay" id="detailModal" onclick="if(event.target===this)closeDetail()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="detailTitle">Agent</h2>
+      <button class="modal-close" onclick="closeDetail()">✕</button>
     </div>
-    <div class="chat-input">
-      <input type="text" id="chatInput" placeholder="Message your team..." autocomplete="off">
-      <button onclick="sendMessage()">Send</button>
+    <div class="detail-stats" id="detailStats">
+      <div class="detail-stat"><div class="val" id="statSessions">-</div><div class="lbl">Sessions</div></div>
+      <div class="detail-stat"><div class="val" id="statMessages">-</div><div class="lbl">Messages</div></div>
+      <div class="detail-stat"><div class="val" id="statTools">-</div><div class="lbl">Tool Calls</div></div>
     </div>
-    <div class="upsell" onclick="openHireModal()">
-      <div class="upsell-icon">⚡</div>
-      <div class="upsell-text">
-        <div class="upsell-title">Grow Your Team</div>
-        <div class="upsell-desc" id="upsellDesc">Hire more agents for your team</div>
-      </div>
-      <button class="upsell-btn">Hire Agents</button>
+    <div class="detail-tabs">
+      <button class="detail-tab active" onclick="switchDetailTab('timeline')">Timeline</button>
+      <button class="detail-tab" onclick="switchDetailTab('sessions')">Sessions</button>
     </div>
+    <div class="detail-body">
+      <div class="detail-section active" id="secTimeline"><div class="sessions-list" style="padding:20px;color:var(--muted);font-size:13px">Loading...</div></div>
+      <div class="detail-section" id="secSessions"><div class="sessions-list" id="sessionsList"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Hire Modal -->
+<div class="modal-overlay" id="hireModal" onclick="if(event.target===this)closeHireModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="hireTitle">⚡ Hire an Agent</h2>
+      <button class="modal-close" onclick="closeHireModal()">✕</button>
+    </div>
+    <div id="hireBrowse" style="flex:1;overflow-y:auto"></div>
+    <div id="hireDetailView" class="view-hidden" style="flex:1;overflow-y:auto"></div>
+    <div id="hireOnboarding" class="view-hidden" style="flex:1;overflow-y:auto;display:flex;align-items:center;justify-content:center"></div>
+    <div id="hireCelebration" class="view-hidden" style="flex:1;overflow-y:auto"></div>
   </div>
 </div>
 
@@ -516,20 +562,28 @@
 </div>
 
 <script>
-let ws=null, agents=[], registeredAgents=[], sessions={}, streamBuffers={}, selectedAgent=null;
-const LOCAL=`${location.protocol}//${location.host}`;
+// ═══ State ═══
+let ws=null, agents=[], registeredAgents=[], agentSessions={}, streamBuffers={};
+let currentChannel='general', officeOpen=false;
+const LOCAL=location.origin;
+const AGENT_COLORS = { '📈':'#34d399', '🔥':'#f87171', '🔒':'#60a5fa', '💰':'#f0b429', '🦞':'#f0b429', '🤖':'#a78bfa' };
 
-// Stable client ID — persists across refreshes so agent sessions carry over
+// Channel message storage: { channelId: [{sender,text,emoji,time,agentId}] }
+const channelMessages = {};
+
+// Stable client ID
 function getClientId() {
-  let id = localStorage.getItem('hq-client-id');
-  if (!id) { id = crypto.randomUUID().slice(0,8); localStorage.setItem('hq-client-id', id); }
+  let id=localStorage.getItem('hq-client-id');
+  if(!id){id=crypto.randomUUID().slice(0,8);localStorage.setItem('hq-client-id',id);}
   return id;
 }
-const CLIENT_ID = getClientId();
+const CLIENT_ID=getClientId();
 
+// ═══ Init ═══
 async function init() {
-  updateClock(); setInterval(updateClock,30000);
-  setupInput(); setupCat();
+  loadSavedMessages();
+  setupInputHandlers();
+  setupCat();
   await checkConnection();
 }
 
@@ -537,500 +591,580 @@ async function checkConnection() {
   try {
     const res=await fetch(`${LOCAL}/api/agents`,{signal:AbortSignal.timeout(3000)});
     if(!res.ok) throw 0;
-    updateStatus(true);
-    document.getElementById('mainLayout').style.display='flex';
-    await loadAgents(); connectWS(); loadChat(); updateUpsell();
-  } catch { document.getElementById('waitlistGate').classList.add('active'); updateStatus(false); }
+    document.getElementById('app').style.display='flex';
+    setGatewayStatus(true);
+    await loadAgents();
+    connectWS();
+    renderCurrentChannel();
+  } catch {
+    document.getElementById('waitlistPage').classList.add('active');
+    setGatewayStatus(false);
+  }
 }
 
+function setGatewayStatus(on) {
+  const dot=document.getElementById('gatewayDot');
+  dot.className=`status-dot-sm ${on?'':'off'}`;
+}
+
+// ═══ Agents ═══
 async function loadAgents() {
-  const [a,r]=await Promise.all([fetch(`${LOCAL}/api/agents`).then(r=>r.json()),fetch(`${LOCAL}/api/agents/registered`).then(r=>r.json())]);
-  agents=a; registeredAgents=r; renderDesks(); updateMeetingParts();
+  const [a,r]=await Promise.all([
+    fetch(`${LOCAL}/api/agents`).then(r=>r.json()),
+    fetch(`${LOCAL}/api/agents/registered`).then(r=>r.json())
+  ]);
+  agents=a; registeredAgents=r;
+  renderSidebar();
+  renderOfficeDesks();
 }
 
 function isInstalled(a) {
-  const regIds=new Set(registeredAgents.map(x=>x.id));
-  return regIds.has(a.name.replace(/-agent$/,''))||regIds.has(a.agentId);
+  const ids=new Set(registeredAgents.map(x=>x.id));
+  return ids.has(a.name.replace(/-agent$/,''))||ids.has(a.agentId);
 }
 
-function renderDesks() {
-  const area=document.getElementById('deskArea');
-  const installed=agents.filter(isInstalled);
-  const uninstalled=agents.filter(a=>!isInstalled(a));
+function getAgentId(a) { return a.agentId||a.name.replace(/-agent$/,''); }
+function getAgentByChannel(ch) { return agents.find(a=>getAgentId(a)===ch && isInstalled(a)); }
+function getInstalledAgents() { return agents.filter(isInstalled); }
 
-  let html=installed.map(agent=>{
-    const id=agent.agentId||agent.name.replace(/-agent$/,'');
-    return `
-      <div class="desk active" data-agent="${agent.name}" onclick="openAgentDetail('${agent.name}')">
-        <button class="fire-btn" onclick="event.stopPropagation();fireAgent('${agent.name}')" title="Remove from team">✕</button>
-        <div class="speech-bubble" id="bubble-${id}"></div>
-        <div class="agent-avatar">${agent.emoji||'🤖'}<div class="status-dot online" id="dot-${id}"></div></div>
-        <div class="agent-label">${agent.displayName||agent.name}</div>
-        <div class="desk-obj"><div class="desk-monitor"><div class="glow"></div></div></div>
-      </div>`;
+// ═══ Sidebar ═══
+function renderSidebar() {
+  const installed=getInstalledAgents();
+
+  // DM list
+  const dmList=document.getElementById('dmList');
+  dmList.innerHTML=installed.map(a=>{
+    const id=getAgentId(a);
+    return `<div class="nav-item" data-channel="dm-${id}" onclick="switchChannel('dm-${id}')">
+      <span class="status-indicator online" id="sidebar-dot-${id}"></span>
+      <span class="nav-label">${a.emoji||'🤖'} ${a.displayName||a.name}</span>
+    </div>`;
   }).join('');
 
-  // No greyed-out desks — uninstalled agents only available via Hire page
-  html+=`<div class="add-agent-desk" onclick="openHireModal()"><div class="add-circle">+</div><div class="add-label">Hire Agent</div></div>`;
-  area.innerHTML=html;
-}
-
-// ═══ Agent Detail ═══
-async function openAgentDetail(agentName) {
-  const agent=agents.find(a=>a.name===agentName);
-  if(!agent) return;
-  selectedAgent=agent;
-
-  // Highlight desk
-  document.querySelectorAll('.desk').forEach(d=>d.classList.remove('selected'));
-  document.querySelector(`.desk[data-agent="${agentName}"]`)?.classList.add('selected');
-
-  // Fill header
-  document.getElementById('detailName').innerHTML=`${agent.emoji||'🤖'} ${agent.displayName||agent.name}`;
-  document.getElementById('detailRole').textContent=agent.title||agent.description||'';
-
-  // Show modal
-  document.getElementById('agentDetailOverlay').classList.add('open');
-
-  // Reset
-  document.getElementById('timeline').innerHTML='';
-  document.getElementById('timelineLoading').style.display='block';
-  document.getElementById('statSessions').textContent='-';
-  document.getElementById('statMessages').textContent='-';
-  document.getElementById('statTools').textContent='-';
-  switchDetailTab('timeline');
-
-  // Fetch activity
-  try {
-    const res=await fetch(`${LOCAL}/api/agents/${agentName}/activity`);
-    const data=await res.json();
-    renderAgentActivity(data);
-  } catch(e) {
-    document.getElementById('timelineLoading').textContent='Failed to load activity';
-  }
-}
-
-function renderAgentActivity(data) {
-  const {sessions:sess, history}=data;
-  document.getElementById('timelineLoading').style.display='none';
-
-  // Stats
-  document.getElementById('statSessions').textContent=sess.length;
-  let msgCount=0, toolCount=0;
-
-  // Build timeline from history
-  const tl=document.getElementById('timeline');
-  if(!history||!history.length) {
-    tl.innerHTML='<div class="detail-loading">No recent activity found.</div>';
-  } else {
-    let html='';
-    for(const msg of history) {
-      const role=msg.role||'unknown';
-      const text=msg.text||'';
-      const tools=msg.toolCalls||[];
-      const time=msg.timestamp?new Date(msg.timestamp):null;
-      const timeStr=time?time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
-
-      if(role==='assistant') {
-        msgCount++;
-        if(tools.length) {
-          for(const tc of tools) {
-            toolCount++;
-            html+=`<div class="tl-item">
-              <div class="tl-icon tool">🔧</div>
-              <div class="tl-body">
-                <div class="tl-title">Used tool <span class="tool-badge">${esc(tc.name||'tool')}</span></div>
-                <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc((tc.input||'').slice(0,300))}</div>
-                <div class="tl-time">${timeStr}</div>
-              </div></div>`;
-          }
-        }
-        if(text) {
-          html+=`<div class="tl-item">
-            <div class="tl-icon msg">💬</div>
-            <div class="tl-body">
-              <div class="tl-title">Sent a message</div>
-              <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc(text.slice(0,500))}</div>
-              ${text.length>200?'<div class="tl-expand" onclick="this.previousElementSibling.classList.toggle(\'expanded\')">show more</div>':''}
-              <div class="tl-time">${timeStr}</div>
-            </div></div>`;
-        }
-      } else if(role==='user') {
-        if(text) {
-          html+=`<div class="tl-item">
-            <div class="tl-icon sys">👤</div>
-            <div class="tl-body">
-              <div class="tl-title">Received input</div>
-              <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc(text.slice(0,300))}</div>
-              <div class="tl-time">${timeStr}</div>
-            </div></div>`;
-        }
-      } else if(role==='tool'||role==='toolResult') {
-        html+=`<div class="tl-item">
-          <div class="tl-icon tool">📄</div>
-          <div class="tl-body">
-            <div class="tl-title">Tool result</div>
-            <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc((text||'(result)').slice(0,200))}</div>
-            <div class="tl-time">${timeStr}</div>
-          </div></div>`;
+  // Agent comms (pairs) — placeholder for now
+  const commsEl=document.getElementById('agentCommsList');
+  if(installed.length>=2) {
+    const pairs=[];
+    for(let i=0;i<installed.length;i++) {
+      for(let j=i+1;j<installed.length;j++) {
+        const a=installed[i], b=installed[j];
+        pairs.push({a,b,id:`comms-${getAgentId(a)}-${getAgentId(b)}`});
       }
     }
-    tl.innerHTML=html||'<div class="detail-loading">No activity to display.</div>';
+    commsEl.innerHTML=pairs.slice(0,6).map(p=>`<div class="nav-item" data-channel="${p.id}" onclick="switchChannel('${p.id}')">
+      <span class="nav-icon">🔗</span>
+      <span class="nav-label">${p.a.emoji} ↔ ${p.b.emoji} ${(p.a.displayName||'').split(' ')[0]} · ${(p.b.displayName||'').split(' ')[0]}</span>
+    </div>`).join('');
+  } else {
+    commsEl.innerHTML='<div style="padding:4px 8px;font-size:11px;color:var(--muted)">Hire 2+ agents to see comms</div>';
   }
-
-  document.getElementById('statMessages').textContent=msgCount;
-  document.getElementById('statTools').textContent=toolCount;
-
-  // Sessions list
-  const sl=document.getElementById('sessionsList');
-  sl.innerHTML=sess.map(s=>{
-    const t=s.updatedAt?timeAgo(new Date(s.updatedAt)):'';
-    const label=s.label||s.key?.split(':').pop()||'session';
-    return `<div class="session-item">
-      <div class="sess-header">
-        <span class="sess-label">${esc(label)}</span>
-        <span class="sess-kind">${s.kind||'chat'}</span>
-      </div>
-      <div class="sess-time">${t}${s.model?' · '+s.model:''}</div>
-    </div>`;
-  }).join('')||'<div class="detail-loading">No sessions found.</div>';
 }
 
-function extractMsgText(msg) {
-  if(typeof msg.content==='string') return msg.content;
-  if(Array.isArray(msg.content)) return msg.content.filter(c=>c.type==='text').map(c=>c.text).join('');
-  return msg.text||'';
-}
+// ═══ Channel Switching ═══
+function switchChannel(ch) {
+  currentChannel=ch;
 
-function closeDetail() {
-  document.getElementById('agentDetailOverlay').classList.remove('open');
-  document.querySelectorAll('.desk').forEach(d=>d.classList.remove('selected'));
-  selectedAgent=null;
-}
-
-function switchDetailTab(tab) {
-  document.querySelectorAll('.detail-tab').forEach((t,i)=>{
-    t.classList.toggle('active',(i===0&&tab==='timeline')||(i===1&&tab==='sessions'));
+  // Update sidebar active state
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.classList.toggle('active', el.dataset.channel===ch);
   });
-  document.getElementById('sectionTimeline').classList.toggle('active',tab==='timeline');
-  document.getElementById('sectionSessions').classList.toggle('active',tab==='sessions');
+
+  // Update header
+  const icon=document.getElementById('chIcon');
+  const name=document.getElementById('chName');
+  const topic=document.getElementById('chTopic');
+  const input=document.getElementById('chatInput');
+  const inputArea=document.getElementById('chatInputArea');
+
+  if(ch==='general') {
+    icon.textContent='#'; name.textContent='general';
+    topic.textContent='Team-wide chat — all agents see your messages';
+    input.placeholder='Message #general...';
+    inputArea.style.display='';
+  } else if(ch==='activity') {
+    icon.textContent='📋'; name.textContent='activity-log';
+    topic.textContent='Compliance changelog — all agent actions recorded';
+    inputArea.style.display='none';
+    loadActivityLog();
+  } else if(ch.startsWith('dm-')) {
+    const agentId=ch.slice(3);
+    const agent=agents.find(a=>getAgentId(a)===agentId);
+    icon.textContent=agent?.emoji||'🤖';
+    name.textContent=agent?.displayName||agentId;
+    topic.textContent=agent?.title||'Direct message';
+    input.placeholder=`Message ${agent?.displayName||agentId}...`;
+    inputArea.style.display='';
+  } else if(ch.startsWith('comms-')) {
+    const parts=ch.slice(6).split('-');
+    const a=agents.find(x=>getAgentId(x)===parts[0]);
+    const b=agents.find(x=>getAgentId(x)===parts[1]);
+    icon.textContent='🔗';
+    name.textContent=`${a?.displayName||parts[0]} ↔ ${b?.displayName||parts[1]}`;
+    topic.textContent='Agent-to-agent communication (read-only)';
+    inputArea.style.display='none';
+  }
+
+  renderCurrentChannel();
 }
 
-// ═══ Hire Modal ═══
-function showHireView(view) {
-  document.querySelectorAll('.hire-view').forEach(v=>{v.classList.remove('active');v.style.display='none';});
-  const el=document.getElementById(view);
-  el.classList.add('active');
-  el.style.display='flex';
-}
+function renderCurrentChannel() {
+  const area=document.getElementById('messagesArea');
+  const msgs=channelMessages[currentChannel]||[];
 
-function openHireModal() {
-  document.getElementById('hireModalTitle').textContent='⚡ Hire an Agent';
-  renderHireList();
-  showHireView('hireBrowse');
-  document.getElementById('hireOverlay').classList.add('open');
-}
+  let html='<div class="spacer"></div>';
 
-function closeHireModal() {
-  document.getElementById('hireOverlay').classList.remove('open');
-}
+  if(currentChannel==='activity') return; // handled by loadActivityLog
 
-function renderHireList() {
-  const list=document.getElementById('hireList');
-  const installedSet=new Set(agents.filter(isInstalled).map(a=>a.name));
+  if(msgs.length===0) {
+    html+=`<div class="msg-system-line"><span>${getChannelWelcome()}</span></div>`;
+  }
 
-  list.innerHTML=agents.map(agent=>{
-    const installed=installedSet.has(agent.name);
-    const price=formatPrice(agent.price);
-    const priceClass=(!agent.price||agent.price==='FREE')?'free':'paid';
-    const skills=(agent.skills||[]).slice(0,5);
-    return `<div class="hire-card ${installed?'on-team':''}" onclick="${installed?'':`showAgentDetail('${agent.name}')`}">
-      <div class="hire-top">
-        <div class="hire-emoji">${agent.emoji||'🤖'}</div>
-        <div class="hire-meta">
-          <div class="hire-name">${agent.displayName||agent.name}</div>
-          <div class="hire-title">${agent.title||''}</div>
+  for(const m of msgs) {
+    if(m.system) {
+      html+=`<div class="msg-system-line"><span>${esc(m.text)}</span></div>`;
+    } else {
+      const senderClass=m.sender==='You'?'you':'agent';
+      const senderColor=m.sender==='You'?'var(--accent)':(AGENT_COLORS[m.emoji]||'var(--green)');
+      html+=`<div class="message-group">
+        <div class="msg-avatar">${m.emoji||'👤'}</div>
+        <div class="msg-body">
+          <div class="msg-header">
+            <span class="msg-sender ${senderClass}" style="color:${senderColor}">${esc(m.sender)}</span>
+            <span class="msg-time">${m.time||''}</span>
+          </div>
+          <div class="msg-text">${renderMarkdown(m.text)}</div>
         </div>
-        ${installed
-          ?'<span class="on-team-badge">✓ On Team</span>'
-          :`<span class="hire-price ${priceClass}">${price}</span>`
-        }
-      </div>
-      <div class="hire-desc">${agent.description||agent.desc||''}</div>
-      ${skills.length?`<div class="hire-skills">${skills.map(s=>`<span class="hire-skill">${esc(s)}</span>`).join('')}</div>`:''}
-    </div>`;
-  }).join('');
-}
-
-function showAgentDetail(agentName) {
-  const agent=agents.find(a=>a.name===agentName);
-  if(!agent) return;
-  document.getElementById('hireModalTitle').textContent='Agent Details';
-  const price=formatPrice(agent.price);
-  const priceClass=(!agent.price||agent.price==='FREE')?'free':'paid';
-  const skills=agent.skills||[];
-  const tags=agent.tags||[];
-
-  document.getElementById('hireDetailView').innerHTML=`
-    <button class="hd-back" onclick="showHireView('hireBrowse');document.getElementById('hireModalTitle').textContent='⚡ Hire an Agent'">← Back to agents</button>
-    <div class="hd-hero">
-      <div class="hd-emoji">${agent.emoji||'🤖'}</div>
-      <div class="hd-name">${agent.displayName||agent.name}</div>
-      <div class="hd-title">${agent.title||''}</div>
-      <div class="hd-price ${priceClass}">${price}</div>
-    </div>
-    <div class="hd-section">
-      <h3>About</h3>
-      <p>${agent.description||agent.desc||'A powerful AI agent ready to join your team.'}</p>
-    </div>
-    ${skills.length?`<div class="hd-section">
-      <h3>Skills & Tools</h3>
-      <div class="hd-skills">${skills.map(s=>`<span class="hd-skill">🔧 ${esc(s)}</span>`).join('')}</div>
-    </div>`:''}
-    ${tags.length?`<div class="hd-section">
-      <h3>Tags</h3>
-      <div class="hd-skills">${tags.map(t=>`<span class="hd-skill">${esc(t)}</span>`).join('')}</div>
-    </div>`:''}
-    <button class="hd-hire-btn" onclick="startOnboarding('${agent.name}')">Hire ${agent.displayName||agent.name} →</button>
-  `;
-  showHireView('hireDetailView');
-}
-
-async function startOnboarding(agentName) {
-  const agent=agents.find(a=>a.name===agentName);
-  const name=agent?.displayName||agentName;
-  document.getElementById('hireModalTitle').textContent='Onboarding';
-
-  document.getElementById('hireOnboarding').innerHTML=`
-    <div class="ob-emoji">${agent?.emoji||'🤖'}</div>
-    <div class="ob-title">Hiring ${name}...</div>
-    <div class="ob-subtitle">Setting up their workspace and tools</div>
-    <div class="ob-steps">
-      <div class="ob-step active" id="ob-step-1"><span class="ob-check">⏳</span> Creating workspace</div>
-      <div class="ob-step" id="ob-step-2"><span class="ob-check">○</span> Installing personality</div>
-      <div class="ob-step" id="ob-step-3"><span class="ob-check">○</span> Configuring tools</div>
-      <div class="ob-step" id="ob-step-4"><span class="ob-check">○</span> Booting agent</div>
-    </div>
-    <div class="ob-progress"><div class="ob-bar" id="obBar"></div></div>
-  `;
-  showHireView('hireOnboarding');
-
-  // Animate steps while installing
-  const steps=['ob-step-1','ob-step-2','ob-step-3','ob-step-4'];
-  const bar=document.getElementById('obBar');
-  let step=0;
-
-  function advanceStep() {
-    if(step>0) {
-      const prev=document.getElementById(steps[step-1]);
-      if(prev){prev.classList.remove('active');prev.classList.add('done');prev.querySelector('.ob-check').textContent='✓';}
+      </div>`;
     }
-    if(step<steps.length) {
-      const cur=document.getElementById(steps[step]);
-      if(cur){cur.classList.add('active');cur.querySelector('.ob-check').textContent='⏳';}
-      bar.style.width=((step+1)/steps.length*100)+'%';
+  }
+
+  area.innerHTML=html;
+  area.scrollTop=area.scrollHeight;
+}
+
+function getChannelWelcome() {
+  if(currentChannel==='general') return '👋 Welcome to #general — your whole team is here';
+  if(currentChannel.startsWith('dm-')) {
+    const id=currentChannel.slice(3);
+    const a=agents.find(x=>getAgentId(x)===id);
+    return `💬 Start of DM with ${a?.displayName||id}`;
+  }
+  if(currentChannel.startsWith('comms-')) return '🔗 Agent-to-agent communication will appear here';
+  return '';
+}
+
+// ═══ Activity Log ═══
+async function loadActivityLog() {
+  const area=document.getElementById('messagesArea');
+  area.innerHTML='<div class="spacer"></div><div style="padding:20px;color:var(--muted);font-size:13px">Loading activity...</div>';
+  try {
+    const res=await fetch(`${LOCAL}/api/activity`);
+    const events=await res.json();
+    let html='<div class="spacer"></div>';
+    html+='<div class="msg-system-line"><span>📋 Activity Log — Compliance Record</span></div>';
+    for(const ev of events.slice(0,50)) {
+      const t=ev.updatedAt?new Date(ev.updatedAt).toLocaleString():'';
+      html+=`<div class="message-group">
+        <div class="msg-avatar">📋</div>
+        <div class="msg-body">
+          <div class="msg-header">
+            <span class="msg-sender agent">${esc(ev.agentId)}</span>
+            <span class="msg-time">${t}</span>
+          </div>
+          <div class="msg-text">${esc(ev.kind||'session')} — ${esc(ev.label||ev.sessionKey||'')}</div>
+        </div>
+      </div>`;
     }
-    step++;
+    area.innerHTML=html;
+    area.scrollTop=area.scrollHeight;
+  } catch { area.innerHTML='<div class="spacer"></div><div style="padding:20px;color:var(--muted)">Failed to load</div>'; }
+}
+
+// ═══ Send Message ═══
+function sendMessage() {
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();
+  if(!text||!ws||ws.readyState!==WebSocket.OPEN) return;
+  input.value=''; input.style.height='auto';
+
+  const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  addMessage(currentChannel, {sender:'You',text,emoji:'👤',time:now});
+
+  if(currentChannel==='general') {
+    // Broadcast to all installed agents
+    getInstalledAgents().forEach(agent=>{
+      ws.send(JSON.stringify({type:'chat',agentPkg:agent.name,message:text,sessionKey:agentSessions[agent.name]||null}));
+    });
+  } else if(currentChannel.startsWith('dm-')) {
+    // DM to specific agent
+    const agentId=currentChannel.slice(3);
+    const agent=agents.find(a=>getAgentId(a)===agentId);
+    if(agent) {
+      ws.send(JSON.stringify({type:'chat',agentPkg:agent.name,message:text,sessionKey:agentSessions[agent.name]||null}));
+    }
   }
+}
 
-  // Step 1: Creating workspace
-  advanceStep();
-  await sleep(800);
+function addMessage(channel, msg) {
+  if(!channelMessages[channel]) channelMessages[channel]=[];
+  channelMessages[channel].push(msg);
+  if(channel===currentChannel) renderCurrentChannel();
+  saveMessages();
 
-  // Step 2: Installing personality
-  advanceStep();
-
-  // Actually install
-  try {
-    const res=await fetch(`${LOCAL}/api/agents/${agentName}/install`,{method:'POST'});
-    const data=await res.json();
-    if(!data.ok) throw new Error(data.error);
-  } catch(e) {
-    alert('Hire failed: '+e.message);
-    showHireView('hireBrowse');
-    return;
+  // Update badge on nav item if not current channel
+  if(channel!==currentChannel) {
+    const navItem=document.querySelector(`.nav-item[data-channel="${channel}"]`);
+    if(navItem && !navItem.querySelector('.nav-badge')) {
+      const badge=document.createElement('span');
+      badge.className='nav-badge';
+      badge.textContent='•';
+      navItem.appendChild(badge);
+    }
   }
-
-  await sleep(600);
-  // Step 3: Configuring tools
-  advanceStep();
-  await sleep(800);
-
-  // Step 4: Booting agent
-  advanceStep();
-  await sleep(1000);
-
-  // Final step done
-  const last=document.getElementById(steps[3]);
-  if(last){last.classList.remove('active');last.classList.add('done');last.querySelector('.ob-check').textContent='✓';}
-  bar.style.width='100%';
-
-  await sleep(500);
-
-  // Clear onboarding content then show celebration
-  document.getElementById('hireOnboarding').innerHTML='';
-  showCelebration(agent);
 }
 
-function showCelebration(agent) {
-  const name=agent?.displayName||agent?.name||'Agent';
-  document.getElementById('hireModalTitle').textContent='🎉 Welcome!';
-
-  document.getElementById('hireCelebration').innerHTML=`
-    <div class="cel-emoji">${agent?.emoji||'🤖'}</div>
-    <h2>${name} has joined the team!</h2>
-    <p>They're at their desk and ready to work. Say hi in the team chat!</p>
-    <button class="cel-btn" onclick="finishHiring()">Go to HQ →</button>
-  `;
-  showHireView('hireCelebration');
-
-  // Confetti!
-  spawnConfetti();
-
-  // Reload agents in background
-  loadAgents().then(()=>updateUpsell());
-}
-
-function finishHiring() {
-  closeHireModal();
-  // Desk already updated from loadAgents()
-  addSystemMsg('🎉 New team member is at their desk!');
-}
-
-function spawnConfetti() {
-  const container=document.createElement('div');
-  container.className='confetti';
-  document.body.appendChild(container);
-  const colors=['#fbbf24','#22c55e','#3b82f6','#ef4444','#a78bfa','#f472b6'];
-  for(let i=0;i<60;i++){
-    const piece=document.createElement('div');
-    piece.className='confetti-piece';
-    piece.style.left=Math.random()*100+'%';
-    piece.style.background=colors[Math.floor(Math.random()*colors.length)];
-    piece.style.animationDelay=Math.random()*1+'s';
-    piece.style.animationDuration=(1.5+Math.random()*1.5)+'s';
-    container.appendChild(piece);
-  }
-  setTimeout(()=>container.remove(),4000);
-}
-
-function formatPrice(p) {
-  if(!p||p==='FREE') return 'FREE';
-  if(typeof p==='object') return `$${p.amount}/${p.interval}`;
-  return p;
-}
-
-function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-
-// ═══ Fire Agent ═══
-function fireAgent(agentName) {
-  const agent=agents.find(a=>a.name===agentName);
-  const name=agent?.displayName||agentName;
-  const emoji=agent?.emoji||'🤖';
-
-  document.getElementById('confirmBox').innerHTML=`
-    <div class="conf-emoji">${emoji}</div>
-    <h3>Remove ${esc(name)}?</h3>
-    <p>They'll leave your team but their workspace and memory files will be kept. You can always hire them back later.</p>
-    <div class="conf-btns">
-      <button class="conf-btn conf-cancel" onclick="document.getElementById('confirmOverlay').classList.remove('open')">Keep on Team</button>
-      <button class="conf-btn conf-danger" onclick="doFireAgent('${agentName}')">Remove Agent</button>
-    </div>
-  `;
-  document.getElementById('confirmOverlay').classList.add('open');
-}
-
-async function doFireAgent(agentName) {
-  document.getElementById('confirmOverlay').classList.remove('open');
-  const agent=agents.find(a=>a.name===agentName);
-  const name=agent?.displayName||agentName;
-  try {
-    const res=await fetch(`${LOCAL}/api/agents/${agentName}/fire`,{method:'POST'});
-    const data=await res.json();
-    if(data.ok) { addSystemMsg(`👋 ${name} has left the team.`); setTimeout(()=>{loadAgents();updateUpsell()},2000); }
-    else throw new Error(data.error);
-  } catch(e) { alert('Failed to remove: '+e.message); }
+function addSystemMessage(channel, text) {
+  addMessage(channel, {system:true, text});
 }
 
 // ═══ WebSocket ═══
 function connectWS() {
   if(ws&&ws.readyState===WebSocket.OPEN) return;
   ws=new WebSocket(`ws://${location.host}`);
-  ws.onopen=()=>{updateStatus(true);ws.send(JSON.stringify({type:'identify',clientId:CLIENT_ID}));};
-  ws.onclose=()=>{updateStatus(false);setTimeout(connectWS,3000)};
-  ws.onmessage=e=>{try{handleMsg(JSON.parse(e.data))}catch(err){console.error(err)}};
+  ws.onopen=()=>{setGatewayStatus(true);ws.send(JSON.stringify({type:'identify',clientId:CLIENT_ID}));};
+  ws.onclose=()=>{setGatewayStatus(false);setTimeout(connectWS,3000);};
+  ws.onmessage=e=>{try{handleWsMsg(JSON.parse(e.data))}catch(err){console.error(err)}};
 }
-function handleMsg(msg) {
-  if(msg.type==='status') updateStatus(msg.connected);
-  if(msg.type==='chat-delta') onDelta(msg);
-  if(msg.type==='chat-final') onFinal(msg);
+
+function handleWsMsg(msg) {
+  if(msg.type==='status') setGatewayStatus(msg.connected);
+  if(msg.type==='chat-delta') onChatDelta(msg);
+  if(msg.type==='chat-final') onChatFinal(msg);
 }
-function onDelta(msg) {
+
+function onChatDelta(msg) {
   const text=extractText(msg.message); if(!text) return;
-  // chat-delta contains FULL cumulative text, not incremental
   streamBuffers[msg.runId]=text;
-  if(msg.sessionKey) sessions[msg.agentPkg]=msg.sessionKey;
+  if(msg.sessionKey) agentSessions[msg.agentPkg]=msg.sessionKey;
   const agent=agents.find(a=>a.name===msg.agentPkg);
-  const id=agent?.agentId||msg.agentPkg.replace(/-agent$/,'');
-  showTyping(agent?.displayName||id);
-  const bubble=document.getElementById(`bubble-${id}`);
-  if(bubble){bubble.textContent=(streamBuffers[msg.runId]||'').slice(-60);bubble.classList.add('visible');}
-  const dot=document.getElementById(`dot-${id}`);
-  if(dot) dot.className='status-dot busy';
+  const name=agent?.displayName||msg.agentPkg;
+  showTyping(name);
+
+  // Update sidebar status
+  const id=getAgentId(agent||{name:msg.agentPkg});
+  const dot=document.getElementById(`sidebar-dot-${id}`);
+  if(dot) dot.className='status-indicator busy';
 }
-function onFinal(msg) {
+
+function onChatFinal(msg) {
   const text=streamBuffers[msg.runId]||extractText(msg.message);
   delete streamBuffers[msg.runId];
-  if(msg.sessionKey) sessions[msg.agentPkg]=msg.sessionKey;
+  if(msg.sessionKey) agentSessions[msg.agentPkg]=msg.sessionKey;
   const agent=agents.find(a=>a.name===msg.agentPkg);
-  const id=agent?.agentId||msg.agentPkg.replace(/-agent$/,'');
-  if(text){addChatMsg(agent?.displayName||id,text,agent?.emoji||'🤖');saveChat();}
-  hideTyping();
-  const bubble=document.getElementById(`bubble-${id}`);
-  if(bubble) setTimeout(()=>bubble.classList.remove('visible'),3000);
-  const dot=document.getElementById(`dot-${id}`);
-  if(dot) dot.className='status-dot online';
-}
-function extractText(m){if(typeof m==='string')return m;if(Array.isArray(m))return m.filter(p=>p.type==='text').map(p=>p.text).join('');if(m?.content)return extractText(m.content);return m?.text||'';}
-
-// ═══ Chat ═══
-function sendMessage(){
-  const input=document.getElementById('chatInput');const text=input.value.trim();
-  if(!text||!ws||ws.readyState!==WebSocket.OPEN)return;
-  input.value=''; addChatMsg('You',text,'👤');
-  agents.filter(isInstalled).forEach(agent=>{
-    ws.send(JSON.stringify({type:'chat',agentPkg:agent.name,message:text,sessionKey:sessions[agent.name]||null}));
-  });
-  saveChat();
-}
-function addChatMsg(sender,text,emoji){
-  const c=document.getElementById('messages');const el=document.createElement('div');el.className='msg';
+  const name=agent?.displayName||msg.agentPkg;
+  const emoji=agent?.emoji||'🤖';
+  const id=getAgentId(agent||{name:msg.agentPkg});
   const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  const color=sender==='You'?'var(--accent)':'var(--green)';
-  let html=esc(text).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>');
-  el.innerHTML=`<span class="time">${now}</span><span class="sender" style="color:${color}">${emoji} ${sender}</span><span class="content">${html}</span>`;
-  c.appendChild(el);c.scrollTop=c.scrollHeight;
-}
-function addSystemMsg(text){const c=document.getElementById('messages');const el=document.createElement('div');el.className='msg-system';el.textContent=text;c.appendChild(el);c.scrollTop=c.scrollHeight;}
-function showTyping(name){document.getElementById('typingWho').textContent=name;document.getElementById('typingLine').classList.add('active');}
-function hideTyping(){document.getElementById('typingLine').classList.remove('active');}
-function saveChat(){localStorage.setItem('hq-chat',document.getElementById('messages').innerHTML);localStorage.setItem('hq-sessions',JSON.stringify(sessions));}
-function loadChat(){const s=localStorage.getItem('hq-chat');if(s)document.getElementById('messages').innerHTML=s;const ss=localStorage.getItem('hq-sessions');if(ss)sessions=JSON.parse(ss);document.getElementById('messages').scrollTop=document.getElementById('messages').scrollHeight;}
 
-// ═══ Meeting ═══
-function startMeeting(){document.getElementById('startBtn').style.display='none';document.getElementById('endBtn').style.display='block';addSystemMsg('🎙️ Team standup started');const inp=document.getElementById('chatInput');const old=inp.value;inp.value="Quick standup: What are you working on? Any blockers? Keep it brief.";sendMessage();inp.value=old;}
-function endMeeting(){document.getElementById('startBtn').style.display='block';document.getElementById('endBtn').style.display='none';addSystemMsg('🎙️ Standup ended');}
+  hideTyping();
+
+  // Reset sidebar status
+  const dot=document.getElementById(`sidebar-dot-${id}`);
+  if(dot) dot.className='status-indicator online';
+
+  if(text) {
+    // Add to #general
+    addMessage('general', {sender:name,text,emoji,time:now,agentId:id});
+    // Also add to DM channel
+    addMessage(`dm-${id}`, {sender:name,text,emoji,time:now,agentId:id});
+  }
+}
+
+function extractText(m) {
+  if(typeof m==='string') return m;
+  if(Array.isArray(m)) return m.filter(p=>p.type==='text').map(p=>p.text).join('');
+  if(m?.content) return extractText(m.content);
+  return m?.text||'';
+}
+
+function showTyping(name) {
+  document.getElementById('typingBar').innerHTML=`${esc(name)} is typing<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>`;
+}
+function hideTyping() { document.getElementById('typingBar').innerHTML=''; }
+
+// ═══ Office ═══
+function toggleOffice() {
+  officeOpen=!officeOpen;
+  document.getElementById('officePanel').classList.toggle('open',officeOpen);
+  document.getElementById('officeToggle').classList.toggle('active',officeOpen);
+}
+
+function renderOfficeDesks() {
+  const area=document.getElementById('officeDesks');
+  const installed=getInstalledAgents();
+  area.innerHTML=installed.map(a=>{
+    const id=getAgentId(a);
+    return `<div class="office-desk" onclick="switchChannel('dm-${id}')">
+      <div class="od-avatar">${a.emoji||'🤖'}<div class="od-dot"></div></div>
+      <div class="od-name">${(a.displayName||a.name).split(' ')[0]}</div>
+      <div class="od-table"></div>
+    </div>`;
+  }).join('')+`<div class="office-desk" onclick="openHireModal()" style="opacity:0.4">
+    <div class="od-avatar" style="border-style:dashed;border-color:var(--accent)">+</div>
+    <div class="od-name" style="color:var(--accent)">Hire</div>
+  </div>`;
+}
+
+function setupCat() {
+  const cat=document.getElementById('officeCat');
+  const faces=['😺','😸','😹','😻','😼','😽','🙀','😿','😾'];
+  let i=0;
+  cat?.addEventListener('click',()=>{i=(i+1)%faces.length;cat.textContent=faces[i];});
+}
+
+// ═══ Agent Detail ═══
+async function openAgentDetail(agentName) {
+  const agent=agents.find(a=>a.name===agentName);
+  if(!agent) return;
+  document.getElementById('detailTitle').innerHTML=`${agent.emoji||'🤖'} ${agent.displayName||agent.name}`;
+  document.getElementById('detailModal').classList.add('open');
+
+  // Reset
+  document.getElementById('secTimeline').innerHTML='<div style="padding:20px;color:var(--muted);font-size:13px">Loading...</div>';
+  document.getElementById('statSessions').textContent='-';
+  document.getElementById('statMessages').textContent='-';
+  document.getElementById('statTools').textContent='-';
+  switchDetailTab('timeline');
+
+  try {
+    const res=await fetch(`${LOCAL}/api/agents/${agentName}/activity`);
+    const data=await res.json();
+    renderDetail(data);
+  } catch { document.getElementById('secTimeline').innerHTML='<div style="padding:20px;color:var(--muted)">Failed to load</div>'; }
+}
+
+function renderDetail(data) {
+  const {sessions:sess,history}=data;
+  document.getElementById('statSessions').textContent=sess.length;
+  let msgCount=0,toolCount=0;
+
+  const el=document.getElementById('secTimeline');
+  if(!history?.length) { el.innerHTML='<div style="padding:20px;color:var(--muted);font-size:13px">No recent activity</div>'; }
+  else {
+    let html='';
+    for(const msg of history) {
+      const role=msg.role||'unknown', text=msg.text||'', tools=msg.toolCalls||[];
+      const time=msg.timestamp?new Date(msg.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
+      if(role==='assistant') {
+        msgCount++;
+        for(const tc of tools) {
+          toolCount++;
+          html+=`<div class="timeline-item"><div class="tl-icon tool">🔧</div><div class="tl-body">
+            <div class="tl-title">Tool <span class="tool-tag">${esc(tc.name||'tool')}</span></div>
+            <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc((tc.input||'').slice(0,200))}</div>
+            <div class="tl-time">${time}</div></div></div>`;
+        }
+        if(text) {
+          html+=`<div class="timeline-item"><div class="tl-icon msg">💬</div><div class="tl-body">
+            <div class="tl-title">Message</div>
+            <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc(text.slice(0,300))}</div>
+            <div class="tl-time">${time}</div></div></div>`;
+        }
+      } else if(role==='user' && text) {
+        html+=`<div class="timeline-item"><div class="tl-icon sys">👤</div><div class="tl-body">
+          <div class="tl-title">Input</div>
+          <div class="tl-preview" onclick="this.classList.toggle('expanded')">${esc(text.slice(0,200))}</div>
+          <div class="tl-time">${time}</div></div></div>`;
+      }
+    }
+    el.innerHTML=html||'<div style="padding:20px;color:var(--muted)">No activity</div>';
+  }
+  document.getElementById('statMessages').textContent=msgCount;
+  document.getElementById('statTools').textContent=toolCount;
+
+  const sl=document.getElementById('sessionsList');
+  sl.innerHTML=sess.map(s=>`<div class="session-card">
+    <div class="sc-header"><span class="sc-label">${esc(s.label||s.key?.split(':').pop()||'session')}</span><span class="sc-kind">${s.kind||'chat'}</span></div>
+    <div class="sc-time">${s.updatedAt?timeAgo(new Date(s.updatedAt)):''}</div>
+  </div>`).join('')||'<div style="padding:20px;color:var(--muted)">No sessions</div>';
+}
+
+function closeDetail() { document.getElementById('detailModal').classList.remove('open'); }
+
+function switchDetailTab(tab) {
+  document.querySelectorAll('.detail-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='timeline')||(i===1&&tab==='sessions')));
+  document.getElementById('secTimeline').classList.toggle('active',tab==='timeline');
+  document.getElementById('secSessions').classList.toggle('active',tab==='sessions');
+}
+
+// ═══ Hire Modal ═══
+function openHireModal() {
+  document.getElementById('hireTitle').textContent='⚡ Hire an Agent';
+  renderHireList();
+  showHireView('hireBrowse');
+  document.getElementById('hireModal').classList.add('open');
+}
+function closeHireModal() { document.getElementById('hireModal').classList.remove('open'); }
+
+function showHireView(id) {
+  ['hireBrowse','hireDetailView','hireOnboarding','hireCelebration'].forEach(v=>{
+    document.getElementById(v).classList.toggle('view-hidden',v!==id);
+  });
+}
+
+function renderHireList() {
+  const el=document.getElementById('hireBrowse');
+  el.innerHTML=agents.map(a=>{
+    const inst=isInstalled(a);
+    const price=formatPrice(a.price);
+    const pc=(!a.price||a.price==='FREE')?'free':'paid';
+    return `<div class="hire-card ${inst?'on-team':''}" onclick="${inst?'':`showHireDetail('${a.name}')`}">
+      <div class="hc-top">
+        <div class="hc-emoji">${a.emoji||'🤖'}</div>
+        <div class="hc-meta"><div class="hc-name">${a.displayName||a.name}</div><div class="hc-title">${a.title||''}</div></div>
+        ${inst?'<span class="on-team-badge">✓ Hired</span>':`<span class="hc-price ${pc}">${price}</span>`}
+      </div>
+      <div class="hc-desc">${a.description||''}</div>
+    </div>`;
+  }).join('');
+}
+
+function showHireDetail(name) {
+  const a=agents.find(x=>x.name===name); if(!a) return;
+  document.getElementById('hireTitle').textContent='Agent Details';
+  const price=formatPrice(a.price);
+  const pc=(!a.price||a.price==='FREE')?'free':'paid';
+  document.getElementById('hireDetailView').innerHTML=`<div class="hire-detail-view">
+    <button class="hd-back" onclick="showHireView('hireBrowse');document.getElementById('hireTitle').textContent='⚡ Hire an Agent'">← Back</button>
+    <div class="hd-hero"><div class="hd-emoji">${a.emoji||'🤖'}</div><div class="hd-name">${a.displayName||a.name}</div><div class="hd-title">${a.title||''}</div></div>
+    <div class="hd-section"><h3>About</h3><p>${a.description||'Ready to join your team.'}</p></div>
+    ${(a.skills||[]).length?`<div class="hd-section"><h3>Skills</h3><div class="hd-skills">${a.skills.map(s=>`<span class="hd-skill">${esc(s)}</span>`).join('')}</div></div>`:''}
+    <button class="hd-hire-btn" onclick="startOnboarding('${a.name}')">Hire ${a.displayName||a.name} →</button>
+  </div>`;
+  showHireView('hireDetailView');
+}
+
+async function startOnboarding(name) {
+  const a=agents.find(x=>x.name===name);
+  const dn=a?.displayName||name;
+  document.getElementById('hireTitle').textContent='Onboarding';
+  document.getElementById('hireOnboarding').innerHTML=`<div class="onboarding-view">
+    <div class="ob-emoji">${a?.emoji||'🤖'}</div>
+    <div class="ob-title">Hiring ${dn}...</div>
+    <div class="ob-subtitle">Setting up workspace and tools</div>
+    <div class="ob-steps">
+      <div class="ob-step active" id="ob1"><span class="ob-check">⏳</span> Creating workspace</div>
+      <div class="ob-step" id="ob2"><span class="ob-check">○</span> Installing personality</div>
+      <div class="ob-step" id="ob3"><span class="ob-check">○</span> Configuring tools</div>
+      <div class="ob-step" id="ob4"><span class="ob-check">○</span> Booting agent</div>
+    </div>
+    <div class="ob-progress"><div class="ob-bar" id="obBar"></div></div>
+  </div>`;
+  showHireView('hireOnboarding');
+
+  const steps=['ob1','ob2','ob3','ob4'];
+  let step=0;
+  function advance() {
+    if(step>0){const p=document.getElementById(steps[step-1]);if(p){p.classList.remove('active');p.classList.add('done');p.querySelector('.ob-check').textContent='✓';}}
+    if(step<4){const c=document.getElementById(steps[step]);if(c){c.classList.add('active');c.querySelector('.ob-check').textContent='⏳';}document.getElementById('obBar').style.width=((step+1)/4*100)+'%';}
+    step++;
+  }
+
+  advance(); await sleep(800);
+  advance();
+  try { const r=await fetch(`${LOCAL}/api/agents/${name}/install`,{method:'POST'}); const d=await r.json(); if(!d.ok) throw new Error(d.error); } catch(e) { alert('Failed: '+e.message); showHireView('hireBrowse'); return; }
+  await sleep(600); advance(); await sleep(800); advance(); await sleep(1000);
+  const last=document.getElementById('ob4'); if(last){last.classList.remove('active');last.classList.add('done');last.querySelector('.ob-check').textContent='✓';}
+  document.getElementById('obBar').style.width='100%';
+  await sleep(500);
+  showCelebration(a);
+}
+
+function showCelebration(a) {
+  const dn=a?.displayName||a?.name||'Agent';
+  document.getElementById('hireTitle').textContent='🎉 Welcome!';
+  document.getElementById('hireCelebration').innerHTML=`<div class="celebration-view">
+    <div class="cel-emoji">${a?.emoji||'🤖'}</div>
+    <h2>${dn} joined the team!</h2>
+    <p>They're ready to work. Send them a DM to get started!</p>
+    <button class="cel-btn" onclick="finishHiring('${getAgentId(a)}')">Go to DM →</button>
+  </div>`;
+  showHireView('hireCelebration');
+  spawnConfetti();
+  loadAgents();
+}
+
+function finishHiring(agentId) {
+  closeHireModal();
+  switchChannel(`dm-${agentId}`);
+  addSystemMessage('general', '🎉 New team member hired!');
+}
+
+function spawnConfetti() {
+  const c=document.createElement('div');c.className='confetti';document.body.appendChild(c);
+  const colors=['#f0b429','#34d399','#60a5fa','#f87171','#a78bfa','#f472b6'];
+  for(let i=0;i<50;i++){const p=document.createElement('div');p.className='confetti-piece';p.style.left=Math.random()*100+'%';p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.animationDelay=Math.random()+'s';p.style.animationDuration=(1.5+Math.random()*1.5)+'s';c.appendChild(p);}
+  setTimeout(()=>c.remove(),4000);
+}
+
+// ═══ Fire Agent ═══
+function fireAgent(name) {
+  const a=agents.find(x=>x.name===name);
+  document.getElementById('confirmBox').innerHTML=`
+    <div class="conf-emoji">${a?.emoji||'🤖'}</div>
+    <h3>Remove ${esc(a?.displayName||name)}?</h3>
+    <p>They'll leave but their workspace is kept. You can hire them back later.</p>
+    <div class="conf-btns">
+      <button class="conf-btn conf-cancel" onclick="document.getElementById('confirmOverlay').classList.remove('open')">Keep</button>
+      <button class="conf-btn conf-danger" onclick="doFire('${name}')">Remove</button>
+    </div>`;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+async function doFire(name) {
+  document.getElementById('confirmOverlay').classList.remove('open');
+  try { const r=await fetch(`${LOCAL}/api/agents/${name}/fire`,{method:'POST'}); const d=await r.json(); if(d.ok){addSystemMessage('general','👋 Agent removed.');setTimeout(()=>loadAgents(),2000);}} catch(e){alert(e.message);}
+}
+
+// ═══ Input Handling ═══
+function setupInputHandlers() {
+  const input=document.getElementById('chatInput');
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+  });
+  // Auto-resize
+  input.addEventListener('input',()=>{
+    input.style.height='auto';
+    input.style.height=Math.min(input.scrollHeight,120)+'px';
+  });
+}
+
+// ═══ Persistence ═══
+function saveMessages() {
+  localStorage.setItem('hq-messages',JSON.stringify(channelMessages));
+  localStorage.setItem('hq-sessions',JSON.stringify(agentSessions));
+}
+function loadSavedMessages() {
+  try { const m=JSON.parse(localStorage.getItem('hq-messages')||'{}'); Object.assign(channelMessages,m); } catch{}
+  try { const s=JSON.parse(localStorage.getItem('hq-sessions')||'{}'); Object.assign(agentSessions,s); } catch{}
+}
+
+// ═══ Waitlist ═══
+async function submitWaitlist() {
+  const email=document.getElementById('wlEmail').value.trim();
+  if(!email||!email.includes('@')) return alert('Enter a valid email.');
+  try{await fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,source:'hq',timestamp:new Date().toISOString()})});}catch{}
+  document.getElementById('wlForm').style.display='none';
+  document.getElementById('wlSuccess').classList.add('show');
+}
 
 // ═══ Helpers ═══
-function updateStatus(on){const b=document.getElementById('statusBadge');b.textContent=on?'● Online':'● Offline';b.className=`badge ${on?'online':'offline'}`;}
-function updateClock(){const now=new Date();document.getElementById('clock').textContent=now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});const h=now.getHours()%12;const clocks=['🕛','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚'];const el=document.getElementById('wallClock');if(el)el.textContent=clocks[h];}
-function updateMeetingParts(){const online=agents.filter(isInstalled);document.getElementById('meetingParts').textContent=online.length>0?`${online.map(a=>a.emoji||'🤖').join(' ')} ${online.length} agent${online.length>1?'s':''} ready`:'No agents online';}
-function updateUpsell(){const c=agents.filter(isInstalled).length;const a=agents.length-c;document.getElementById('upsellDesc').textContent=a>0?`${a} more agent${a>1?'s':''} available`:'Hire from the marketplace';}
-function setupInput(){document.getElementById('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});}
-function setupCat(){const cat=document.getElementById('officeCat');const f=['😺','😸','😹','😻','😼','😽','🙀','😿','😾'];let i=0;cat.addEventListener('click',()=>{i=(i+1)%f.length;cat.textContent=f[i];});}
-function timeAgo(d){const s=Math.floor((Date.now()-d.getTime())/1000);if(s<60)return'just now';if(s<3600)return`${Math.floor(s/60)}m ago`;if(s<86400)return`${Math.floor(s/3600)}h ago`;return`${Math.floor(s/86400)}d ago`;}
-function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
-async function submitWaitlist(){const email=document.getElementById('waitlistEmail').value.trim();if(!email||!email.includes('@'))return alert('Enter a valid email.');try{await fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,source:'hq',timestamp:new Date().toISOString()})});}catch{const l=JSON.parse(localStorage.getItem('waitlist-emails')||'[]');l.push({email,timestamp:new Date().toISOString()});localStorage.setItem('waitlist-emails',JSON.stringify(l));}document.getElementById('waitlistForm').style.display='none';document.getElementById('waitlistSuccess').classList.add('show');}
+function formatPrice(p){if(!p||p==='FREE')return'FREE';if(typeof p==='object')return`$${p.amount}/${p.interval}`;return p;}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function timeAgo(d){const s=Math.floor((Date.now()-d)/1000);if(s<60)return'just now';if(s<3600)return`${Math.floor(s/60)}m ago`;if(s<86400)return`${Math.floor(s/3600)}h ago`;return`${Math.floor(s/86400)}d ago`;}
+function esc(t){const d=document.createElement('div');d.textContent=t||'';return d.innerHTML;}
+function renderMarkdown(t) {
+  return esc(t).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank">$1</a>');
+}
 
 init();
 </script>

@@ -1,0 +1,23 @@
+{
+  "name": "sales-agent",
+  "agentId": "sales",
+  "displayName": "Sales",
+  "version": "1.0.0",
+  "emoji": "💰",
+  "title": "Pipeline Builder",
+  "description": "Finds startups that need AI agents, researches them deeply, builds your CRM, and drafts personalized outreach. Thinks like a detective, not a spammer.",
+  "creator": "@hopper",
+  "creatorUrl": "https://x.com/Hopper1430990",
+  "price": { "amount": 12, "currency": "USD", "interval": "month" },
+  "skills": ["yc-cold-outreach", "closing-deals", "linkedin-api"],
+  "tags": ["sales", "pipeline", "outreach", "crm", "research"],
+  "stats": {
+    "prospect_research": 9,
+    "personalization": 8,
+    "crm_management": 8,
+    "outreach_quality": 8,
+    "market_intelligence": 7,
+    "deal_closing": 7
+  },
+  "minOpenClawVersion": "0.1.0"
+}

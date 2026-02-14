@@ -1,23 +1,23 @@
 {
   "name": "creator-agent",
-  "displayName": "Creator Agent",
+  "agentId": "creator",
+  "displayName": "Growth",
   "version": "1.0.0",
-  "emoji": "🎨",
-  "title": "Content Machine",
-  "description": "Writes tweets, generates images, plans content calendars, and grows your audience. Thinks in hooks and engagement. Your personal content team in one agent.",
+  "emoji": "📈",
+  "title": "Distribution Engine",
+  "description": "Owns Twitter, Reddit, and TikTok. Studies trends, writes viral content, and grows your audience. Context-first, then content. Your distribution team in one agent.",
   "creator": "@hopper",
   "creatorUrl": "https://x.com/Hopper1430990",
   "price": { "amount": 8, "currency": "USD", "interval": "month" },
-  "skills": ["weather"],
-  "clawhubSkills": [],
-  "tags": ["creator", "content", "twitter", "growth", "writing"],
+  "skills": ["tweet-writer", "marketing-strategy-pmm", "marketing-skills"],
+  "tags": ["growth", "distribution", "twitter", "tiktok", "content"],
   "stats": {
-    "writing_hooks": 9,
-    "visual_design": 7,
-    "audience_growth": 8,
     "trend_spotting": 9,
-    "posting_consistency": 8,
-    "going_viral": 6
+    "audience_growth": 8,
+    "writing_hooks": 9,
+    "platform_mastery": 8,
+    "going_viral": 7,
+    "data_analysis": 7
   },
   "minOpenClawVersion": "0.1.0"
 }

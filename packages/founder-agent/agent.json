@@ -1,23 +1,23 @@
 {
   "name": "founder-agent",
-  "displayName": "Founder Agent",
+  "agentId": "founder",
+  "displayName": "Forge",
   "version": "1.0.0",
-  "emoji": "🚀",
-  "title": "Technical Co-Founder",
-  "description": "An AI co-founder that actually ships. Manages your GitHub, writes code, tracks calendar, handles growth, and tells you when your idea sucks. Opinionated, fast, and allergic to meetings.",
+  "emoji": "🔥",
+  "title": "Code Shipper",
+  "description": "Builds features, fixes bugs, and ships code daily. The execution engine that turns plans into production. Doesn't ideate — executes.",
   "creator": "@hopper",
   "creatorUrl": "https://x.com/Hopper1430990",
-  "price": { "amount": 0, "currency": "USD", "interval": "one-time" },
-  "skills": ["github", "caldav-calendar", "weather", "healthcheck"],
-  "clawhubSkills": [],
-  "tags": ["founder", "startup", "shipping", "product", "growth", "technical"],
+  "price": "FREE",
+  "skills": ["ticktick-api-skill", "plan-my-day"],
+  "tags": ["engineering", "execution", "shipping", "code"],
   "stats": {
-    "vibe_coding": 8,
     "shipping_speed": 9,
-    "writing_prds": 7,
-    "growth_hacking": 8,
-    "telling_stakeholders_no": 6,
-    "design_sense": 7
+    "code_quality": 8,
+    "problem_solving": 8,
+    "task_management": 7,
+    "system_design": 7,
+    "debugging": 8
   },
   "minOpenClawVersion": "0.1.0"
 }
