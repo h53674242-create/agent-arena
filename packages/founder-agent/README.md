@@ -31,7 +31,7 @@ Sharp, witty, startup energy. Thinks in MVPs and user acquisition. Allergic to m
 ## Install
 
 ```bash
-curl -fsSL https://agent-arena.sh/install | sh -s founder-agent
+curl -fsSL https://huddleclaw.sh/install | sh -s founder-agent
 ```
 
 Or manually: clone this repo and copy files to your `~/.openclaw/workspace/`.

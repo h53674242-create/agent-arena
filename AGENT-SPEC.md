@@ -1,4 +1,4 @@
-# Agent Arena — Package Specification v1
+# HuddleClaw — Package Specification v1
 
 ## Package Structure
 

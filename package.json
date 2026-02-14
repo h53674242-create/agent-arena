@@ -1,5 +1,5 @@
 {
-  "name": "agent-arena",
+  "name": "huddleclaw",
   "version": "1.0.0",
   "description": "",
   "main": "openclaw-bridge.js",
@@ -9,15 +9,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/h53674242-create/agent-arena.git"
+    "url": "git+https://github.com/h53674242-create/huddleclaw.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/h53674242-create/agent-arena/issues"
+    "url": "https://github.com/h53674242-create/huddleclaw/issues"
   },
-  "homepage": "https://github.com/h53674242-create/agent-arena#readme",
+  "homepage": "https://github.com/h53674242-create/huddleclaw#readme",
   "dependencies": {
     "ws": "^8.19.0"
   }

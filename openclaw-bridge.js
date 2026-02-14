@@ -1,11 +1,11 @@
 /**
- * Agent Arena ↔ OpenClaw Bridge
+ * HuddleClaw ↔ OpenClaw Bridge
  * Connects our HQ UI to the local OpenClaw gateway via WebSocket.
  *
  * Usage:
  *   const bridge = new OpenClawBridge();
  *   bridge.connect().then(() => {
- *     bridge.sendMessage("Hello from Agent Arena!");
+ *     bridge.sendMessage("Hello from HuddleClaw!");
  *     bridge.onMessage((msg) => console.log('Agent:', msg));
  *   });
  */

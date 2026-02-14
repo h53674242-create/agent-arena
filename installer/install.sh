@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Agent Arena Installer
-# Usage: curl -fsSL https://agent-arena.sh/install | sh -s <agent-name>
+# HuddleClaw Installer
+# Usage: curl -fsSL https://huddleclaw.sh/install | sh -s <agent-name>
 #   or:  ./install.sh <agent-name> [--from <path-or-url>]
 
 VERSION="0.1.0"
 WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
-BACKUP_DIR="$WORKSPACE/.agent-arena-backup/$(date +%Y%m%d-%H%M%S)"
+BACKUP_DIR="$WORKSPACE/.huddleclaw-backup/$(date +%Y%m%d-%H%M%S)"
 
 # Colors
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; CYAN='\033[0;36m'
@@ -15,7 +15,7 @@ BOLD='\033[1m'; DIM='\033[2m'; RESET='\033[0m'
 
 banner() {
   echo ""
-  echo -e "${YELLOW}${BOLD}  ⚡ AGENT ARENA ⚡${RESET}"
+  echo -e "${YELLOW}${BOLD}  ⚡ HUDDLECLAW ⚡${RESET}"
   echo -e "${DIM}  Hire AI. Ship Product. v${VERSION}${RESET}"
   echo ""
 }
@@ -48,14 +48,14 @@ elif [[ -d "./packages/$AGENT_NAME" ]]; then
   PACKAGE_DIR="./packages/$AGENT_NAME"
 else
   # Download from GitHub
-  REPO_URL="https://github.com/h53674242-create/agent-arena"
-  info "Downloading ${AGENT_NAME} from Agent Arena..."
+  REPO_URL="https://github.com/h53674242-create/huddleclaw"
+  info "Downloading ${AGENT_NAME} from HuddleClaw..."
   TMP_DIR=$(mktemp -d)
   trap "rm -rf $TMP_DIR" EXIT
   if command -v curl &>/dev/null; then
-    curl -fsSL "${REPO_URL}/archive/refs/heads/main.tar.gz" -o "$TMP_DIR/repo.tar.gz" || fail "Could not download from Agent Arena"
+    curl -fsSL "${REPO_URL}/archive/refs/heads/main.tar.gz" -o "$TMP_DIR/repo.tar.gz" || fail "Could not download from HuddleClaw"
     tar -xzf "$TMP_DIR/repo.tar.gz" -C "$TMP_DIR" || fail "Could not extract archive"
-    PACKAGE_DIR="$TMP_DIR/agent-arena-main/packages/$AGENT_NAME"
+    PACKAGE_DIR="$TMP_DIR/huddleclaw-main/packages/$AGENT_NAME"
   elif command -v git &>/dev/null; then
     git clone --depth 1 "$REPO_URL" "$TMP_DIR/repo" 2>/dev/null || fail "Could not download agent"
     PACKAGE_DIR="$TMP_DIR/repo/packages/$AGENT_NAME"
@@ -85,7 +85,7 @@ for f in SOUL.md AGENTS.md TOOLS.md HEARTBEAT.md MEMORY.md; do
 done
 
 if $NEEDS_BACKUP; then
-  warn "Existing workspace files found — backing up to .agent-arena-backup/"
+  warn "Existing workspace files found — backing up to .huddleclaw-backup/"
   mkdir -p "$BACKUP_DIR"
   for f in SOUL.md AGENTS.md TOOLS.md HEARTBEAT.md MEMORY.md USER.md; do
     [[ -f "$WORKSPACE/$f" ]] && cp "$WORKSPACE/$f" "$BACKUP_DIR/$f"
@@ -148,8 +148,8 @@ for skill in $CH_SKILLS; do
 done
 
 # Store agent metadata
-mkdir -p "$WORKSPACE/.agent-arena"
-cp "$PACKAGE_DIR/agent.json" "$WORKSPACE/.agent-arena/current-agent.json"
+mkdir -p "$WORKSPACE/.huddleclaw"
+cp "$PACKAGE_DIR/agent.json" "$WORKSPACE/.huddleclaw/current-agent.json"
 ok "Agent metadata saved"
 
 # Restart gateway if running

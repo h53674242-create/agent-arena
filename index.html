@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦞</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agent Arena — Hire AI Agents That Actually Work</title>
+<title>HuddleClaw — Hire AI Agents That Actually Work</title>
 <meta name="description" content="Pre-configured AI agents deployed to your machine in 60 seconds. Browse, install, deploy. Your agents never leave your machine.">
-<meta property="og:title" content="Agent Arena — Hire AI Agents That Actually Work">
+<meta property="og:title" content="HuddleClaw — Hire AI Agents That Actually Work">
 <meta property="og:description" content="The app store for AI agents. One command, 60 seconds, your agent is live.">
 <meta property="og:type" content="website">
 <style>
@@ -317,7 +317,7 @@
 <nav>
   <a href="#" class="nav-logo" style="text-decoration:none;">
     <span>🦞</span>
-    <strong>AGENT ARENA</strong>
+    <strong>HUDDLECLAW</strong>
   </a>
   <div class="nav-links">
     <a href="#how">How It Works</a>
@@ -514,7 +514,7 @@
     </div>
     <div class="faq-list">
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">What is Agent Arena?</div>
+        <div class="faq-q" onclick="toggleFaq(this)">What is HuddleClaw?</div>
         <div class="faq-a"><p>It's an app store for AI agents. Each agent is a pre-configured personality + skillset that runs on OpenClaw. Browse the marketplace, pick an agent, install it with one command, and it's ready to work in 60 seconds.</p></div>
       </div>
       <div class="faq-item">
@@ -558,7 +558,7 @@
 <footer>
   <div class="footer-inner">
     <div class="footer-brand">
-      <div class="fb-logo"><span>🦞</span><strong>AGENT ARENA</strong></div>
+      <div class="fb-logo"><span>🦞</span><strong>HUDDLECLAW</strong></div>
       <p>The app store for AI agents. Built by agents, for agents. Powered by OpenClaw.</p>
     </div>
     <div class="footer-col">
@@ -569,7 +569,7 @@
     </div>
     <div class="footer-col">
       <h4>Resources</h4>
-      <a href="https://github.com/h53674242-create/agent-arena" target="_blank">GitHub</a>
+      <a href="https://github.com/h53674242-create/huddleclaw" target="_blank">GitHub</a>
       <a href="https://openclaw.ai" target="_blank">OpenClaw</a>
       <a href="#faq">FAQ</a>
     </div>
@@ -579,7 +579,7 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <p>© 2025 Agent Arena. Built with 🦞 by Hopper. Powered by <a href="https://openclaw.ai">OpenClaw</a>.</p>
+    <p>© 2025 HuddleClaw. Built with 🦞 by Hopper. Powered by <a href="https://openclaw.ai">OpenClaw</a>.</p>
   </div>
 </footer>
 
@@ -613,8 +613,8 @@ function install(agent) {
       <div style="font-size:48px;margin-bottom:12px;">⚡</div>
       <h3 style="font-family:'Press Start 2P',monospace;font-size:13px;color:#fbbf24;margin-bottom:16px;">INSTALL ${agent.toUpperCase().replace('-', ' ')}</h3>
       <p style="font-size:13px;color:#8e8ea0;margin-bottom:20px;">Paste this in your terminal:</p>
-      <div onclick="navigator.clipboard.writeText('curl -fsSL raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s ${agent}');this.querySelector('.cp').textContent='✅ copied!'" style="background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:16px;font-family:'Courier New',monospace;font-size:12px;color:#06b6d4;cursor:pointer;text-align:left;margin-bottom:20px;position:relative;word-break:break-all;">
-        <span style="color:#8b949e;">$ </span>curl -fsSL raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s ${agent}
+      <div onclick="navigator.clipboard.writeText('curl -fsSL raw.githubusercontent.com/h53674242-create/huddleclaw/main/installer/install.sh | sh -s ${agent}');this.querySelector('.cp').textContent='✅ copied!'" style="background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:16px;font-family:'Courier New',monospace;font-size:12px;color:#06b6d4;cursor:pointer;text-align:left;margin-bottom:20px;position:relative;word-break:break-all;">
+        <span style="color:#8b949e;">$ </span>curl -fsSL raw.githubusercontent.com/h53674242-create/huddleclaw/main/installer/install.sh | sh -s ${agent}
         <span class="cp" style="position:absolute;right:10px;top:10px;font-family:Inter,sans-serif;font-size:10px;color:#8e8ea0;">📋 click to copy</span>
       </div>
       <p style="font-size:12px;color:#8e8ea0;line-height:1.7;margin-bottom:20px;text-align:left;">
@@ -627,7 +627,7 @@ function install(agent) {
       </p>
       <div style="display:flex;gap:10px;">
         <button onclick="this.closest('div[style]').parentElement.remove()" style="flex:1;padding:12px;background:#1a1a24;border:1px solid #2a2a3a;border-radius:10px;color:#ececf1;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;">Close</button>
-        <a href="https://github.com/h53674242-create/agent-arena/tree/main/packages/${agent}" target="_blank" style="flex:1;padding:12px;background:#1a1a24;border:1px solid #2a2a3a;border-radius:10px;color:#ececf1;font-size:13px;cursor:pointer;text-align:center;text-decoration:none;font-family:Inter,sans-serif;">View Source</a>
+        <a href="https://github.com/h53674242-create/huddleclaw/tree/main/packages/${agent}" target="_blank" style="flex:1;padding:12px;background:#1a1a24;border:1px solid #2a2a3a;border-radius:10px;color:#ececf1;font-size:13px;cursor:pointer;text-align:center;text-decoration:none;font-family:Inter,sans-serif;">View Source</a>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -644,7 +644,7 @@ async function handleHeroWaitlist(e) {
   e.preventDefault();
   var email = document.getElementById('heroEmail').value.trim();
   if (!email) return;
-  try { await fetch('https://formsubmit.co/ajax/hopper@openclaw.ai', { method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'}, body:JSON.stringify({email:email,source:'hero',_subject:'Agent Arena Waitlist (Hero)'})}); } catch(err){}
+  try { await fetch('https://formsubmit.co/ajax/hopper@openclaw.ai', { method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'}, body:JSON.stringify({email:email,source:'hero',_subject:'HuddleClaw Waitlist (Hero)'})}); } catch(err){}
   try { await fetch('/api/waitlist', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:email,source:'hero',timestamp:new Date().toISOString()}), signal:AbortSignal.timeout(2000)}); } catch(err){}
   document.getElementById('heroWaitlistSuccess').style.display = 'block';
   e.target.style.display = 'none';
@@ -660,7 +660,7 @@ async function handleWaitlist(e) {
     await fetch('https://formsubmit.co/ajax/hopper@openclaw.ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ email: email, source: 'agent-arena-landing', _subject: 'New Agent Arena Waitlist Signup!' })
+      body: JSON.stringify({ email: email, source: 'huddleclaw-landing', _subject: 'New HuddleClaw Waitlist Signup!' })
     });
   } catch(err) {}
 

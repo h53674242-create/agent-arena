@@ -7,20 +7,20 @@
        /___/                                                  
 ```
 
-# 🏟️ Agent Arena
+# 🏟️ HuddleClaw
 
 **The marketplace to hire pre-configured AI agents for [OpenClaw](https://github.com/openclaw/openclaw).**
 
 Browse agents. Pick one. Install in 10 seconds. Done.
 
-[![Live Site](https://img.shields.io/badge/🌐_Live_Site-Agent_Arena-blue?style=for-the-badge)](https://h53674242-create.github.io/agent-arena/)
+[![Live Site](https://img.shields.io/badge/🌐_Live_Site-Agent_Arena-blue?style=for-the-badge)](https://h53674242-create.github.io/huddleclaw/)
 [![Built on OpenClaw](https://img.shields.io/badge/Built_on-OpenClaw-black?style=for-the-badge)](https://github.com/openclaw/openclaw)
 
 ---
 
 <!-- TODO: Add demo GIF -->
 <p align="center">
-  <img src="assets/demo.gif" alt="Agent Arena Demo" width="700" />
+  <img src="assets/demo.gif" alt="HuddleClaw Demo" width="700" />
   <br />
   <em>👆 Demo coming soon — imagine the magic here</em>
 </p>
@@ -42,10 +42,10 @@ Browse agents. Pick one. Install in 10 seconds. Done.
 
 ```bash
 # Install any agent in one command
-curl -fsSL raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s <agent-name>
+curl -fsSL raw.githubusercontent.com/h53674242-create/huddleclaw/main/installer/install.sh | sh -s <agent-name>
 
 # Example: install the Founder agent (free!)
-curl -fsSL raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s founder
+curl -fsSL raw.githubusercontent.com/h53674242-create/huddleclaw/main/installer/install.sh | sh -s founder
 ```
 
 That's it. The agent installs into OpenClaw, gets its own workspace, and is ready to chat.
@@ -68,7 +68,7 @@ That's it. The agent installs into OpenClaw, gets its own workspace, and is read
 
 ```
 ┌─────────────┐     curl install     ┌──────────────┐
-│ Agent Arena  │ ──────────────────▸  │  Your Machine │
+│ HuddleClaw  │ ──────────────────▸  │  Your Machine │
 │  (catalog)   │                      │               │
 └─────────────┘                      │  ┌──────────┐ │
                                      │  │ OpenClaw  │ │
@@ -83,7 +83,7 @@ That's it. The agent installs into OpenClaw, gets its own workspace, and is read
                                      └───────────────┘
 ```
 
-1. **Browse** the catalog on the [live site](https://h53674242-create.github.io/agent-arena/)
+1. **Browse** the catalog on the [live site](https://h53674242-create.github.io/huddleclaw/)
 2. **Install** with one `curl` command — the installer configures everything
 3. **Agent boots** inside OpenClaw with its own workspace, soul file, memory, and tools
 4. **Chat** via any connected channel — webchat, Discord, terminal, etc.
@@ -96,7 +96,7 @@ Each agent is a fully isolated OpenClaw agent: own `SOUL.md`, own `memory/`, own
 
 Build an agent. Publish it. Earn **80% of every subscription**.
 
-### Why build on Agent Arena?
+### Why build on HuddleClaw?
 
 - 💸 **80% revenue share** — you keep the lion's share
 - 📦 **Simple format** — it's just a folder with config files
@@ -116,7 +116,7 @@ Build an agent. Publish it. Earn **80% of every subscription**.
 
 ## 🏗️ Architecture
 
-Agent Arena is built on **[OpenClaw](https://github.com/openclaw/openclaw)** — an open-source multi-agent framework.
+HuddleClaw is built on **[OpenClaw](https://github.com/openclaw/openclaw)** — an open-source multi-agent framework.
 
 | Layer | What it does |
 |-------|-------------|
@@ -132,15 +132,15 @@ Everything runs **locally on your machine**. No cloud. No telemetry. Your agents
 
 ## 🔗 Links
 
-- 🌐 **Live Site:** [agent-arena](https://h53674242-create.github.io/agent-arena/)
+- 🌐 **Live Site:** [huddleclaw](https://h53674242-create.github.io/huddleclaw/)
 - 📖 **OpenClaw:** [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
 - 💬 **Discord:** [Join the community](https://discord.gg/openclaw)
-- 🐛 **Issues:** [Report bugs](https://github.com/h53674242-create/agent-arena/issues)
+- 🐛 **Issues:** [Report bugs](https://github.com/h53674242-create/huddleclaw/issues)
 
 ---
 
 <p align="center">
-  <strong>Built with 🦞 by the Agent Arena community</strong>
+  <strong>Built with 🦞 by the HuddleClaw community</strong>
   <br />
   <sub>Powered by OpenClaw · Agents run local · Your data stays yours</sub>
 </p>

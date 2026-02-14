@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦞</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🦞 Agent Arena</title>
+<title>🦞 HuddleClaw</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap');
   
@@ -655,7 +655,7 @@
 <!-- Sidebar -->
 <div class="sidebar" id="sidebar">
   <div class="sidebar-header">
-    <span class="logo">🦞 AGENT ARENA</span>
+    <span class="logo">🦞 HUDDLECLAW</span>
     <span class="status offline" id="status">● Offline</span>
   </div>
   <div class="agent-list" id="agentList">
@@ -668,13 +668,13 @@
   <!-- Mobile Header -->
   <div class="mobile-header">
     <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
-    <span class="logo">🦞 AGENT ARENA</span>
+    <span class="logo">🦞 HUDDLECLAW</span>
   </div>
 
   <!-- Empty State -->
   <div class="empty-state" id="emptyState">
     <div class="emoji">🦞</div>
-    <h3>Welcome to Agent Arena</h3>
+    <h3>Welcome to HuddleClaw</h3>
     <p>Select an agent from the sidebar to view details or start a conversation.</p>
   </div>
 
@@ -711,7 +711,7 @@
     <div class="waitlist-hero">
       <div class="emoji">🦞</div>
       <h1>Coming Soon</h1>
-      <p>Agent Arena is currently in development. Join our waitlist to get early access to the next generation of AI agents.</p>
+      <p>HuddleClaw is currently in development. Join our waitlist to get early access to the next generation of AI agents.</p>
     </div>
     <div class="waitlist-form">
       <div id="waitlistFormContent">
@@ -725,7 +725,7 @@
       <div class="waitlist-success" id="waitlistSuccess">
         <div class="check">✅</div>
         <h2>You're on the list!</h2>
-        <p>We'll email you when Agent Arena is ready.</p>
+        <p>We'll email you when HuddleClaw is ready.</p>
       </div>
     </div>
   </div>
@@ -901,7 +901,7 @@ function showAgentDetail() {
       <div class="install-section">
         <button class="install-button" onclick="installAgent()">Install Agent</button>
         <div class="install-command">
-          <span>curl -fsSL raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s ${currentAgent.name}</span>
+          <span>curl -fsSL raw.githubusercontent.com/h53674242-create/huddleclaw/main/installer/install.sh | sh -s ${currentAgent.name}</span>
           <button class="copy-btn" onclick="copyInstallCommand()">Copy</button>
         </div>
       </div>
@@ -932,7 +932,7 @@ async function loadSoulPreview() {
 
 // Install agent
 function installAgent() {
-  const command = `curl -fsSL raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s ${currentAgent.name}`;
+  const command = `curl -fsSL raw.githubusercontent.com/h53674242-create/huddleclaw/main/installer/install.sh | sh -s ${currentAgent.name}`;
   
   if (navigator.clipboard) {
     navigator.clipboard.writeText(command);
@@ -944,7 +944,7 @@ function installAgent() {
 
 // Copy install command
 function copyInstallCommand() {
-  const command = `curl -fsSL raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s ${currentAgent.name}`;
+  const command = `curl -fsSL raw.githubusercontent.com/h53674242-create/huddleclaw/main/installer/install.sh | sh -s ${currentAgent.name}`;
   
   if (navigator.clipboard) {
     navigator.clipboard.writeText(command);
@@ -1282,7 +1282,7 @@ async function submitWaitlist() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: email,
-        source: 'agent-arena-app',
+        source: 'huddleclaw-app',
         timestamp: new Date().toISOString()
       })
     });

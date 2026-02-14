@@ -3,7 +3,7 @@
 # Usage: bash test-install.sh [agent-name]
 
 AGENT="${1:-founder-agent}"
-export OPENCLAW_WORKSPACE="/tmp/agent-arena-test-workspace"
+export OPENCLAW_WORKSPACE="/tmp/huddleclaw-test-workspace"
 export SKIP_RESTART=1
 
 rm -rf "$OPENCLAW_WORKSPACE"

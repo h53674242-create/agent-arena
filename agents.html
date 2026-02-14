@@ -363,7 +363,7 @@
 
 <!-- Nav -->
 <div class="site-nav">
-  <a href="index.html" class="nav-logo"><span>🦞</span><strong>AGENT ARENA</strong></a>
+  <a href="index.html" class="nav-logo"><span>🦞</span><strong>HUDDLECLAW</strong></a>
   <div class="nav-links">
     <a href="index.html">Home</a>
     <a href="agents.html" class="active">Agents</a>
@@ -379,7 +379,7 @@
   <div class="logo">
     <span class="logo-icon">🦞</span>
     <div>
-      <div class="logo-text">AGENT ARENA</div>
+      <div class="logo-text">HUDDLECLAW</div>
       <div class="logo-sub">Hire AI. Ship Product.</div>
     </div>
   </div>
@@ -770,7 +770,7 @@ function hireAgent() {
               <div style="margin-top:16px; text-align:left;">
                 <div style="font-size:12px; color:#8b949e; margin-bottom:8px; font-weight:600;">📋 Paste this in your terminal:</div>
                 <div id="installCmd" onclick="copyInstallCmd()" style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:14px;font-family:monospace;font-size:13px;color:#58a6ff;cursor:pointer;position:relative;word-break:break-all;">
-                  <span style="color:#8b949e">$</span> curl -fsSL https://raw.githubusercontent.com/h53674242-create/agent-arena/main/installer/install.sh | sh -s ${a.id}
+                  <span style="color:#8b949e">$</span> curl -fsSL https://raw.githubusercontent.com/h53674242-create/huddleclaw/main/installer/install.sh | sh -s ${a.id}
                   <span id="copyHint" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:#8b949e;font-family:Inter,sans-serif;">click to copy</span>
                 </div>
                 <div style="margin-top:12px; font-size:11px; color:#8b949e; line-height:1.6;">
@@ -785,7 +785,7 @@ function hireAgent() {
                 </div>
                 <div style="display:flex;gap:8px;margin-top:12px;">
                   <button onclick="downloadAgent('${a.id}')" style="padding:8px 16px;background:#1c1c20;border:1px solid #2a2a3a;border-radius:6px;color:#e6edf3;font-size:11px;cursor:pointer;font-weight:500;">⬇️ Manual download (.tar.gz)</button>
-                  <a href="https://github.com/h53674242-create/agent-arena/tree/main/packages/${a.id}" target="_blank" style="padding:8px 16px;background:#1c1c20;border:1px solid #2a2a3a;border-radius:6px;color:#e6edf3;font-size:11px;cursor:pointer;font-weight:500;text-decoration:none;">📂 View on GitHub</a>
+                  <a href="https://github.com/h53674242-create/huddleclaw/tree/main/packages/${a.id}" target="_blank" style="padding:8px 16px;background:#1c1c20;border:1px solid #2a2a3a;border-radius:6px;color:#e6edf3;font-size:11px;cursor:pointer;font-weight:500;text-decoration:none;">📂 View on GitHub</a>
                 </div>
               </div>`;
           } else {
@@ -820,7 +820,7 @@ function copyInstallCmd() {
 // Real download for packaged agents
 function downloadAgent(agentId) {
   // Download from GitHub as zip
-  window.open(`https://github.com/h53674242-create/agent-arena/archive/refs/heads/main.zip`, '_blank');
+  window.open(`https://github.com/h53674242-create/huddleclaw/archive/refs/heads/main.zip`, '_blank');
 }
 
 function showCreateModal() {
@@ -833,7 +833,7 @@ function showCreateModal() {
     <div class="modal-step done"><div class="step-num">1</div><span>Write your SOUL.md — give your agent personality</span></div>
     <div class="modal-step done"><div class="step-num">2</div><span>Add AGENTS.md — define behavior rules</span></div>
     <div class="modal-step done"><div class="step-num">3</div><span>Create agent.json — set name, price, skills, stats</span></div>
-    <div class="modal-step done"><div class="step-num">4</div><span>Publish to Agent Arena marketplace</span></div>
+    <div class="modal-step done"><div class="step-num">4</div><span>Publish to HuddleClaw marketplace</span></div>
     <div class="modal-step"><div class="step-num">💰</div><span>Earn 80% of every hire. Build once, earn forever.</span></div>
   `;
   document.getElementById('modalAction').style.display = 'inline-block';

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Agent Arena — Local server with real Gateway WebSocket bridge
+// HuddleClaw — Local server with real Gateway WebSocket bridge
 // Agents get FULL tool access through the gateway protocol
 
 const http = require('http');
@@ -147,7 +147,7 @@ class GatewayConnection {
         maxProtocol: PROTOCOL_VERSION,
         client: {
           id: 'gateway-client',
-          displayName: 'agent-arena',
+          displayName: 'huddleclaw',
           version: '1.0.0',
           platform: process.platform,
           mode: 'backend',
@@ -955,7 +955,7 @@ process.on('uncaughtException', (e) => { console.error('Uncaught:', e.message); 
 process.on('unhandledRejection', (e) => { console.error('Unhandled:', e); });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n  🦞 Agent Arena server running on http://localhost:${PORT}\n`);
+  console.log(`\n  🦞 HuddleClaw server running on http://localhost:${PORT}\n`);
   console.log(`  Endpoints:`);
   console.log(`    GET  /                    → Arena UI`);
   console.log(`    GET  /api/agents          → List all agents`);
