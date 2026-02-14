@@ -76,8 +76,12 @@ input,button,textarea { font-family:inherit; }
 .nav-item .nav-label { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .nav-item .nav-badge {
   font-size:9px; font-weight:700; padding:1px 5px; border-radius:8px;
-  background:var(--accent); color:var(--bg); min-width:16px; text-align:center;
+  background:var(--red); color:#fff; min-width:16px; text-align:center;
+  animation:badgePop .2s ease;
 }
+@keyframes badgePop { from{transform:scale(0)} to{transform:scale(1)} }
+.nav-item.unread { color:var(--text); font-weight:600; }
+.nav-item.unread .nav-label { color:var(--text); }
 .nav-item .status-indicator {
   width:6px; height:6px; border-radius:50%; flex-shrink:0;
 }
@@ -455,6 +459,42 @@ input,button,textarea { font-family:inherit; }
 .file-viewer-content h1,.file-viewer-content h2,.file-viewer-content h3 { color:var(--accent); margin:12px 0 6px; }
 .file-viewer-content strong { color:var(--text); }
 
+/* Create Channel Modal */
+.create-channel-overlay {
+  display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,0.6); z-index:55; align-items:center; justify-content:center;
+  backdrop-filter:blur(6px);
+}
+.create-channel-overlay.open { display:flex; }
+.create-channel-box {
+  width:420px; max-width:90vw; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:24px; animation:modalSlide .25s ease;
+  box-shadow:0 24px 80px rgba(0,0,0,0.5);
+}
+.create-channel-box h3 { font-size:16px; font-weight:700; margin-bottom:4px; }
+.create-channel-box .cc-desc { font-size:12px; color:var(--muted); margin-bottom:16px; }
+.create-channel-box label { display:block; font-size:11px; font-weight:600; color:var(--text2); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px; }
+.create-channel-box input[type="text"] {
+  width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border);
+  border-radius:var(--radius); color:var(--text); font-size:13px; outline:none; margin-bottom:14px;
+}
+.create-channel-box input[type="text"]:focus { border-color:var(--accent); }
+.cc-agents { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+.cc-agent-chip {
+  display:flex; align-items:center; gap:5px; padding:5px 10px;
+  background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius);
+  cursor:pointer; font-size:12px; transition:all .15s; user-select:none;
+}
+.cc-agent-chip:hover { border-color:var(--text2); }
+.cc-agent-chip.selected { border-color:var(--accent); background:var(--accent-dim); color:var(--accent); }
+.cc-agent-chip .cc-check { width:14px; text-align:center; font-size:10px; }
+.cc-btns { display:flex; gap:10px; justify-content:flex-end; }
+.cc-btn { padding:8px 20px; border:none; border-radius:var(--radius); font-weight:700; font-size:12px; cursor:pointer; }
+.cc-btn-cancel { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+.cc-btn-cancel:hover { border-color:var(--text2); }
+.cc-btn-create { background:var(--accent); color:var(--bg); }
+.cc-btn-create:hover { filter:brightness(1.1); }
+
 /* Hide view utility */
 .view-hidden { display:none !important; }
 </style>
@@ -483,14 +523,19 @@ input,button,textarea { font-family:inherit; }
     <div class="sidebar-nav" id="sidebarNav">
       <!-- Channels -->
       <div class="nav-section">
-        <div class="nav-section-title">Channels</div>
-        <div class="nav-item active" data-channel="general" onclick="switchChannel('general')">
-          <span class="nav-icon">#</span>
-          <span class="nav-label">general</span>
+        <div class="nav-section-title">
+          Channels
+          <span class="section-action" onclick="openCreateChannel()" title="Create channel">+</span>
         </div>
-        <div class="nav-item" data-channel="activity" onclick="switchChannel('activity')">
-          <span class="nav-icon">📋</span>
-          <span class="nav-label">activity-log</span>
+        <div id="channelList">
+          <div class="nav-item active" data-channel="general" onclick="switchChannel('general')">
+            <span class="nav-icon">#</span>
+            <span class="nav-label">general</span>
+          </div>
+          <div class="nav-item" data-channel="activity" onclick="switchChannel('activity')">
+            <span class="nav-icon">📋</span>
+            <span class="nav-label">activity-log</span>
+          </div>
         </div>
       </div>
 
@@ -607,6 +652,22 @@ input,button,textarea { font-family:inherit; }
   </div>
 </div>
 
+<!-- Create Channel Modal -->
+<div class="create-channel-overlay" id="createChannelOverlay" onclick="if(event.target===this)closeCreateChannel()">
+  <div class="create-channel-box">
+    <h3># Create a Channel</h3>
+    <div class="cc-desc">Channels are for topic-based discussions with selected agents.</div>
+    <label>Channel Name</label>
+    <input type="text" id="ccName" placeholder="e.g. tiktok-strategy" autocomplete="off">
+    <label>Invite Agents</label>
+    <div class="cc-agents" id="ccAgents"></div>
+    <div class="cc-btns">
+      <button class="cc-btn cc-btn-cancel" onclick="closeCreateChannel()">Cancel</button>
+      <button class="cc-btn cc-btn-create" onclick="createChannel()">Create Channel</button>
+    </div>
+  </div>
+</div>
+
 <!-- File Viewer -->
 <div class="file-viewer-overlay" id="fileViewerOverlay" onclick="if(event.target===this)closeFileViewer()">
   <div class="file-viewer">
@@ -632,6 +693,10 @@ const AGENT_COLORS = { '📈':'#34d399', '🔥':'#f87171', '🔒':'#60a5fa', '�
 
 // Channel message storage: { channelId: [{sender,text,emoji,time,agentId}] }
 const channelMessages = {};
+// Unread counts: { channelId: number }
+const unreadCounts = {};
+// Custom channels: [{ id, name, agents: [agentId,...] }]
+let customChannels = [];
 
 // Stable client ID
 function getClientId() {
@@ -658,6 +723,7 @@ async function checkConnection() {
     await loadAgents();
     connectWS();
     renderCurrentChannel();
+    updateUnreadBadges();
   } catch {
     document.getElementById('waitlistPage').classList.add('active');
     setGatewayStatus(false);
@@ -693,6 +759,22 @@ function getInstalledAgents() { return agents.filter(isInstalled); }
 function renderSidebar() {
   const installed=getInstalledAgents();
 
+  // Custom channels
+  const chList=document.getElementById('channelList');
+  let chHtml=`<div class="nav-item${currentChannel==='general'?' active':''}" data-channel="general" onclick="switchChannel('general')">
+    <span class="nav-icon">#</span><span class="nav-label">general</span>
+  </div>
+  <div class="nav-item${currentChannel==='activity'?' active':''}" data-channel="activity" onclick="switchChannel('activity')">
+    <span class="nav-icon">📋</span><span class="nav-label">activity-log</span>
+  </div>`;
+  for(const ch of customChannels) {
+    const memberEmojis=ch.agents.map(id=>{const a=agents.find(x=>getAgentId(x)===id);return a?.emoji||'🤖';}).join('');
+    chHtml+=`<div class="nav-item${currentChannel===ch.id?' active':''}" data-channel="${ch.id}" onclick="switchChannel('${ch.id}')">
+      <span class="nav-icon">#</span><span class="nav-label">${esc(ch.name)}</span>
+    </div>`;
+  }
+  chList.innerHTML=chHtml;
+
   // DM list
   const dmList=document.getElementById('dmList');
   dmList.innerHTML=installed.map(a=>{
@@ -726,6 +808,7 @@ function renderSidebar() {
 // ═══ Channel Switching ═══
 function switchChannel(ch) {
   currentChannel=ch;
+  clearUnread(ch);
 
   // Update sidebar active state
   document.querySelectorAll('.nav-item').forEach(el=>{
@@ -765,6 +848,16 @@ function switchChannel(ch) {
     name.textContent=`${a?.displayName||parts[0]} ↔ ${b?.displayName||parts[1]}`;
     topic.textContent='Agent-to-agent communication (read-only)';
     inputArea.style.display='none';
+  } else if(ch.startsWith('ch-')) {
+    const custom=customChannels.find(c=>c.id===ch);
+    if(custom) {
+      const memberNames=custom.agents.map(id=>{const a=agents.find(x=>getAgentId(x)===id);return a?.displayName||id;}).join(', ');
+      icon.textContent='#';
+      name.textContent=custom.name;
+      topic.textContent=`${memberNames}`;
+      input.placeholder=`Message #${custom.name}...`;
+      inputArea.style.display='';
+    }
   }
 
   renderCurrentChannel();
@@ -813,6 +906,9 @@ function getChannelWelcome() {
     return `💬 Start of DM with ${a?.displayName||id}`;
   }
   if(currentChannel.startsWith('comms-')) return '🔗 Agent-to-agent communication will appear here';
+  if(currentChannel.startsWith('ch-')) {
+    const ch=customChannels.find(c=>c.id===currentChannel);
+    return ch?`# Welcome to #${ch.name}`:'';}
   return '';
 }
 
@@ -865,6 +961,17 @@ function sendMessage() {
     if(agent) {
       ws.send(JSON.stringify({type:'chat',agentPkg:agent.name,message:text,sessionKey:agentSessions[agent.name]||null}));
     }
+  } else if(currentChannel.startsWith('ch-')) {
+    // Custom channel — send to selected agents only
+    const ch=customChannels.find(c=>c.id===currentChannel);
+    if(ch) {
+      for(const agentId of ch.agents) {
+        const agent=agents.find(a=>getAgentId(a)===agentId);
+        if(agent) {
+          ws.send(JSON.stringify({type:'chat',agentPkg:agent.name,message:`[#${ch.name}] ${text}`,sessionKey:agentSessions[agent.name]||null}));
+        }
+      }
+    }
   }
 }
 
@@ -874,15 +981,40 @@ function addMessage(channel, msg) {
   if(channel===currentChannel) renderCurrentChannel();
   saveMessages();
 
-  // Update badge on nav item if not current channel
-  if(channel!==currentChannel) {
-    const navItem=document.querySelector(`.nav-item[data-channel="${channel}"]`);
-    if(navItem && !navItem.querySelector('.nav-badge')) {
-      const badge=document.createElement('span');
-      badge.className='nav-badge';
-      badge.textContent='•';
-      navItem.appendChild(badge);
+  // Track unread if not current channel
+  if(channel!==currentChannel && !msg.system) {
+    unreadCounts[channel]=(unreadCounts[channel]||0)+1;
+    saveUnread();
+    updateUnreadBadges();
+  }
+}
+
+function updateUnreadBadges() {
+  document.querySelectorAll('.nav-item[data-channel]').forEach(el=>{
+    const ch=el.dataset.channel;
+    const count=unreadCounts[ch]||0;
+    const existing=el.querySelector('.nav-badge');
+    if(count>0) {
+      el.classList.add('unread');
+      if(existing) { existing.textContent=count; }
+      else {
+        const badge=document.createElement('span');
+        badge.className='nav-badge';
+        badge.textContent=count;
+        el.appendChild(badge);
+      }
+    } else {
+      el.classList.remove('unread');
+      if(existing) existing.remove();
     }
+  });
+}
+
+function clearUnread(channel) {
+  if(unreadCounts[channel]) {
+    delete unreadCounts[channel];
+    saveUnread();
+    updateUnreadBadges();
   }
 }
 
@@ -1127,6 +1259,45 @@ function renderFileMarkdown(text) {
     .replace(/\n/g,'<br>');
 }
 
+// ═══ Create Channel ═══
+function openCreateChannel() {
+  const installed=getInstalledAgents();
+  document.getElementById('ccName').value='';
+  document.getElementById('ccAgents').innerHTML=installed.map(a=>{
+    const id=getAgentId(a);
+    return `<div class="cc-agent-chip selected" data-agent="${id}" onclick="this.classList.toggle('selected')">
+      <span class="cc-check">✓</span>
+      <span>${a.emoji||'🤖'} ${a.displayName||a.name}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('createChannelOverlay').classList.add('open');
+  document.getElementById('ccName').focus();
+}
+
+function closeCreateChannel() {
+  document.getElementById('createChannelOverlay').classList.remove('open');
+}
+
+function createChannel() {
+  const name=document.getElementById('ccName').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-');
+  if(!name) { alert('Enter a channel name'); return; }
+  if(customChannels.find(c=>c.id===`ch-${name}`)) { alert('Channel already exists'); return; }
+
+  const selectedAgents=[];
+  document.querySelectorAll('#ccAgents .cc-agent-chip.selected').forEach(el=>{
+    selectedAgents.push(el.dataset.agent);
+  });
+  if(!selectedAgents.length) { alert('Select at least one agent'); return; }
+
+  const channel={ id:`ch-${name}`, name, agents:selectedAgents };
+  customChannels.push(channel);
+  saveChannels();
+  renderSidebar();
+  closeCreateChannel();
+  switchChannel(channel.id);
+  addSystemMessage(channel.id, `🎉 Channel #${name} created — ${selectedAgents.length} agent${selectedAgents.length>1?'s':''} invited`);
+}
+
 // ═══ Hire Modal ═══
 function openHireModal() {
   document.getElementById('hireTitle').textContent='⚡ Hire an Agent';
@@ -1276,7 +1447,11 @@ function saveMessages() {
 function loadSavedMessages() {
   try { const m=JSON.parse(localStorage.getItem('hq-messages')||'{}'); Object.assign(channelMessages,m); } catch{}
   try { const s=JSON.parse(localStorage.getItem('hq-sessions')||'{}'); Object.assign(agentSessions,s); } catch{}
+  try { customChannels=JSON.parse(localStorage.getItem('hq-custom-channels')||'[]'); } catch{}
+  try { const u=JSON.parse(localStorage.getItem('hq-unread')||'{}'); Object.assign(unreadCounts,u); } catch{}
 }
+function saveChannels() { localStorage.setItem('hq-custom-channels',JSON.stringify(customChannels)); }
+function saveUnread() { localStorage.setItem('hq-unread',JSON.stringify(unreadCounts)); }
 
 // ═══ Waitlist ═══
 async function submitWaitlist() {
