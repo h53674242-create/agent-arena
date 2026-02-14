@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Arena — Brand Cards</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08080c;
+    --surface: #111118;
+    --accent: #fbbf24;
+    --green: #22c55e;
+    --purple: #a855f7;
+    --cyan: #06b6d4;
+    --text: #ececf1;
+    --muted: #8e8ea0;
+    --red: #ef4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #050508;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 60px;
+  }
+
+  h1.page-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .page-subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  .card-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+
+  /* Shared card base */
+  .card {
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  /* Grid texture overlay */
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Noise texture */
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 128px 128px;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .card > * { position: relative; z-index: 2; }
+
+  /* ========== 1. QUOTE CARD ========== */
+  .card-quote {
+    width: 1080px; height: 1080px;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 100px;
+    text-align: center;
+  }
+  .card-quote .glow {
+    position: absolute;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(251,191,36,0.08) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .card-quote .lobster-top {
+    font-size: 48px;
+    margin-bottom: 40px;
+  }
+  .card-quote .open-quote {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 64px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 24px;
+    text-shadow: 0 0 40px rgba(251,191,36,0.3);
+  }
+  .card-quote .quote-text {
+    font-size: 38px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--text);
+    max-width: 800px;
+    margin-bottom: 48px;
+  }
+  .card-quote .quote-text em {
+    color: var(--accent);
+    font-style: normal;
+  }
+  .card-quote .attribution {
+    font-size: 18px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .card-quote .attribution strong {
+    color: var(--cyan);
+    font-weight: 700;
+  }
+  .card-quote .brand-footer {
+    position: absolute;
+    bottom: 48px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    opacity: 0.6;
+  }
+
+  /* ========== 2. STAT CALLOUT ========== */
+  .card-stat {
+    width: 1080px; height: 1080px;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 80px;
+  }
+  .card-stat .glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(168,85,247,0.1) 0%, transparent 70%);
+    top: 45%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .card-stat .stat-label-top {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .card-stat .stat-number {
+    font-family: 'Inter', sans-serif;
+    font-size: 180px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 16px;
+    text-shadow: none;
+    filter: drop-shadow(0 0 60px rgba(251,191,36,0.2));
+  }
+  .card-stat .stat-unit {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    color: var(--text);
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+  .card-stat .stat-desc {
+    font-size: 22px;
+    color: var(--muted);
+    max-width: 600px;
+    line-height: 1.5;
+  }
+  .card-stat .brand-footer {
+    position: absolute;
+    bottom: 56px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .card-stat .brand-footer span {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .card-stat .brand-footer .lobster { font-size: 32px; }
+
+  /* ========== 3. TIKTOK TITLE CARD ========== */
+  .card-tiktok {
+    width: 1080px; height: 1920px;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 120px 80px;
+  }
+  .card-tiktok .glow-top {
+    position: absolute;
+    top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 800px; height: 600px;
+    background: radial-gradient(ellipse, rgba(6,182,212,0.1) 0%, transparent 70%);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .card-tiktok .glow-bottom {
+    position: absolute;
+    bottom: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 800px; height: 400px;
+    background: radial-gradient(ellipse, rgba(251,191,36,0.08) 0%, transparent 70%);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .card-tiktok .top-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .card-tiktok .lobster-badge {
+    font-size: 56px;
+    margin-bottom: 8px;
+  }
+  .card-tiktok .headline {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 42px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .card-tiktok .headline em {
+    color: var(--cyan);
+    font-style: normal;
+  }
+  .card-tiktok .mid-section {
+    padding: 0 20px;
+  }
+  .card-tiktok .subtext {
+    font-size: 36px;
+    font-weight: 500;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .card-tiktok .subtext strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+  .card-tiktok .bottom-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    text-align: center;
+  }
+  .card-tiktok .cta {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 18px;
+    color: var(--bg);
+    background: var(--accent);
+    padding: 24px 48px;
+    border-radius: 8px;
+    letter-spacing: 1px;
+    box-shadow: 0 0 40px rgba(251,191,36,0.25);
+  }
+  .card-tiktok .url {
+    font-size: 20px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* ========== 4. BEFORE/AFTER SPLIT ========== */
+  .card-split {
+    width: 1080px; height: 1080px;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+  }
+  .card-split .split-header {
+    text-align: center;
+    padding: 48px 0 24px;
+  }
+  .card-split .split-header h2 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .card-split .split-body {
+    flex: 1;
+    display: flex;
+  }
+  .card-split .split-side {
+    flex: 1;
+    padding: 40px 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 28px;
+    position: relative;
+  }
+  .card-split .split-side::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .card-split .side-before {
+    background: linear-gradient(135deg, rgba(239,68,68,0.06) 0%, rgba(239,68,68,0.02) 100%);
+    border-right: 2px solid rgba(239,68,68,0.15);
+  }
+  .card-split .side-after {
+    background: linear-gradient(135deg, rgba(34,197,94,0.02) 0%, rgba(34,197,94,0.06) 100%);
+    border-left: 2px solid rgba(34,197,94,0.15);
+  }
+  .card-split .side-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .side-before .side-label { color: var(--red); }
+  .side-after .side-label { color: var(--green); }
+  .card-split .split-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: 20px;
+    line-height: 1.5;
+  }
+  .card-split .split-item .icon {
+    flex-shrink: 0;
+    font-size: 22px;
+    width: 32px;
+    text-align: center;
+  }
+  .side-before .split-item { color: rgba(236,236,241,0.55); }
+  .side-after .split-item { color: var(--text); font-weight: 500; }
+  .card-split .divider {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    width: 56px; height: 56px;
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 0 30px rgba(251,191,36,0.15);
+  }
+  .card-split .split-footer {
+    text-align: center;
+    padding: 24px 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .card-split .split-footer span {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div>
+  <h1 class="page-title">🦞 Agent Arena — Brand Cards</h1>
+  <p class="page-subtitle">Screenshot each card at 1:1 / 9:16 for social posts. Replace placeholder text as needed.</p>
+</div>
+
+<!-- ==================== 1. QUOTE CARD (1080×1080) ==================== -->
+<p class="card-label">1 — Quote Card · 1080×1080</p>
+<div class="card card-quote">
+  <div class="glow"></div>
+  <div class="lobster-top">🦞</div>
+  <div class="open-quote">"</div>
+  <p class="quote-text">
+    We replaced our entire <em>ops team</em> with AI agents in 60 seconds. Not joking.
+  </p>
+  <p class="attribution">— <strong>PLACEHOLDER NAME</strong>, Founder @ Company</p>
+  <div class="brand-footer">AGENT ARENA</div>
+</div>
+
+<!-- ==================== 2. STAT CALLOUT (1080×1080) ==================== -->
+<p class="card-label">2 — Stat Callout · 1080×1080</p>
+<div class="card card-stat">
+  <div class="glow"></div>
+  <p class="stat-label-top">Time to Deploy</p>
+  <p class="stat-number">60s</p>
+  <p class="stat-unit">SECONDS</p>
+  <p class="stat-desc">From zero to a fully working AI agent team. No code. No config files. Just results.</p>
+  <div class="brand-footer">
+    <span class="lobster">🦞</span>
+    <span>AGENT ARENA</span>
+  </div>
+</div>
+
+<!-- ==================== 3. TIKTOK TITLE CARD (1080×1920) ==================== -->
+<p class="card-label">3 — TikTok Title Card · 1080×1920</p>
+<div class="card card-tiktok">
+  <div class="glow-top"></div>
+  <div class="glow-bottom"></div>
+  <div class="top-section">
+    <div class="lobster-badge">🦞</div>
+    <h2 class="headline">I let <em>AI agents</em><br>run my business<br>for a week</h2>
+  </div>
+  <div class="mid-section">
+    <p class="subtext">
+      They handled <strong>customer support</strong>, wrote marketing copy, and even fixed a production bug at 3am.
+    </p>
+  </div>
+  <div class="bottom-section">
+    <div class="cta">TRY IT FREE →</div>
+    <p class="url">agentarena.com</p>
+  </div>
+</div>
+
+<!-- ==================== 4. BEFORE/AFTER SPLIT (1080×1080) ==================== -->
+<p class="card-label">4 — Before / After Split · 1080×1080</p>
+<div class="card card-split">
+  <div class="split-header">
+    <h2>🦞 THE AGENT ARENA EFFECT</h2>
+  </div>
+  <div class="split-body" style="position:relative;">
+    <div class="split-side side-before">
+      <div class="side-label">✕ Without AI Agents</div>
+      <div class="split-item"><span class="icon">😵</span> Hiring takes 3 months</div>
+      <div class="split-item"><span class="icon">🔥</span> Ops fires everywhere</div>
+      <div class="split-item"><span class="icon">💸</span> $12K/mo on contractors</div>
+      <div class="split-item"><span class="icon">😴</span> Nothing runs at night</div>
+      <div class="split-item"><span class="icon">📋</span> Manual copy-paste workflows</div>
+    </div>
+    <div class="divider">⚡</div>
+    <div class="split-side side-after">
+      <div class="side-label">✓ With Agent Arena</div>
+      <div class="split-item"><span class="icon">🚀</span> Deploy agents in 60 seconds</div>
+      <div class="split-item"><span class="icon">🧘</span> Agents handle the chaos</div>
+      <div class="split-item"><span class="icon">💰</span> $49/mo, unlimited agents</div>
+      <div class="split-item"><span class="icon">🌙</span> Runs 24/7 autonomously</div>
+      <div class="split-item"><span class="icon">⚙️</span> Fully automated pipelines</div>
+    </div>
+  </div>
+  <div class="split-footer">
+    <span>🦞</span>
+    <span>AGENT ARENA</span>
+  </div>
+</div>
+
+</body>
+</html>
