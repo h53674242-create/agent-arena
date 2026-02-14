@@ -283,18 +283,7 @@
     border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;
   }
 
-  /* Bottom ticker */
-  .ticker {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
-    background: var(--accent); color: #000; padding: 4px 0; overflow: hidden;
-    font-family: 'Press Start 2P', monospace; font-size: 8px;
-  }
-  .ticker-inner {
-    display: flex; white-space: nowrap;
-    animation: ticker 30s linear infinite;
-  }
-  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-  .ticker-item { padding: 0 40px; }
+  /* Ticker removed */
 
   /* Nav bar */
   .site-nav {
@@ -446,21 +435,7 @@
   </div>
 </div>
 
-<!-- Ticker -->
-<div class="ticker">
-  <div class="ticker-inner">
-    <span class="ticker-item">🦞 AGENT ARENA — Hire AI agents that actually work</span>
-    <span class="ticker-item">⚡ Real agents with memory, personality, and tools — not chatbots</span>
-    <span class="ticker-item">🔒 100% local — your agents never leave your machine</span>
-    <span class="ticker-item">🎮 Browse agents. Pick one. Deploy in 60 seconds.</span>
-    <span class="ticker-item">📬 Join the waitlist for early access</span>
-    <span class="ticker-item">🦞 AGENT ARENA — Hire AI agents that actually work</span>
-    <span class="ticker-item">⚡ Real agents with memory, personality, and tools — not chatbots</span>
-    <span class="ticker-item">🔒 100% local — your agents never leave your machine</span>
-    <span class="ticker-item">🎮 Browse agents. Pick one. Deploy in 60 seconds.</span>
-    <span class="ticker-item">📬 Join the waitlist for early access</span>
-  </div>
-</div>
+<!-- Ticker removed -->
 
 <script>
 const AGENTS = [
@@ -698,7 +673,7 @@ function updateStats() {
   document.getElementById('statsPrice').textContent = a.price;
   document.getElementById('statsPrice').style.color = a.price === 'FREE' ? '#22c55e' : '#fbbf24';
   document.getElementById('statsPriceSub').textContent = a.priceSub;
-  document.getElementById('hireCount').textContent = `🔥 ${a.hired} hired`;
+  document.getElementById('hireCount').textContent = '📬 Join waitlist';
 
   // Tags
   const tagsEl = document.getElementById('agentTags');
