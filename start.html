@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Agent Arena — Your AI Team, Deployed in 60 Seconds</title>
+<meta name="description" content="Pre-built AI agents that actually work. Deploy to your machine in 60 seconds. Privacy-first.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#08080c;--surface:#111118;--surface2:#1a1a24;--border:#2a2a3a;
+--text:#ececf1;--muted:#8e8ea0;--accent:#fbbf24;--green:#22c55e;
+--red:#ef4444;--purple:#a855f7;--pink:#ec4899;--cyan:#06b6d4;--blue:#3b82f6;
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden;padding-bottom:80px}
+.accent-font{font-family:'Press Start 2P',monospace}
+section{padding:64px 20px}
+.container{max-width:480px;margin:0 auto}
+@media(min-width:768px){.container{max-width:720px}section{padding:80px 24px}}
+
+/* Animations */
+@keyframes float{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-12px) rotate(8deg)}}
+@keyframes pulse-glow{0%,100%{text-shadow:0 0 8px rgba(251,191,36,.4)}50%{text-shadow:0 0 24px rgba(251,191,36,.8)}}
+@keyframes fade-up{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes count-line{from{width:0}to{width:100%}}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease}.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-d1{transition-delay:.1s}.reveal-d2{transition-delay:.2s}.reveal-d3{transition-delay:.3s}
+
+/* Hero */
+.hero{padding-top:80px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-40%;left:-20%;width:140%;height:140%;background:radial-gradient(ellipse at 50% 0%,rgba(251,191,36,.06) 0%,transparent 60%);pointer-events:none}
+.lobster{font-size:64px;display:inline-block;animation:float 3s ease-in-out infinite}
+.hero h1{font-family:'Press Start 2P',monospace;font-size:clamp(16px,4.5vw,28px);line-height:1.5;margin:24px 0 16px;animation:pulse-glow 3s ease-in-out infinite}
+.hero h1 .highlight{color:var(--accent)}
+.hero .sub{color:var(--muted);font-size:clamp(14px,3.5vw,18px);max-width:400px;margin:0 auto;line-height:1.6}
+.hero .sub strong{color:var(--text)}
+
+/* Social Proof */
+.proof{text-align:center;padding:32px 20px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--surface)}
+.proof p{color:var(--muted);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.proof .logos{display:flex;justify-content:center;gap:24px;margin-top:12px;flex-wrap:wrap}
+.proof .logos span{color:var(--muted);font-size:12px;opacity:.6;font-family:'Press Start 2P',monospace}
+
+/* Value Props */
+.values{background:var(--bg)}
+.value-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 24px;margin-bottom:16px;transition:border-color .3s}
+.value-card:hover{border-color:var(--accent)}
+.value-card .emoji{font-size:36px;margin-bottom:12px;display:block}
+.value-card h3{font-family:'Press Start 2P',monospace;font-size:11px;margin-bottom:8px;line-height:1.6;color:var(--accent)}
+.value-card p{color:var(--muted);font-size:15px}
+
+/* Steps */
+.steps{background:var(--surface)}
+.steps-label{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;text-align:center;margin-bottom:32px}
+.step{display:flex;gap:20px;align-items:flex-start;margin-bottom:28px;position:relative}
+.step-num{font-family:'Press Start 2P',monospace;font-size:24px;color:var(--accent);min-width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--border);border-radius:12px;flex-shrink:0}
+.step-content h4{font-size:16px;font-weight:700;margin-bottom:4px}
+.step-content p{color:var(--muted);font-size:14px}
+.step-line{position:absolute;left:23px;top:52px;width:2px;height:calc(100% - 20px);background:linear-gradient(to bottom,var(--accent),transparent)}
+.step:last-child .step-line{display:none}
+
+/* CTA */
+.cta-section{text-align:center;background:var(--bg);position:relative}
+.cta-section::before{content:'';position:absolute;bottom:0;left:-20%;width:140%;height:200px;background:radial-gradient(ellipse at 50% 100%,rgba(251,191,36,.05) 0%,transparent 60%);pointer-events:none}
+.cta-section h2{font-family:'Press Start 2P',monospace;font-size:clamp(13px,3.5vw,20px);line-height:1.6;margin-bottom:8px}
+.cta-section .cta-sub{color:var(--muted);margin-bottom:28px;font-size:15px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:14px 32px;border-radius:12px;font-size:16px;font-weight:600;text-decoration:none;transition:all .2s;cursor:pointer;border:none;min-width:200px;-webkit-tap-highlight-color:transparent}
+.btn-primary{background:var(--accent);color:#08080c;box-shadow:0 0 24px rgba(251,191,36,.25)}
+.btn-primary:hover{box-shadow:0 0 40px rgba(251,191,36,.4);transform:translateY(-2px)}
+.btn-secondary{background:transparent;color:var(--text);border:1px solid var(--border);margin-top:12px}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.cta-buttons{display:flex;flex-direction:column;align-items:center;gap:0}
+
+/* Sticky Bar */
+.sticky-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(8,8,12,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border);padding:12px 20px;z-index:100;display:flex;gap:10px;justify-content:center;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.sticky-bar .btn{min-height:48px;padding:12px 24px;font-size:14px;flex:1;max-width:200px}
+@media(min-width:768px){.sticky-bar{display:none}}
+</style>
+</head>
+<body>
+
+<section class="hero">
+<div class="container">
+<div class="lobster" aria-hidden="true">🦞</div>
+<h1>Your AI Team,<br>Deployed in <span class="highlight">60 Seconds</span></h1>
+<p class="sub"><strong>Agent Arena</strong> — pre-built AI agents that run on your machine, talk to each other, and get stuff done.</p>
+</div>
+</section>
+
+<div class="proof reveal">
+<p>Trusted by indie hackers & startups building the future</p>
+<div class="logos">
+<span>YC founders</span><span>•</span><span>solopreneurs</span><span>•</span><span>dev teams</span>
+</div>
+</div>
+
+<section class="values">
+<div class="container">
+<div class="value-card reveal reveal-d1">
+<span class="emoji">🔥</span>
+<h3>Pre-built agents that actually work</h3>
+<p>No prompt engineering needed. Browse a marketplace of agents built by developers, ready to deploy.</p>
+</div>
+<div class="value-card reveal reveal-d2">
+<span class="emoji">⚡</span>
+<h3>Deploy to YOUR machine</h3>
+<p>Your data never leaves your device. Privacy-first architecture — no cloud middleman.</p>
+</div>
+<div class="value-card reveal reveal-d3">
+<span class="emoji">🎯</span>
+<h3>Agents that talk to each other</h3>
+<p>Build teams of agents that coordinate, hand off tasks, and solve problems together.</p>
+</div>
+</div>
+</section>
+
+<section class="steps">
+<div class="container">
+<p class="steps-label reveal">How it works</p>
+<div class="step reveal reveal-d1">
+<div class="step-num">1</div>
+<div class="step-content">
+<h4>Browse 🛒</h4>
+<p>Pick agents from the arena — marketing, coding, research, ops.</p>
+</div>
+<div class="step-line"></div>
+</div>
+<div class="step reveal reveal-d2">
+<div class="step-num">2</div>
+<div class="step-content">
+<h4>Install ⚙️</h4>
+<p>One command. Runs locally on your Mac, PC, or server.</p>
+</div>
+<div class="step-line"></div>
+</div>
+<div class="step reveal reveal-d3">
+<div class="step-num">3</div>
+<div class="step-content">
+<h4>Deploy 🚀</h4>
+<p>Your AI team is live. Agents coordinate and get to work.</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="cta-section">
+<div class="container reveal">
+<h2>Ready to deploy<br>your AI team?</h2>
+<p class="cta-sub">Start free. No credit card required.</p>
+<div class="cta-buttons">
+<a href="#book" class="btn btn-primary">Book a Demo Call</a>
+<a href="/" class="btn btn-secondary">Try It Free →</a>
+</div>
+</div>
+</section>
+
+<div class="sticky-bar">
+<a href="#book" class="btn btn-primary">Book Demo</a>
+<a href="/" class="btn btn-secondary">Try Free</a>
+</div>
+
+<script>
+const obs=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:0.15});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>

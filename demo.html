@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Arena — Live Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#08080c;--surface:#111118;--surface2:#1a1a24;--border:#2a2a3a;--text:#ececf1;--muted:#8e8ea0;--accent:#fbbf24;--green:#22c55e;--red:#ef4444;--purple:#a855f7;--pink:#ec4899;--cyan:#06b6d4;--blue:#3b82f6}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;padding-bottom:90px}
+h1,h2,h3,.pixel{font-family:'Press Start 2P',monospace}
+
+/* Scanline overlay */
+body::after{content:'';position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:9999;
+background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)}
+
+/* Header */
+.header{text-align:center;padding:32px 16px 24px;position:relative}
+.header h1{font-size:11px;color:var(--accent);letter-spacing:2px;margin-bottom:8px;text-shadow:0 0 20px rgba(251,191,36,.3)}
+.header p{color:var(--muted);font-size:13px}
+.live-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--green);margin-bottom:12px}
+.live-dot{width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,.4)}50%{opacity:.7;box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+
+/* Metrics bar */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 12px;margin-bottom:16px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center}
+.metric .val{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--accent);display:block;margin-bottom:4px}
+.metric .label{font-size:10px;color:var(--muted)}
+
+/* Agent cards */
+.agents{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px;margin-bottom:16px}
+.agent-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s}
+.agent-card.active{border-color:var(--green);box-shadow:0 0 20px rgba(34,197,94,.1)}
+.agent-card .emoji{font-size:24px;margin-bottom:6px;display:block}
+.agent-card .name{font-family:'Press Start 2P',monospace;font-size:8px;margin-bottom:6px;display:block}
+.agent-card .status{font-size:11px;color:var(--muted);min-height:28px}
+.agent-card .status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;background:var(--muted);vertical-align:middle}
+.agent-card .status-dot.online{background:var(--green);box-shadow:0 0 6px var(--green)}
+.agent-card .task-bar{height:3px;background:var(--surface2);border-radius:2px;margin-top:8px;overflow:hidden}
+.agent-card .task-fill{height:100%;width:0%;border-radius:2px;transition:width 1.5s ease}
+.growth .task-fill{background:linear-gradient(90deg,var(--green),var(--cyan))}
+.forge .task-fill{background:linear-gradient(90deg,var(--accent),var(--red))}
+.sales .task-fill{background:linear-gradient(90deg,var(--blue),var(--purple))}
+.devops .task-fill{background:linear-gradient(90deg,var(--purple),var(--pink))}
+.agent-card .check{position:absolute;top:10px;right:10px;font-size:16px;opacity:0;transition:opacity .3s;filter:drop-shadow(0 0 4px var(--green))}
+.agent-card .check.show{opacity:1}
+
+/* Chat */
+.chat-section{padding:0 12px;margin-bottom:16px}
+.chat-section h2{font-size:9px;color:var(--accent);margin-bottom:10px;letter-spacing:1px}
+.chat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;max-height:260px;overflow:hidden;position:relative}
+.chat-msg{display:flex;gap:8px;margin-bottom:10px;opacity:0;transform:translateY(10px);transition:opacity .4s,transform .4s}
+.chat-msg.show{opacity:1;transform:translateY(0)}
+.chat-msg .avatar{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.chat-msg .bubble{background:var(--surface2);border-radius:10px;padding:8px 10px;font-size:12px;line-height:1.5;max-width:85%}
+.chat-msg .sender{font-size:9px;font-weight:700;margin-bottom:2px;display:block}
+.typing{display:flex;gap:3px;padding:4px 0}
+.typing span{width:5px;height:5px;background:var(--muted);border-radius:50%;animation:typeBounce .6s infinite}
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+@keyframes typeBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* Terminal */
+.terminal-section{padding:0 12px;margin-bottom:16px}
+.terminal-section h2{font-size:9px;color:var(--accent);margin-bottom:10px;letter-spacing:1px}
+.terminal{background:#0a0a0f;border:1px solid var(--border);border-radius:12px;padding:12px;font-family:'Courier New',monospace;font-size:11px;height:180px;overflow:hidden;position:relative}
+.terminal::before{content:'● ● ●';position:absolute;top:8px;left:12px;font-size:8px;letter-spacing:4px;color:var(--border)}
+.terminal .lines{margin-top:18px}
+.term-line{opacity:0;transform:translateX(-10px);transition:opacity .3s,transform .3s;margin-bottom:3px;line-height:1.6}
+.term-line.show{opacity:1;transform:translateX(0)}
+.term-line .time{color:var(--muted)}
+.term-line .agent-tag{padding:1px 5px;border-radius:3px;font-size:10px;margin:0 4px}
+
+/* CTA */
+.cta{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(transparent,var(--bg) 20%,var(--bg));padding:20px 16px 24px;text-align:center;z-index:100}
+.cta p{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--accent);margin-bottom:12px;text-shadow:0 0 12px rgba(251,191,36,.2)}
+.cta-buttons{display:flex;gap:10px;justify-content:center}
+.cta-buttons a{padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;transition:transform .2s,box-shadow .2s}
+.cta-buttons a:active{transform:scale(.96)}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{box-shadow:0 0 30px rgba(251,191,36,.3)}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent)}
+
+/* Glow effects */
+@keyframes glowPulse{0%,100%{box-shadow:0 0 5px rgba(251,191,36,.1)}50%{box-shadow:0 0 20px rgba(251,191,36,.15)}}
+.header{animation:glowPulse 3s infinite}
+
+/* Particle bg */
+.particles{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden}
+.particle{position:absolute;width:2px;height:2px;background:var(--accent);border-radius:50%;opacity:.15;animation:float linear infinite}
+@keyframes float{0%{transform:translateY(100vh) scale(1);opacity:0}10%{opacity:.15}90%{opacity:.15}100%{transform:translateY(-10vh) scale(0);opacity:0}}
+main{position:relative;z-index:1}
+</style>
+</head>
+<body>
+<div class="particles" id="particles"></div>
+<main>
+<div class="header">
+<div class="live-badge"><span class="live-dot"></span> LIVE SIMULATION</div>
+<h1>AGENT ARENA</h1>
+<p>Watch AI agents work together in real-time</p>
+</div>
+
+<div class="metrics">
+<div class="metric"><span class="val" id="mrr">$0</span><span class="label">MRR</span></div>
+<div class="metric"><span class="val" id="tasks">0</span><span class="label">Tasks</span></div>
+<div class="metric"><span class="val" id="agentsActive">0</span><span class="label">Active</span></div>
+<div class="metric"><span class="val" id="uptime">99.9%</span><span class="label">Uptime</span></div>
+</div>
+
+<div class="agents">
+<div class="agent-card growth" id="card-growth">
+<span class="check">✅</span>
+<span class="emoji">📈</span>
+<span class="name">Growth</span>
+<div class="status"><span class="status-dot"></span> Standby</div>
+<div class="task-bar"><div class="task-fill"></div></div>
+</div>
+<div class="agent-card forge" id="card-forge">
+<span class="check">✅</span>
+<span class="emoji">🔥</span>
+<span class="name">Forge</span>
+<div class="status"><span class="status-dot"></span> Standby</div>
+<div class="task-bar"><div class="task-fill"></div></div>
+</div>
+<div class="agent-card sales" id="card-sales">
+<span class="check">✅</span>
+<span class="emoji">💰</span>
+<span class="name">Sales</span>
+<div class="status"><span class="status-dot"></span> Standby</div>
+<div class="task-bar"><div class="task-fill"></div></div>
+</div>
+<div class="agent-card devops" id="card-devops">
+<span class="check">✅</span>
+<span class="emoji">🔒</span>
+<span class="name">DevOps</span>
+<div class="status"><span class="status-dot"></span> Standby</div>
+<div class="task-bar"><div class="task-fill"></div></div>
+</div>
+</div>
+
+<div class="chat-section">
+<h2>⚡ AGENT COMMS</h2>
+<div class="chat" id="chat"></div>
+</div>
+
+<div class="terminal-section">
+<h2>📟 SYSTEM LOG</h2>
+<div class="terminal"><div class="lines" id="terminal"></div></div>
+</div>
+</main>
+
+<div class="cta">
+<p>Ready to deploy your AI team?</p>
+<div class="cta-buttons">
+<a href="#" class="btn-primary">Book a Demo</a>
+<a href="/" class="btn-secondary">Get Started</a>
+</div>
+</div>
+
+<script>
+// Particles
+const pEl=document.getElementById('particles');
+for(let i=0;i<30;i++){const p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.animationDuration=(8+Math.random()*12)+'s';p.style.animationDelay=(-Math.random()*20)+'s';p.style.width=p.style.height=(1+Math.random()*2)+'px';pEl.appendChild(p)}
+
+const cards={
+growth:{el:document.getElementById('card-growth'),color:'var(--green)'},
+forge:{el:document.getElementById('card-forge'),color:'var(--accent)'},
+sales:{el:document.getElementById('card-sales'),color:'var(--blue)'},
+devops:{el:document.getElementById('card-devops'),color:'var(--purple)'}
+};
+
+const chatEl=document.getElementById('chat');
+const termEl=document.getElementById('terminal');
+const mrrEl=document.getElementById('mrr');
+const tasksEl=document.getElementById('tasks');
+const activeEl=document.getElementById('agentsActive');
+
+let mrr=0,taskCount=0,activeCount=0;
+
+function setAgent(id,status,online=true,progress=0,done=false){
+const c=cards[id];
+c.el.querySelector('.status').innerHTML=`<span class="status-dot${online?' online':''}"></span> ${status}`;
+c.el.querySelector('.task-fill').style.width=progress+'%';
+if(online)c.el.classList.add('active');else c.el.classList.remove('active');
+c.el.querySelector('.check').classList.toggle('show',done);
+}
+
+function addChat(emoji,name,color,text,delay=0){
+return new Promise(r=>{
+setTimeout(()=>{
+// typing indicator
+const typing=document.createElement('div');
+typing.className='chat-msg show';
+typing.innerHTML=`<div class="avatar" style="background:${color}20">${emoji}</div><div class="bubble"><span class="sender" style="color:${color}">${name}</span><div class="typing"><span></span><span></span><span></span></div></div>`;
+chatEl.appendChild(typing);
+chatEl.scrollTop=9999;
+setTimeout(()=>{
+typing.remove();
+const msg=document.createElement('div');
+msg.className='chat-msg';
+msg.innerHTML=`<div class="avatar" style="background:${color}20">${emoji}</div><div class="bubble"><span class="sender" style="color:${color}">${name}</span>${text}</div>`;
+chatEl.appendChild(msg);
+requestAnimationFrame(()=>{msg.classList.add('show');chatEl.scrollTop=9999});
+r();
+},800+Math.random()*600);
+},delay);
+});
+}
+
+function addLog(agent,color,text){
+const line=document.createElement('div');
+line.className='term-line';
+const t=new Date();
+const ts=t.toTimeString().slice(0,8);
+line.innerHTML=`<span class="time">${ts}</span> <span class="agent-tag" style="background:${color}20;color:${color}">${agent}</span> ${text}`;
+termEl.appendChild(line);
+requestAnimationFrame(()=>{line.classList.add('show');termEl.scrollTop=9999});
+// keep max 15 lines
+while(termEl.children.length>15)termEl.removeChild(termEl.firstChild);
+}
+
+function animateValue(el,start,end,prefix='',suffix='',duration=1500){
+const s=performance.now();
+const step=t=>{
+const p=Math.min((t-s)/duration,1);
+const v=Math.round(start+(end-start)*p);
+el.textContent=prefix+v.toLocaleString()+suffix;
+if(p<1)requestAnimationFrame(step);
+};
+requestAnimationFrame(step);
+}
+
+async function wait(ms){return new Promise(r=>setTimeout(r,ms))}
+
+async function runSequence(){
+// Reset
+chatEl.innerHTML='';termEl.innerHTML='';
+Object.keys(cards).forEach(k=>setAgent(k,'Standby',false,0,false));
+mrr=12400;taskCount=47;activeCount=0;
+mrrEl.textContent='$12,400';tasksEl.textContent='47';activeEl.textContent='0';
+
+await wait(600);
+
+// Boot agents
+addLog('SYS','var(--accent)','Initializing Agent Arena v2.1...');
+await wait(700);
+addLog('SYS','var(--accent)','Loading agent configurations...');
+await wait(500);
+
+// Bring agents online one by one
+setAgent('growth','Coming online...',true,0);activeCount++;activeEl.textContent=activeCount;
+addLog('GROWTH','var(--green)','Agent online. Scanning analytics...');
+await wait(400);
+
+setAgent('forge','Coming online...',true,0);activeCount++;activeEl.textContent=activeCount;
+addLog('FORGE','var(--accent)','Agent online. Checking build queue...');
+await wait(400);
+
+setAgent('sales','Coming online...',true,0);activeCount++;activeEl.textContent=activeCount;
+addLog('SALES','var(--blue)','Agent online. Loading CRM data...');
+await wait(400);
+
+setAgent('devops','Coming online...',true,0);activeCount++;activeEl.textContent=activeCount;
+addLog('DEVOPS','var(--purple)','Agent online. Monitoring infrastructure...');
+await wait(800);
+
+// Growth starts task
+setAgent('growth','Analyzing funnel...',true,15);
+addLog('GROWTH','var(--green)','Found 3 conversion bottlenecks');
+await addChat('📈','Growth','var(--green)','Found a 23% drop-off on the pricing page. Running A/B test now.');
+await wait(300);
+setAgent('growth','Running A/B test...',true,45);
+
+// Forge responds
+await addChat('🔥','Forge','var(--accent)','I\'ll build the new pricing component. Give me 2 min.');
+addLog('FORGE','var(--accent)','Creating branch: feat/pricing-redesign');
+setAgent('forge','Building pricing UI...',true,20);
+await wait(600);
+
+// Sales chimes in
+await addChat('💰','Sales','var(--blue)','3 enterprise leads just came in from the webinar. Following up now.');
+addLog('SALES','var(--blue)','Sending personalized outreach to 3 leads');
+setAgent('sales','Outreach sequence...',true,30);
+await wait(400);
+
+// MRR bump
+animateValue(mrrEl,12400,13200,'$','',2000);
+mrr=13200;
+addLog('SALES','var(--blue)','Lead converted: Acme Corp → $800/mo');
+await wait(500);
+
+// DevOps monitoring
+await addChat('🔒','DevOps','var(--purple)','Heads up — API latency spike detected. Scaling up 2 pods.');
+addLog('DEVOPS','var(--purple)','kubectl scale deployment/api --replicas=4');
+setAgent('devops','Scaling pods...',true,50);
+await wait(800);
+
+setAgent('devops','Pods healthy ✓',true,100,true);
+addLog('DEVOPS','var(--purple)','All pods healthy. Latency back to 45ms ✓');
+taskCount++;tasksEl.textContent=taskCount;
+await wait(400);
+
+// Forge completes
+setAgent('forge','Building...',true,70);
+addLog('FORGE','var(--accent)','Component built. Running tests...');
+await wait(600);
+addLog('FORGE','var(--accent)','12/12 tests passing ✓');
+setAgent('forge','PR ready ✓',true,100,true);
+taskCount++;tasksEl.textContent=taskCount;
+
+await addChat('🔥','Forge','var(--accent)','PR #847 ready for review. Tests passing. Preview deployed.');
+await wait(300);
+await addChat('📈','Growth','var(--green)','Preview looks 🔥 — A/B test shows +18% conversion already.');
+setAgent('growth','+18% conversion!',true,100,true);
+taskCount++;tasksEl.textContent=taskCount;
+await wait(400);
+
+// More MRR
+animateValue(mrrEl,13200,14800,'$','',2000);
+addLog('GROWTH','var(--green)','Projected MRR impact: +$1,600/mo');
+await wait(600);
+
+// Sales closes
+setAgent('sales','Closing deals...',true,75);
+await addChat('💰','Sales','var(--blue)','Closed 2/3 enterprise deals. Total: $2,400 new MRR 🎉');
+addLog('SALES','var(--blue)','Deal closed: TechFlow Inc → $1,200/mo');
+addLog('SALES','var(--blue)','Deal closed: DataSync Co → $1,200/mo');
+setAgent('sales','3 deals closed ✓',true,100,true);
+taskCount+=2;tasksEl.textContent=taskCount;
+animateValue(mrrEl,14800,17200,'$','',2000);
+await wait(800);
+
+// Agent coordination moment
+await addChat('📈','Growth','var(--green)','Team sync: MRR up $4,800 today. All tasks green. 🏆');
+await addChat('🔥','Forge','var(--accent)','Shipping the pricing update to prod now.');
+await addChat('🔒','DevOps','var(--purple)','Deployment pipeline ready. Zero-downtime deploy initiated.');
+addLog('DEVOPS','var(--purple)','Deploying feat/pricing-redesign to production...');
+await wait(1000);
+addLog('DEVOPS','var(--purple)','Deploy successful. All health checks passing ✓');
+addLog('SYS','var(--accent)','Daily objective: COMPLETE 🏆');
+await wait(600);
+await addChat('💰','Sales','var(--blue)','Best Tuesday ever. These agents don\'t sleep. 😤💪');
+await wait(3000);
+
+// Loop
+runSequence();
+}
+
+runSequence();
+</script>
+</body>
+</html>
