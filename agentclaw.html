@@ -4,551 +4,619 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a0a0f">
+<meta name="theme-color" content="#0C1117">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
 <title>AgentClaw — AI Outbound for Real Estate</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Satoshi:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0a0f; --surface: #141420; --surface2: #1a1a28; --surface3: #222233;
-  --border: #2a2a3d; --border2: #353550;
-  --text: #eaeaf0; --text2: #9898ad; --muted: #5e5e75;
-  --accent: #6c5ce7; --accent2: #a29bfe; --accent-dim: rgba(108,92,231,0.12);
-  --green: #00cec9; --green-dim: rgba(0,206,201,0.1);
-  --red: #ff6b6b; --red-dim: rgba(255,107,107,0.1);
-  --orange: #ffa94d; --orange-dim: rgba(255,169,77,0.1);
-  --blue: #74b9ff; --blue-dim: rgba(116,185,255,0.1);
-  --r: 10px; --r-sm: 6px; --r-lg: 14px;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bg: #0C1117; --bg2: #111820; --surface: #161D26; --surface2: #1C2530;
+  --surface3: #222D3A; --border: #2A3544; --border2: #354354;
+  --text: #E8ECF0; --text2: #8B98A8; --muted: #576270;
+  --warm: #E8A838; --warm2: #F0C060; --warm-dim: rgba(232,168,56,0.10);
+  --warm-glow: rgba(232,168,56,0.20);
+  --green: #34D399; --green-dim: rgba(52,211,153,0.10);
+  --red: #F87171; --red-dim: rgba(248,113,113,0.10);
+  --blue: #60A5FA; --blue-dim: rgba(96,165,250,0.10);
+  --r: 12px; --r-sm: 8px; --r-lg: 16px; --r-xl: 20px;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{height:100%;overflow:hidden}
-body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100%;overflow:hidden}
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-::selection{background:var(--accent-dim)}
-input,button,textarea{font-family:inherit}
-a{color:var(--accent2)}
+html{height:100%;overflow-x:hidden}
+body{font-family:'Satoshi',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100%;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::selection{background:var(--warm-dim);color:var(--warm)}
+input,button,textarea,select{font-family:inherit}
+a{color:var(--warm2);text-decoration:none}
 
-.app{display:flex;flex-direction:column;height:100%;padding-top:var(--safe-top)}
+/* Grain overlay */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:0.025;mix-blend-mode:overlay}
 
-/* Header */
-.header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
-.logo{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.5px}
-.logo-emoji{font-size:20px}
-.header-right{margin-left:auto;display:flex;gap:8px}
-.btn{padding:8px 16px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
-.btn:hover{background:var(--surface2);border-color:var(--border2)}
-.btn-accent{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn-accent:hover{background:#5a4bd6;border-color:#5a4bd6}
-.btn-sm{padding:6px 12px;font-size:12px}
-.btn:disabled{opacity:.5;cursor:not-allowed}
+/* ═══ Layout ═══ */
+.container{max-width:1100px;margin:0 auto;padding:0 20px}
 
-/* Stats bar */
-.stats-bar{display:flex;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
-.stat{display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--surface);border-radius:var(--r-sm);font-size:13px;color:var(--text2)}
-.stat-num{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:16px;color:var(--text)}
-.stat-num.accent{color:var(--accent2)}
-.stat-num.green{color:var(--green)}
-.stat-num.orange{color:var(--orange)}
+/* ═══ Header ═══ */
+header{padding:24px 0 0;position:sticky;top:0;z-index:50;background:var(--bg);
+  border-bottom:1px solid transparent;transition:border-color .3s}
+header.scrolled{border-bottom-color:var(--border)}
+.header-inner{display:flex;align-items:center;gap:16px;padding-bottom:20px}
+.brand{display:flex;align-items:center;gap:10px;flex:1}
+.brand-icon{font-size:24px}
+.brand h1{font-family:'Instrument Serif',Georgia,serif;font-size:22px;font-weight:400;
+  background:linear-gradient(135deg,var(--warm),var(--warm2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-actions{display:flex;gap:8px}
+.btn-ghost{padding:8px 16px;border:1px solid var(--border);border-radius:var(--r-sm);
+  background:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-ghost:hover{border-color:var(--warm);color:var(--warm);background:var(--warm-dim)}
 
-/* Content */
-.content{flex:1;overflow-y:auto;padding-bottom:var(--safe-bottom)}
+/* ═══ Stats Bar ═══ */
+.stats{display:flex;gap:12px;padding:16px 0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.stat-card{flex:1;min-width:140px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px;transition:all .2s}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.stat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:6px}
+.stat-value{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;color:var(--text)}
+.stat-value .unit{font-size:14px;color:var(--text2);font-weight:500;margin-left:2px}
+.stat-card.warm .stat-value{color:var(--warm)}
+.stat-card.green .stat-value{color:var(--green)}
+.stat-card.blue .stat-value{color:var(--blue)}
 
-/* Upload view */
-.view{display:none;animation:fadeIn .25s ease}
-.view.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* ═══ Upload Zone ═══ */
+.upload-zone{margin:20px 0;border:2px dashed var(--border);border-radius:var(--r-lg);
+  padding:48px 24px;text-align:center;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.upload-zone::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at center,var(--warm-dim) 0%,transparent 70%);opacity:0;transition:opacity .3s}
+.upload-zone:hover{border-color:var(--warm);background:var(--warm-dim)}
+.upload-zone:hover::before{opacity:1}
+.upload-zone.dragover{border-color:var(--warm);background:var(--warm-dim);transform:scale(1.01)}
+.upload-zone.dragover::before{opacity:1}
+.upload-zone.has-data{display:none}
+.uz-icon{font-size:40px;margin-bottom:12px;position:relative;z-index:1}
+.uz-title{font-size:17px;font-weight:700;margin-bottom:6px;position:relative;z-index:1}
+.uz-sub{font-size:13px;color:var(--text2);line-height:1.5;position:relative;z-index:1}
+.uz-sub code{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface2);padding:2px 6px;border-radius:4px}
+.upload-zone input[type=file]{display:none}
 
-.upload-view{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:40px 20px}
-.upload-view.active{display:flex}
+/* ═══ Lead Cards ═══ */
+.leads-section{margin:24px 0}
+.leads-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.leads-title{font-family:'Instrument Serif',Georgia,serif;font-size:20px}
+.leads-count{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.leads-grid{display:grid;grid-template-columns:1fr;gap:12px}
 
-.drop-zone{width:100%;max-width:520px;border:2px dashed var(--border);border-radius:var(--r-lg);padding:60px 40px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
-.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);background:var(--accent-dim)}
-.drop-zone-icon{font-size:48px;margin-bottom:16px}
-.drop-zone-title{font-size:18px;font-weight:700;margin-bottom:8px}
-.drop-zone-sub{font-size:13px;color:var(--muted);line-height:1.6}
-.drop-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.lead-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:18px 20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.lead-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.lead-card.active{border-color:var(--warm);box-shadow:0 0 0 1px var(--warm),0 4px 20px rgba(232,168,56,.1)}
+.lead-card .lc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.lead-card .lc-name{font-size:16px;font-weight:700}
+.lead-card .lc-status{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+  padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.lc-status.foreclosure{background:var(--red-dim);color:var(--red)}
+.lc-status.expired{background:rgba(255,169,77,.1);color:#FFA94D}
+.lc-status.fsbo{background:var(--blue-dim);color:var(--blue)}
+.lc-status.default{background:var(--surface2);color:var(--text2)}
+.lead-card .lc-address{font-size:13px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.lead-card .lc-address::before{content:'📍';font-size:12px}
+.lead-card .lc-meta{display:flex;gap:16px;font-size:11px;color:var(--muted)}
+.lead-card .lc-meta span{display:flex;align-items:center;gap:4px}
+.lead-card .lc-enriched{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text2);line-height:1.5}
+.lead-card .lc-actions{display:flex;gap:8px;margin-top:12px}
 
-.upload-hint{margin-top:20px;font-size:12px;color:var(--muted);max-width:520px;text-align:center;line-height:1.6}
-.upload-hint code{font-family:'IBM Plex Mono',monospace;background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:11px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;
+  padding:3px 8px;border-radius:12px}
+.badge.enriched{background:var(--green-dim);color:var(--green)}
+.badge.drafted{background:var(--warm-dim);color:var(--warm)}
+.badge.sent{background:var(--blue-dim);color:var(--blue)}
 
-/* Dashboard view */
-.dashboard-view{display:none}
-.dashboard-view.active{display:block}
+/* ═══ Detail Panel (slide-in) ═══ */
+.detail-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
+.detail-overlay.open{display:flex;justify-content:flex-end}
+.detail-panel{width:100%;max-width:560px;background:var(--bg2);border-left:1px solid var(--border);
+  overflow-y:auto;animation:slideIn .25s cubic-bezier(.4,0,.2,1)}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
 
-.leads-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:16px 20px}
+.dp-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;position:sticky;top:0;background:var(--bg2);z-index:1}
+.dp-close{width:36px;height:36px;border:1px solid var(--border);border-radius:var(--r-sm);
+  background:none;color:var(--text2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.dp-close:hover{border-color:var(--red);color:var(--red);background:var(--red-dim)}
+.dp-title{flex:1;font-size:18px;font-weight:700}
 
-.lead-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .15s;position:relative}
-.lead-card:hover{border-color:var(--border2);background:var(--surface2);transform:translateY(-1px)}
-.lead-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
-.lead-name{font-size:15px;font-weight:700}
-.lead-address{font-size:12px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:4px}
-.lead-snippet{font-size:12px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.lead-card-footer{display:flex;align-items:center;gap:6px;margin-top:10px}
+.dp-section{padding:20px 24px;border-bottom:1px solid var(--border)}
+.dp-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:12px}
 
-.badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
-.badge-new{background:var(--blue-dim);color:var(--blue)}
-.badge-active{background:var(--green-dim);color:var(--green)}
-.badge-expired{background:var(--red-dim);color:var(--red)}
-.badge-preforeclosure{background:var(--orange-dim);color:var(--orange)}
-.badge-other{background:var(--accent-dim);color:var(--accent2)}
+.dp-field{margin-bottom:12px}
+.dp-field label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px}
+.dp-field .val{font-size:14px;color:var(--text)}
 
-.contact-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;margin-left:auto}
-.contact-badge.drafted{background:var(--orange-dim);color:var(--orange)}
-.contact-badge.sent{background:var(--green-dim);color:var(--green)}
-
-/* Detail panel */
-.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:flex-end;justify-content:center;animation:fadeOverlay .2s ease}
-.detail-overlay.active{display:flex}
-@keyframes fadeOverlay{from{opacity:0}to{opacity:1}}
-
-.detail-panel{background:var(--bg);border:1px solid var(--border);border-bottom:none;border-radius:var(--r-lg) var(--r-lg) 0 0;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;animation:slideUp .25s cubic-bezier(.4,0,.2,1);padding-bottom:var(--safe-bottom)}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-@media(min-width:640px){
-  .detail-overlay{align-items:center}
-  .detail-panel{border-radius:var(--r-lg);border-bottom:1px solid var(--border);max-height:85vh;padding-bottom:0}
-  @keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
-}
-
-.detail-header{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px}
-.detail-close{width:32px;height:32px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;flex-shrink:0}
-.detail-close:hover{background:var(--surface2);color:var(--text)}
-.detail-title{font-size:18px;font-weight:700;flex:1}
-.detail-address{font-size:13px;color:var(--muted);margin-top:4px}
-
-.detail-body{padding:20px}
-.detail-section{margin-bottom:20px}
-.detail-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:10px}
-
-.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.info-item{background:var(--surface);border-radius:var(--r-sm);padding:10px 12px}
-.info-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
-.info-value{font-size:13px;font-weight:500}
-.info-item.full{grid-column:1/-1}
-
-.action-row{display:flex;gap:8px;flex-wrap:wrap}
-
-/* Enrichment cards */
-.enrichment-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.enrichment-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px}
-.enrichment-card-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:flex;align-items:center;gap:4px}
-.enrichment-card-value{font-size:13px;line-height:1.5}
-.enrichment-card.full{grid-column:1/-1}
+/* Enrich button */
+.btn-enrich{width:100%;padding:14px;border:1px solid var(--warm);border-radius:var(--r);
+  background:var(--warm-dim);color:var(--warm);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s}
+.btn-enrich:hover{background:var(--warm);color:var(--bg);box-shadow:0 4px 20px var(--warm-glow)}
+.btn-enrich:disabled{opacity:.4;cursor:default;background:var(--warm-dim);color:var(--warm)}
+.btn-enrich.loading{pointer-events:none}
+.btn-enrich.loading::after{content:'';display:inline-block;width:14px;height:14px;border:2px solid currentColor;
+  border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin-left:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* Email editor */
-.email-editor textarea{width:100%;min-height:160px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;color:var(--text);font-size:13px;line-height:1.6;resize:vertical;transition:border-color .15s}
-.email-editor textarea:focus{outline:none;border-color:var(--accent)}
-.email-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.email-editor{margin-top:4px}
+.email-editor textarea{width:100%;min-height:200px;padding:16px;border:1px solid var(--border);border-radius:var(--r);
+  background:var(--surface);color:var(--text);font-size:14px;line-height:1.6;resize:vertical;outline:none;transition:border-color .15s}
+.email-editor textarea:focus{border-color:var(--warm);box-shadow:0 0 0 2px var(--warm-glow)}
+.email-editor textarea::placeholder{color:var(--muted)}
 
-/* Shimmer */
-.shimmer{background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--r-sm);height:40px}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.shimmer-block{padding:12px}
-.shimmer+.shimmer{margin-top:8px}
+.email-actions{display:flex;gap:8px;margin-top:12px}
+.btn-primary{padding:12px 24px;border:none;border-radius:var(--r);
+  background:linear-gradient(135deg,var(--warm),var(--warm2));color:var(--bg);
+  font-size:14px;font-weight:700;cursor:pointer;transition:all .15s}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 20px var(--warm-glow)}
+.btn-primary:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
+.btn-secondary{padding:12px 24px;border:1px solid var(--border);border-radius:var(--r);
+  background:none;color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-secondary:hover{border-color:var(--text2);color:var(--text)}
 
-/* Empty state */
-.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
-.empty-state-icon{font-size:40px;margin-bottom:12px}
-.empty-state-text{font-size:14px;line-height:1.6}
+/* ═══ Empty state ═══ */
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty .e-icon{font-size:48px;margin-bottom:16px;opacity:.5}
+.empty .e-title{font-size:17px;font-weight:700;color:var(--text2);margin-bottom:8px}
+.empty .e-sub{font-size:13px;line-height:1.6;max-width:360px;margin:0 auto}
 
-/* Toast */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 20px;font-size:13px;font-weight:600;z-index:300;animation:toastIn .3s ease;pointer-events:none}
-@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+/* ═══ Toast ═══ */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
+  padding:12px 20px;font-size:13px;font-weight:600;z-index:999;transition:transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 8px 30px rgba(0,0,0,.4);display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(--green);color:var(--green)}
+.toast.error{border-color:var(--red);color:var(--red)}
 
-/* Status select */
-.status-select{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:12px;padding:4px 8px;font-family:inherit;cursor:pointer}
-.status-select:focus{outline:none;border-color:var(--accent)}
+/* ═══ Mobile ═══ */
+@media(max-width:640px){
+  .container{padding:0 14px}
+  header{padding:16px 0 0}
+  .brand h1{font-size:19px}
+  .stats{gap:8px}
+  .stat-card{padding:12px;min-width:110px}
+  .stat-value{font-size:22px}
+  .upload-zone{padding:32px 16px}
+  .detail-panel{max-width:100%}
+  .dp-header{padding:16px}
+  .dp-section{padding:16px}
+}
+
+/* ═══ Animations ═══ */
+.fade-in{animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.stagger-1{animation-delay:.05s}
+.stagger-2{animation-delay:.1s}
+.stagger-3{animation-delay:.15s}
+.stagger-4{animation-delay:.2s}
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="header">
-    <span class="logo-emoji">🏠</span>
-    <span class="logo">AgentClaw</span>
-    <div class="header-right">
-      <button class="btn btn-sm" id="importBtn" style="display:none" onclick="showUpload()">+ Import CSV</button>
-      <button class="btn btn-sm" id="clearBtn" style="display:none" onclick="clearAll()">Clear All</button>
+
+<header id="header">
+  <div class="container header-inner">
+    <div class="brand">
+      <span class="brand-icon">🏠</span>
+      <h1>AgentClaw</h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn-ghost" onclick="document.getElementById('csvInput').click()">+ Import CSV</button>
+      <button class="btn-ghost" onclick="clearAll()">Clear</button>
     </div>
   </div>
+</header>
 
-  <div class="stats-bar" id="statsBar" style="display:none">
-    <div class="stat">📋 <span class="stat-num accent" id="statTotal">0</span> Leads</div>
-    <div class="stat">✏️ <span class="stat-num orange" id="statDrafted">0</span> Drafted</div>
-    <div class="stat">✅ <span class="stat-num green" id="statSent">0</span> Sent</div>
+<div class="container">
+  <!-- Stats -->
+  <div class="stats" id="stats">
+    <div class="stat-card"><div class="stat-label">Total Leads</div><div class="stat-value" id="statTotal">0</div></div>
+    <div class="stat-card warm"><div class="stat-label">Enriched</div><div class="stat-value" id="statEnriched">0</div></div>
+    <div class="stat-card green"><div class="stat-label">Drafted</div><div class="stat-value" id="statDrafted">0</div></div>
+    <div class="stat-card blue"><div class="stat-label">Sent</div><div class="stat-value" id="statSent">0</div></div>
   </div>
 
-  <div class="content">
-    <div class="upload-view active" id="uploadView">
-      <div class="drop-zone" id="dropZone">
-        <input type="file" accept=".csv,.tsv,.txt" id="fileInput">
-        <div class="drop-zone-icon">📂</div>
-        <div class="drop-zone-title">Drop your lead list here</div>
-        <div class="drop-zone-sub">CSV file with columns like name, email, address, status, notes<br>We'll fuzzy-match whatever headers you have</div>
-      </div>
-      <div class="upload-hint">
-        Expected columns: <code>name</code> <code>email</code> <code>address</code> <code>property_status</code> <code>notes</code><br>
-        Don't have all? No problem — we'll work with what you've got.
-      </div>
+  <!-- Upload Zone -->
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('csvInput').click()">
+    <div class="uz-icon">📋</div>
+    <div class="uz-title">Drop your lead list here</div>
+    <div class="uz-sub">
+      CSV with columns like <code>name</code> <code>email</code> <code>address</code> <code>status</code> <code>notes</code><br>
+      We'll match columns automatically — don't worry about exact names
     </div>
+    <input type="file" id="csvInput" accept=".csv,.tsv,.txt" onchange="handleFile(event)">
+  </div>
 
-    <div class="dashboard-view" id="dashboardView">
-      <div class="leads-grid" id="leadsGrid"></div>
+  <!-- Leads -->
+  <div class="leads-section" id="leadsSection" style="display:none">
+    <div class="leads-header">
+      <div class="leads-title">Your Leads</div>
+      <div class="leads-count" id="leadsCount"></div>
     </div>
+    <div class="leads-grid" id="leadsGrid"></div>
+  </div>
+
+  <!-- Empty state (no leads yet) -->
+  <div class="empty" id="emptyState">
+    <div class="e-icon">🏡</div>
+    <div class="e-title">No leads yet</div>
+    <div class="e-sub">Upload a CSV of property leads — foreclosures, expired listings, FSBOs, whatever you've got. AI will enrich each one and draft personalized outreach emails.</div>
   </div>
 </div>
 
+<!-- Detail Overlay -->
 <div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
   <div class="detail-panel" id="detailPanel"></div>
 </div>
 
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <script>
-const STORAGE_KEY = 'agentclaw_leads';
-let leads = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-let currentLeadId = null;
+// ═══ State ═══
+let leads = []; // [{id, name, email, address, status, notes, enrichment, emailDraft, sent}]
 
-// Init
-if (leads.length) showDashboard();
-
-// CSV parsing
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-
-['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.add('drag-over'); }));
-['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.remove('drag-over'); }));
-dropZone.addEventListener('drop', ev => { if(ev.dataTransfer.files[0]) parseCSV(ev.dataTransfer.files[0]); });
-fileInput.addEventListener('change', ev => { if(ev.target.files[0]) parseCSV(ev.target.files[0]); });
-
-function parseCSV(file) {
+// ═══ CSV Parsing ═══
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    const text = e.target.result;
-    const lines = text.split(/\r?\n/).filter(l => l.trim());
-    if (lines.length < 2) return toast('CSV needs a header row + at least one data row');
-    
-    const sep = lines[0].includes('\t') ? '\t' : ',';
-    const headers = parseLine(lines[0], sep).map(h => h.toLowerCase().trim());
-    
-    const colMap = {
-      name: fuzzyMatch(headers, ['name','full_name','fullname','owner','owner_name','contact','first_name']),
-      email: fuzzyMatch(headers, ['email','e-mail','email_address','mail']),
-      address: fuzzyMatch(headers, ['address','property_address','street','property','location','full_address']),
-      status: fuzzyMatch(headers, ['status','property_status','prop_status','listing_status','type']),
-      notes: fuzzyMatch(headers, ['notes','note','comments','description','details','info'])
-    };
-
-    const newLeads = [];
-    for (let i = 1; i < lines.length; i++) {
-      const vals = parseLine(lines[i], sep);
-      if (!vals.length || vals.every(v => !v.trim())) continue;
-      const lead = {
-        id: Date.now() + '_' + i,
-        name: vals[colMap.name] || '',
-        email: vals[colMap.email] || '',
-        address: vals[colMap.address] || '',
-        status: vals[colMap.status] || '',
-        notes: vals[colMap.notes] || '',
-        enrichment: null,
-        emailDraft: '',
-        contactStatus: 'not_contacted',
-        createdAt: Date.now()
-      };
-      if (lead.name || lead.address || lead.email) newLeads.push(lead);
-    }
-
-    if (!newLeads.length) return toast('No valid leads found in CSV');
-    leads = leads.concat(newLeads);
-    save();
-    showDashboard();
-    toast(`Imported ${newLeads.length} leads`);
-  };
+  reader.onload = (ev) => parseCSV(ev.target.result);
   reader.readAsText(file);
+  e.target.value = '';
 }
 
-function parseLine(line, sep) {
-  const result = []; let current = ''; let inQuotes = false;
+// Drag & drop
+const uz = document.getElementById('uploadZone');
+uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('dragover'); });
+uz.addEventListener('dragleave', () => uz.classList.remove('dragover'));
+uz.addEventListener('drop', e => {
+  e.preventDefault(); uz.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) { const r = new FileReader(); r.onload = ev => parseCSV(ev.target.result); r.readAsText(file); }
+});
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) { showToast('CSV needs a header row + at least one data row', 'error'); return; }
+
+  const sep = lines[0].includes('\t') ? '\t' : ',';
+  const headers = parseCSVLine(lines[0], sep).map(h => h.toLowerCase().trim());
+
+  // Smart column matching
+  const colMap = {
+    name: findCol(headers, ['name', 'owner', 'contact', 'full_name', 'fullname', 'owner_name']),
+    email: findCol(headers, ['email', 'mail', 'email_address', 'contact_email']),
+    address: findCol(headers, ['address', 'property', 'property_address', 'street', 'location']),
+    status: findCol(headers, ['status', 'type', 'property_status', 'listing_status', 'category']),
+    notes: findCol(headers, ['notes', 'comments', 'description', 'details', 'info']),
+    phone: findCol(headers, ['phone', 'tel', 'telephone', 'mobile', 'cell']),
+    price: findCol(headers, ['price', 'value', 'asking_price', 'list_price', 'amount']),
+  };
+
+  const newLeads = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = parseCSVLine(lines[i], sep);
+    if (vals.length < 2) continue;
+    const lead = {
+      id: crypto.randomUUID(),
+      name: getVal(vals, colMap.name) || `Lead ${i}`,
+      email: getVal(vals, colMap.email) || '',
+      address: getVal(vals, colMap.address) || '',
+      status: getVal(vals, colMap.status) || '',
+      notes: getVal(vals, colMap.notes) || '',
+      phone: getVal(vals, colMap.phone) || '',
+      price: getVal(vals, colMap.price) || '',
+      enrichment: null,
+      emailDraft: '',
+      sent: false,
+      raw: {}
+    };
+    // Store all raw values
+    headers.forEach((h, idx) => { if (vals[idx]) lead.raw[h] = vals[idx]; });
+    newLeads.push(lead);
+  }
+
+  if (newLeads.length === 0) { showToast('No valid rows found in CSV', 'error'); return; }
+
+  leads = [...leads, ...newLeads];
+  saveLeads();
+  render();
+  showToast(`${newLeads.length} leads imported`, 'success');
+}
+
+function parseCSVLine(line, sep) {
+  const result = [];
+  let current = '';
+  let inQuote = false;
   for (const ch of line) {
-    if (ch === '"') { inQuotes = !inQuotes; }
-    else if (ch === sep && !inQuotes) { result.push(current.trim()); current = ''; }
+    if (ch === '"') { inQuote = !inQuote; }
+    else if (ch === sep && !inQuote) { result.push(current.trim()); current = ''; }
     else { current += ch; }
   }
   result.push(current.trim());
   return result;
 }
 
-function fuzzyMatch(headers, candidates) {
+function findCol(headers, candidates) {
   for (const c of candidates) {
-    const idx = headers.findIndex(h => h.replace(/[^a-z0-9]/g,'').includes(c.replace(/[^a-z0-9]/g,'')));
-    if (idx !== -1) return idx;
+    const idx = headers.indexOf(c);
+    if (idx >= 0) return idx;
+  }
+  // Fuzzy match
+  for (const c of candidates) {
+    const idx = headers.findIndex(h => h.includes(c) || c.includes(h));
+    if (idx >= 0) return idx;
   }
   return -1;
 }
 
-// Views
-function showUpload() {
-  document.getElementById('uploadView').classList.add('active');
-  document.getElementById('dashboardView').classList.remove('active');
-  document.getElementById('statsBar').style.display = 'none';
-  document.getElementById('importBtn').style.display = 'none';
-  document.getElementById('clearBtn').style.display = 'none';
-}
+function getVal(vals, idx) { return idx >= 0 && vals[idx] ? vals[idx].replace(/^["']|["']$/g, '').trim() : ''; }
 
-function showDashboard() {
-  document.getElementById('uploadView').classList.remove('active');
-  document.getElementById('dashboardView').classList.add('active');
-  document.getElementById('statsBar').style.display = 'flex';
-  document.getElementById('importBtn').style.display = '';
-  document.getElementById('clearBtn').style.display = '';
-  renderLeads();
-  updateStats();
-}
+// ═══ Persistence ═══
+function saveLeads() { localStorage.setItem('ac-leads', JSON.stringify(leads)); }
+function loadLeads() { try { leads = JSON.parse(localStorage.getItem('ac-leads') || '[]'); } catch { leads = []; } }
 
-function updateStats() {
+// ═══ Render ═══
+function render() {
+  // Stats
   document.getElementById('statTotal').textContent = leads.length;
-  document.getElementById('statDrafted').textContent = leads.filter(l => l.contactStatus === 'drafted').length;
-  document.getElementById('statSent').textContent = leads.filter(l => l.contactStatus === 'sent').length;
-}
+  document.getElementById('statEnriched').textContent = leads.filter(l => l.enrichment).length;
+  document.getElementById('statDrafted').textContent = leads.filter(l => l.emailDraft).length;
+  document.getElementById('statSent').textContent = leads.filter(l => l.sent).length;
 
-function renderLeads() {
+  // Toggle sections
+  const hasLeads = leads.length > 0;
+  document.getElementById('uploadZone').classList.toggle('has-data', hasLeads);
+  document.getElementById('leadsSection').style.display = hasLeads ? '' : 'none';
+  document.getElementById('emptyState').style.display = hasLeads ? 'none' : '';
+  document.getElementById('leadsCount').textContent = `${leads.length} leads`;
+
+  // Lead cards
   const grid = document.getElementById('leadsGrid');
-  if (!leads.length) {
-    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No leads yet. Import a CSV to get started.</div></div>';
-    return;
-  }
-  grid.innerHTML = leads.map(l => `
-    <div class="lead-card" onclick="openDetail('${l.id}')">
-      <div class="lead-card-header">
-        <div class="lead-name">${esc(l.name || 'Unknown')}</div>
-        ${statusBadge(l.status)}
+  grid.innerHTML = leads.map((l, i) => {
+    const statusClass = getStatusClass(l.status);
+    const badges = [];
+    if (l.enrichment) badges.push('<span class="badge enriched">✓ Enriched</span>');
+    if (l.emailDraft) badges.push('<span class="badge drafted">✉ Drafted</span>');
+    if (l.sent) badges.push('<span class="badge sent">✈ Sent</span>');
+
+    return `<div class="lead-card fade-in" style="animation-delay:${Math.min(i * 0.03, 0.3)}s" onclick="openDetail('${l.id}')">
+      <div class="lc-top">
+        <div class="lc-name">${esc(l.name)}</div>
+        ${l.status ? `<span class="lc-status ${statusClass}">${esc(l.status)}</span>` : ''}
       </div>
-      <div class="lead-address">📍 ${esc(l.address || 'No address')}</div>
-      ${l.enrichment ? `<div class="lead-snippet">${esc(l.enrichment.outreach || l.enrichment.summary || '').slice(0,120)}…</div>` : ''}
-      <div class="lead-card-footer">
-        ${l.email ? `<span style="font-size:11px;color:var(--text2)">✉️ ${esc(l.email)}</span>` : ''}
-        ${l.contactStatus === 'drafted' ? '<span class="contact-badge drafted">Drafted</span>' : ''}
-        ${l.contactStatus === 'sent' ? '<span class="contact-badge sent">Sent ✓</span>' : ''}
+      ${l.address ? `<div class="lc-address">${esc(l.address)}</div>` : ''}
+      <div class="lc-meta">
+        ${l.email ? `<span>✉ ${esc(l.email)}</span>` : ''}
+        ${l.phone ? `<span>📞 ${esc(l.phone)}</span>` : ''}
+        ${l.price ? `<span>💰 ${esc(l.price)}</span>` : ''}
       </div>
-    </div>
-  `).join('');
+      ${badges.length ? `<div style="margin-top:8px;display:flex;gap:6px">${badges.join('')}</div>` : ''}
+    </div>`;
+  }).join('');
 }
 
-function statusBadge(status) {
-  const s = (status || '').toLowerCase().replace(/[\s_-]/g,'');
-  if (s.includes('active')) return '<span class="badge badge-active">Active</span>';
-  if (s.includes('expired')) return '<span class="badge badge-expired">Expired</span>';
-  if (s.includes('foreclos') || s.includes('preforeclos')) return '<span class="badge badge-preforeclosure">Pre-foreclosure</span>';
-  if (s.includes('new')) return '<span class="badge badge-new">New</span>';
-  if (status) return `<span class="badge badge-other">${esc(status)}</span>`;
-  return '<span class="badge badge-new">New</span>';
+function getStatusClass(status) {
+  if (!status) return 'default';
+  const s = status.toLowerCase();
+  if (s.includes('foreclos')) return 'foreclosure';
+  if (s.includes('expir')) return 'expired';
+  if (s.includes('fsbo') || s.includes('by owner')) return 'fsbo';
+  return 'default';
 }
 
-// Detail panel
+// ═══ Detail Panel ═══
 function openDetail(id) {
-  currentLeadId = id;
-  const l = leads.find(x => x.id === id);
-  if (!l) return;
-  
-  document.getElementById('detailPanel').innerHTML = `
-    <div class="detail-header">
-      <div>
-        <div class="detail-title">${esc(l.name || 'Unknown Lead')}</div>
-        <div class="detail-address">📍 ${esc(l.address || 'No address')}</div>
-      </div>
-      <button class="detail-close" onclick="closeDetail()">✕</button>
+  const lead = leads.find(l => l.id === id);
+  if (!lead) return;
+
+  const panel = document.getElementById('detailPanel');
+  panel.innerHTML = `
+    <div class="dp-header">
+      <button class="dp-close" onclick="closeDetail()">✕</button>
+      <div class="dp-title">${esc(lead.name)}</div>
     </div>
-    <div class="detail-body">
-      <div class="detail-section">
-        <div class="detail-section-title">Lead Info</div>
-        <div class="info-grid">
-          <div class="info-item"><div class="info-label">Name</div><div class="info-value">${esc(l.name || '—')}</div></div>
-          <div class="info-item"><div class="info-label">Email</div><div class="info-value">${esc(l.email || '—')}</div></div>
-          <div class="info-item"><div class="info-label">Status</div><div class="info-value">${statusBadge(l.status)}</div></div>
-          <div class="info-item"><div class="info-label">Contact</div><div class="info-value">
-            <select class="status-select" onchange="updateContact('${l.id}',this.value)">
-              <option value="not_contacted" ${l.contactStatus==='not_contacted'?'selected':''}>Not Contacted</option>
-              <option value="drafted" ${l.contactStatus==='drafted'?'selected':''}>Email Drafted</option>
-              <option value="sent" ${l.contactStatus==='sent'?'selected':''}>Email Sent</option>
-            </select>
-          </div></div>
-          ${l.notes ? `<div class="info-item full"><div class="info-label">Notes</div><div class="info-value">${esc(l.notes)}</div></div>` : ''}
-        </div>
-      </div>
 
-      <div class="detail-section">
-        <div class="detail-section-title">AI Enrichment</div>
-        <div id="enrichmentArea">
-          ${l.enrichment ? renderEnrichment(l.enrichment) : '<div class="action-row"><button class="btn btn-accent" onclick="enrich(\''+l.id+'\')">✨ Enrich Lead</button></div>'}
-        </div>
-      </div>
+    <div class="dp-section">
+      <div class="dp-section-title">Lead Info</div>
+      ${lead.address ? `<div class="dp-field"><label>Address</label><div class="val">📍 ${esc(lead.address)}</div></div>` : ''}
+      ${lead.email ? `<div class="dp-field"><label>Email</label><div class="val">${esc(lead.email)}</div></div>` : ''}
+      ${lead.phone ? `<div class="dp-field"><label>Phone</label><div class="val">${esc(lead.phone)}</div></div>` : ''}
+      ${lead.status ? `<div class="dp-field"><label>Status</label><div class="val"><span class="lc-status ${getStatusClass(lead.status)}" style="display:inline-block">${esc(lead.status)}</span></div></div>` : ''}
+      ${lead.price ? `<div class="dp-field"><label>Price</label><div class="val">${esc(lead.price)}</div></div>` : ''}
+      ${lead.notes ? `<div class="dp-field"><label>Notes</label><div class="val" style="color:var(--text2)">${esc(lead.notes)}</div></div>` : ''}
+    </div>
 
-      <div class="detail-section">
-        <div class="detail-section-title">Email Outreach</div>
-        <div id="emailArea">
-          ${l.emailDraft ? renderEmail(l) : `<div class="action-row"><button class="btn btn-accent" onclick="draftEmail('${l.id}')" ${!l.enrichment?'disabled title="Enrich first"':''}>📝 Draft Email</button></div>`}
-        </div>
-      </div>
+    <div class="dp-section">
+      <div class="dp-section-title">AI Enrichment</div>
+      ${lead.enrichment
+        ? `<div class="val" style="font-size:13px;line-height:1.6;color:var(--text2)">${formatEnrichment(lead.enrichment)}</div>`
+        : `<button class="btn-enrich" id="enrichBtn" onclick="enrichLead('${lead.id}')">🔍 Enrich with AI</button>`
+      }
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Outreach Email</div>
+      ${lead.emailDraft || lead.enrichment
+        ? `<div class="email-editor">
+            <textarea id="emailDraft" placeholder="AI will draft a personalized email...">${esc(lead.emailDraft)}</textarea>
+            <div class="email-actions">
+              ${!lead.emailDraft ? `<button class="btn-primary" onclick="draftEmail('${lead.id}')">✍ Draft Email</button>` : ''}
+              ${lead.emailDraft && !lead.sent ? `<button class="btn-primary" onclick="sendEmail('${lead.id}')">📧 Copy & Open Mail</button>` : ''}
+              ${lead.emailDraft ? `<button class="btn-secondary" onclick="draftEmail('${lead.id}')">↻ Redraft</button>` : ''}
+              ${lead.sent ? `<span class="badge sent" style="padding:10px 16px;font-size:12px">✈ Sent</span>` : ''}
+            </div>
+          </div>`
+        : `<div style="font-size:13px;color:var(--muted)">Enrich the lead first, then AI will draft a personalized email.</div>`
+      }
+    </div>
+
+    <div class="dp-section">
+      <button class="btn-secondary" style="width:100%;color:var(--red);border-color:var(--red-dim)" onclick="deleteLead('${lead.id}')">🗑 Remove Lead</button>
     </div>
   `;
-  document.getElementById('detailOverlay').classList.add('active');
+
+  document.getElementById('detailOverlay').classList.add('open');
 }
 
 function closeDetail() {
-  document.getElementById('detailOverlay').classList.remove('active');
-  currentLeadId = null;
-  renderLeads();
-  updateStats();
+  document.getElementById('detailOverlay').classList.remove('open');
 }
 
-function renderEnrichment(e) {
-  return `
-    <div class="enrichment-cards">
-      <div class="enrichment-card"><div class="enrichment-card-label">💰 Est. Value</div><div class="enrichment-card-value">${esc(e.value || '—')}</div></div>
-      <div class="enrichment-card"><div class="enrichment-card-label">📅 Days on Market</div><div class="enrichment-card-value">${esc(e.dom || '—')}</div></div>
-      <div class="enrichment-card full"><div class="enrichment-card-label">👤 Owner Situation</div><div class="enrichment-card-value">${esc(e.summary || '—')}</div></div>
-      <div class="enrichment-card full"><div class="enrichment-card-label">🎯 Best Outreach Angle</div><div class="enrichment-card-value">${esc(e.outreach || '—')}</div></div>
-    </div>
-    <div class="action-row" style="margin-top:10px"><button class="btn btn-sm" onclick="enrich('${currentLeadId}')">🔄 Re-enrich</button></div>
-  `;
+function formatEnrichment(text) {
+  return esc(text).replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--text)">$1</strong>');
 }
 
-function renderEmail(l) {
-  return `
-    <div class="email-editor">
-      <textarea id="emailDraftArea" oninput="saveEmailDraft('${l.id}',this.value)">${esc(l.emailDraft)}</textarea>
-      <div class="email-actions">
-        <button class="btn btn-sm" onclick="copyEmail()">📋 Copy</button>
-        <button class="btn btn-sm" onclick="openMail('${l.id}')">✉️ Open in Mail</button>
-        <button class="btn btn-sm btn-accent" onclick="draftEmail('${l.id}')">🔄 Re-draft</button>
-        <button class="btn btn-sm" onclick="markSent('${l.id}')" style="margin-left:auto">✅ Mark Sent</button>
-      </div>
-    </div>
-  `;
-}
+// ═══ AI Calls ═══
+async function enrichLead(id) {
+  const lead = leads.find(l => l.id === id);
+  if (!lead) return;
 
-// AI calls
-async function enrich(id) {
-  const l = leads.find(x => x.id === id);
-  if (!l) return;
-  const area = document.getElementById('enrichmentArea');
-  area.innerHTML = '<div class="shimmer" style="height:32px"></div><div class="shimmer" style="height:60px;margin-top:8px"></div><div class="shimmer" style="height:60px;margin-top:8px"></div>';
-  
+  const btn = document.getElementById('enrichBtn');
+  if (btn) { btn.disabled = true; btn.classList.add('loading'); btn.textContent = 'Enriching'; }
+
+  const prompt = `You are a real estate research assistant. Given this property lead, provide a brief enrichment analysis. Be concise (under 150 words).
+
+Lead info:
+- Name: ${lead.name}
+- Address: ${lead.address || 'Unknown'}
+- Status: ${lead.status || 'Unknown'}
+- Price: ${lead.price || 'Unknown'}
+- Notes: ${lead.notes || 'None'}
+
+Provide:
+1. **Estimated Situation**: Why this property might be available (2-3 sentences)
+2. **Outreach Angle**: The best way to approach this owner (1-2 sentences)
+3. **Urgency Level**: Low / Medium / High with brief reason`;
+
   try {
-    const prompt = `Given this property lead: Name: ${l.name}, Address: ${l.address}, Status: ${l.status}, Notes: ${l.notes}. Generate a JSON object (no markdown) with keys: "value" (estimated property value), "dom" (days on market estimate), "summary" (owner situation summary, 1-2 sentences), "outreach" (best outreach angle, 1-2 sentences).`;
-    const data = await apiChat(prompt);
-    const parsed = parseJSON(data.reply);
-    l.enrichment = parsed;
-    save();
-    area.innerHTML = renderEnrichment(parsed);
-    // Enable draft button
-    const emailArea = document.getElementById('emailArea');
-    if (emailArea && !l.emailDraft) {
-      emailArea.innerHTML = `<div class="action-row"><button class="btn btn-accent" onclick="draftEmail('${l.id}')">📝 Draft Email</button></div>`;
-    }
-  } catch(e) {
-    area.innerHTML = `<div style="color:var(--red);font-size:13px">Failed to enrich: ${esc(e.message)}</div><div class="action-row" style="margin-top:8px"><button class="btn btn-sm" onclick="enrich('${id}')">Retry</button></div>`;
+    const result = await callAI(prompt);
+    lead.enrichment = result;
+    saveLeads();
+    openDetail(id); // re-render panel
+    render();
+    showToast('Lead enriched', 'success');
+  } catch (e) {
+    showToast('Enrichment failed: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.textContent = '🔍 Enrich with AI'; }
   }
 }
 
 async function draftEmail(id) {
-  const l = leads.find(x => x.id === id);
-  if (!l) return;
-  const area = document.getElementById('emailArea');
-  area.innerHTML = '<div class="shimmer" style="height:120px"></div>';
-  
+  const lead = leads.find(l => l.id === id);
+  if (!lead) return;
+
+  const ta = document.getElementById('emailDraft');
+  if (ta) ta.value = 'Drafting...';
+
+  const prompt = `You are a real estate agent writing a personalized cold outreach email. Write a warm, professional email under 150 words. No fake urgency, no pushy language. Be genuine and helpful.
+
+Lead:
+- Owner: ${lead.name}
+- Property: ${lead.address || 'their property'}
+- Status: ${lead.status || 'potential seller'}
+- Context: ${lead.enrichment || lead.notes || 'No additional context'}
+
+Write ONLY the email body (no subject line, no greeting template). Start with a personalized opening line about their specific situation. End with a soft call to action like grabbing coffee or a quick call.`;
+
   try {
-    const enrichCtx = l.enrichment ? `Enrichment context: Value: ${l.enrichment.value}, DOM: ${l.enrichment.dom}, Situation: ${l.enrichment.summary}, Angle: ${l.enrichment.outreach}` : '';
-    const prompt = `Write a personalized cold email from a real estate agent to ${l.name || 'the owner'} about their property at ${l.address || 'their property'}. Status: ${l.status || 'unknown'}. ${enrichCtx}. Keep it warm, personal, under 150 words. No fake urgency. No subject line — just the email body. Plain text only.`;
-    const data = await apiChat(prompt);
-    l.emailDraft = data.reply.trim();
-    l.contactStatus = 'drafted';
-    save();
-    area.innerHTML = renderEmail(l);
-    // Update contact select
-    const sel = document.querySelector('.status-select');
-    if (sel) sel.value = 'drafted';
-  } catch(e) {
-    area.innerHTML = `<div style="color:var(--red);font-size:13px">Failed to draft: ${esc(e.message)}</div><div class="action-row" style="margin-top:8px"><button class="btn btn-sm" onclick="draftEmail('${id}')">Retry</button></div>`;
+    const result = await callAI(prompt);
+    lead.emailDraft = result;
+    saveLeads();
+    openDetail(id);
+    render();
+    showToast('Email drafted', 'success');
+  } catch (e) {
+    showToast('Draft failed: ' + e.message, 'error');
+    if (ta) ta.value = lead.emailDraft || '';
   }
 }
 
-async function apiChat(message) {
+async function callAI(prompt) {
   const res = await fetch('/api/gateway/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message })
+    body: JSON.stringify({
+      model: 'openclaw:main',
+      messages: [{ role: 'user', content: prompt }],
+      stream: false
+    })
   });
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  return res.json();
+
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || 'No response';
 }
 
-function parseJSON(text) {
-  // Try to extract JSON from response
-  const match = text.match(/\{[\s\S]*\}/);
-  if (match) {
-    try { return JSON.parse(match[0]); } catch(e) {}
-  }
-  // Fallback: try to parse key-value pairs
-  return { value: extract(text,'value'), dom: extract(text,'dom','days'), summary: extract(text,'summary','situation'), outreach: extract(text,'outreach','angle') };
+function sendEmail(id) {
+  const lead = leads.find(l => l.id === id);
+  if (!lead || !lead.emailDraft) return;
+
+  // Save any edits from textarea
+  const ta = document.getElementById('emailDraft');
+  if (ta) lead.emailDraft = ta.value;
+
+  // Copy to clipboard
+  navigator.clipboard.writeText(lead.emailDraft).then(() => {
+    // Open mailto link
+    if (lead.email) {
+      const subject = encodeURIComponent(`Your property at ${lead.address || 'your address'}`);
+      const body = encodeURIComponent(lead.emailDraft);
+      window.open(`mailto:${lead.email}?subject=${subject}&body=${body}`, '_blank');
+    }
+
+    lead.sent = true;
+    saveLeads();
+    openDetail(id);
+    render();
+    showToast('Email copied & mail opened', 'success');
+  }).catch(() => {
+    showToast('Could not copy — please copy manually', 'error');
+  });
 }
 
-function extract(text, ...keys) {
-  for (const k of keys) {
-    const re = new RegExp(k + '[:\\s]+["\']?([^"\'\\n]+)', 'i');
-    const m = text.match(re);
-    if (m) return m[1].trim();
-  }
-  return text.slice(0, 100);
-}
-
-// Actions
-function saveEmailDraft(id, val) {
-  const l = leads.find(x => x.id === id);
-  if (l) { l.emailDraft = val; save(); }
-}
-
-function copyEmail() {
-  const ta = document.getElementById('emailDraftArea');
-  if (ta) { navigator.clipboard.writeText(ta.value); toast('Copied to clipboard'); }
-}
-
-function openMail(id) {
-  const l = leads.find(x => x.id === id);
-  if (!l) return;
-  const subject = encodeURIComponent(`Your property at ${l.address || 'your address'}`);
-  const body = encodeURIComponent(document.getElementById('emailDraftArea')?.value || l.emailDraft);
-  window.open(`mailto:${l.email || ''}?subject=${subject}&body=${body}`);
-}
-
-function markSent(id) {
-  const l = leads.find(x => x.id === id);
-  if (l) { l.contactStatus = 'sent'; save(); }
-  const sel = document.querySelector('.status-select');
-  if (sel) sel.value = 'sent';
-  toast('Marked as sent ✓');
-}
-
-function updateContact(id, val) {
-  const l = leads.find(x => x.id === id);
-  if (l) { l.contactStatus = val; save(); updateStats(); }
+function deleteLead(id) {
+  leads = leads.filter(l => l.id !== id);
+  saveLeads();
+  closeDetail();
+  render();
+  showToast('Lead removed', 'success');
 }
 
 function clearAll() {
+  if (!leads.length) return;
   if (!confirm('Clear all leads? This cannot be undone.')) return;
-  leads = []; save(); showUpload();
+  leads = [];
+  saveLeads();
+  render();
+  showToast('All leads cleared', 'success');
 }
 
-function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(leads)); }
-function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
-function toast(msg) {
-  const t = document.createElement('div');
-  t.className = 'toast'; t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 2500);
+// ═══ UI Helpers ═══
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = 'toast', 3000);
 }
+
+function esc(t) { const d = document.createElement('div'); d.textContent = t || ''; return d.innerHTML; }
+
+// ═══ Header scroll effect ═══
+window.addEventListener('scroll', () => {
+  document.getElementById('header').classList.toggle('scrolled', window.scrollY > 10);
+});
+
+// ═══ Init ═══
+loadLeads();
+render();
 </script>
 </body>
 </html>
