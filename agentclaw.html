@@ -187,6 +187,33 @@ header.scrolled{border-bottom-color:var(--border)}
   .dp-section{padding:16px}
 }
 
+/* ═══ Pro Badge ═══ */
+.pro-badge{display:inline-block;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;
+  background:linear-gradient(135deg,var(--warm),var(--warm2));color:var(--bg);letter-spacing:.5px;vertical-align:middle;margin-left:4px}
+
+/* ═══ Enrichment Field Toggle ═══ */
+.ef-item{display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:8px;transition:all .15s}
+.ef-item:hover{border-color:var(--border2)}
+.ef-item.off{opacity:.45}
+.ef-toggle{width:40px;height:22px;border-radius:11px;background:var(--border);cursor:pointer;
+  position:relative;flex-shrink:0;margin-top:2px;transition:background .2s;border:none}
+.ef-toggle.on{background:var(--green)}
+.ef-toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;
+  border-radius:50%;background:#fff;transition:transform .2s}
+.ef-toggle.on::after{transform:translateX(18px)}
+.ef-info{flex:1;min-width:0}
+.ef-name{font-size:13px;font-weight:700;margin-bottom:2px}
+.ef-desc{font-size:11px;color:var(--text2);line-height:1.4}
+.ef-edit{margin-top:6px}
+.ef-edit textarea{width:100%;min-height:48px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);
+  background:var(--bg);color:var(--text);font-size:12px;resize:vertical;line-height:1.4;outline:none;transition:border-color .15s}
+.ef-edit textarea:focus{border-color:var(--warm)}
+.ef-custom{position:relative}
+.ef-remove{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--red);
+  font-size:14px;cursor:pointer;opacity:.5;transition:opacity .15s}
+.ef-remove:hover{opacity:1}
+
 /* ═══ Animations ═══ */
 .fade-in{animation:fadeIn .4s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -205,6 +232,7 @@ header.scrolled{border-bottom-color:var(--border)}
       <h1>AgentClaw</h1>
     </div>
     <div class="header-actions">
+      <button class="btn-ghost" onclick="openSettings()">⚙️ AI Settings</button>
       <button class="btn-ghost" onclick="document.getElementById('csvInput').click()">+ Import CSV</button>
       <button class="btn-ghost" onclick="clearAll()">Clear</button>
     </div>
@@ -253,12 +281,209 @@ header.scrolled{border-bottom-color:var(--border)}
   <div class="detail-panel" id="detailPanel"></div>
 </div>
 
+<!-- Settings Modal -->
+<div class="detail-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="detail-panel" id="settingsPanel" style="max-width:620px">
+    <div class="dp-header">
+      <button class="dp-close" onclick="closeSettings()">✕</button>
+      <div class="dp-title">⚙️ AI Settings</div>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Enrichment Fields <span class="badge enriched" style="margin-left:6px">Customizable</span></div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">
+        Choose what AI analyzes for each lead. Toggle fields on/off and edit the instructions.
+      </div>
+      <div id="enrichFields"></div>
+      <button class="btn-secondary" style="width:100%;margin-top:10px" onclick="addCustomField()">+ Add Custom Field <span class="pro-badge">PRO</span></button>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Email Style</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.5">
+        How should AI write your outreach emails?
+      </div>
+      <div class="dp-field">
+        <label>Tone</label>
+        <select id="emailTone" onchange="saveSettings()" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-size:13px">
+          <option value="warm">Warm & Genuine</option>
+          <option value="professional">Professional & Direct</option>
+          <option value="casual">Casual & Neighborly</option>
+          <option value="urgent">Empathetic & Urgent</option>
+        </select>
+      </div>
+      <div class="dp-field">
+        <label>Max Words</label>
+        <select id="emailLength" onchange="saveSettings()" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-size:13px">
+          <option value="100">Short (~100 words)</option>
+          <option value="150" selected>Medium (~150 words)</option>
+          <option value="250">Detailed (~250 words)</option>
+        </select>
+      </div>
+      <div class="dp-field">
+        <label>Your Name (for sign-off)</label>
+        <input type="text" id="agentName" placeholder="e.g. Sarah Johnson" oninput="saveSettings()" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-size:13px">
+      </div>
+      <div class="dp-field">
+        <label>Custom Instructions <span class="pro-badge">PRO</span></label>
+        <textarea id="emailCustom" placeholder="e.g. Always mention my 15 years of experience in South Austin. Never use the word 'opportunity'." oninput="saveSettings()" style="width:100%;min-height:80px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-size:13px;resize:vertical;line-height:1.5"></textarea>
+      </div>
+    </div>
+
+    <div class="dp-section">
+      <button class="btn-enrich" onclick="resetSettings()" style="border-color:var(--border);color:var(--text2);background:var(--surface)">↻ Reset to Defaults</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
 // ═══ State ═══
 let leads = []; // [{id, name, email, address, status, notes, enrichment, emailDraft, sent}]
+
+// ═══ Default Enrichment Fields ═══
+const DEFAULT_FIELDS = [
+  { id: 'situation', name: 'Estimated Situation', desc: 'Why this property might be available', enabled: true, builtin: true,
+    prompt: 'Why this property might be available based on the status and notes (2-3 sentences)' },
+  { id: 'value', name: 'Value Assessment', desc: 'Is the asking price realistic?', enabled: true, builtin: true,
+    prompt: 'Is the asking price realistic for this area? Overpriced, underpriced, or fair? Brief analysis.' },
+  { id: 'angle', name: 'Outreach Angle', desc: 'Best way to approach this owner', enabled: true, builtin: true,
+    prompt: 'The single best angle to approach this owner. Be specific and tactical (1-2 sentences)' },
+  { id: 'urgency', name: 'Urgency Level', desc: 'How quickly to act', enabled: true, builtin: true,
+    prompt: 'Urgency level: Low / Medium / High with a brief reason why' },
+  { id: 'motivation', name: 'Owner Motivation Score', desc: 'Rate seller motivation 1-10', enabled: true, builtin: true,
+    prompt: 'Rate the owner motivation from 1-10 based on available signals. Explain the score briefly.' },
+  { id: 'objections', name: 'Likely Objections', desc: 'What they\'ll push back on', enabled: false, builtin: true,
+    prompt: 'Top 2 objections this owner will likely raise, and a one-line counter for each' },
+  { id: 'comps', name: 'Comparable Context', desc: 'Nearby sales context', enabled: false, builtin: true,
+    prompt: 'Brief context on what similar properties in this area have been selling for recently' },
+  { id: 'channel', name: 'Best Contact Method', desc: 'Email, phone, or door knock?', enabled: false, builtin: true,
+    prompt: 'Recommended contact method (email, phone call, text, or door knock) and best time to reach out, with reasoning' },
+];
+
+let settings = {
+  fields: JSON.parse(JSON.stringify(DEFAULT_FIELDS)),
+  emailTone: 'warm',
+  emailLength: '150',
+  agentName: '',
+  emailCustom: ''
+};
+
+function loadSettings() {
+  try { const s = JSON.parse(localStorage.getItem('ac-settings')); if (s && s.fields) settings = s; } catch {}
+}
+function saveSettings() {
+  // Sync UI values
+  settings.emailTone = document.getElementById('emailTone')?.value || settings.emailTone;
+  settings.emailLength = document.getElementById('emailLength')?.value || settings.emailLength;
+  settings.agentName = document.getElementById('agentName')?.value || settings.agentName;
+  settings.emailCustom = document.getElementById('emailCustom')?.value || settings.emailCustom;
+  // Save field prompts from textareas
+  settings.fields.forEach(f => {
+    const ta = document.getElementById('ef-prompt-' + f.id);
+    if (ta) f.prompt = ta.value;
+  });
+  localStorage.setItem('ac-settings', JSON.stringify(settings));
+}
+function resetSettings() {
+  if (!confirm('Reset all AI settings to defaults?')) return;
+  settings = { fields: JSON.parse(JSON.stringify(DEFAULT_FIELDS)), emailTone: 'warm', emailLength: '150', agentName: '', emailCustom: '' };
+  localStorage.setItem('ac-settings', JSON.stringify(settings));
+  renderSettingsFields();
+  document.getElementById('emailTone').value = 'warm';
+  document.getElementById('emailLength').value = '150';
+  document.getElementById('agentName').value = '';
+  document.getElementById('emailCustom').value = '';
+  showToast('Settings reset to defaults', 'success');
+}
+
+function openSettings() {
+  document.getElementById('settingsOverlay').classList.add('open');
+  document.getElementById('emailTone').value = settings.emailTone;
+  document.getElementById('emailLength').value = settings.emailLength;
+  document.getElementById('agentName').value = settings.agentName;
+  document.getElementById('emailCustom').value = settings.emailCustom;
+  renderSettingsFields();
+}
+function closeSettings() { saveSettings(); document.getElementById('settingsOverlay').classList.remove('open'); }
+
+function renderSettingsFields() {
+  const container = document.getElementById('enrichFields');
+  container.innerHTML = settings.fields.map(f => `
+    <div class="ef-item${f.enabled ? '' : ' off'}${f.builtin ? '' : ' ef-custom'}">
+      <button class="ef-toggle${f.enabled ? ' on' : ''}" onclick="toggleField('${f.id}')"></button>
+      <div class="ef-info">
+        <div class="ef-name">${esc(f.name)}${f.builtin ? '' : ' <span class=\\'pro-badge\\'>CUSTOM</span>'}</div>
+        <div class="ef-desc">${esc(f.desc)}</div>
+        <div class="ef-edit"><textarea id="ef-prompt-${f.id}" oninput="saveSettings()" placeholder="Instructions for AI...">${esc(f.prompt)}</textarea></div>
+      </div>
+      ${f.builtin ? '' : '<button class="ef-remove" onclick="removeField(\\''+f.id+'\\')">✕</button>'}
+    </div>
+  `).join('');
+}
+
+function toggleField(id) {
+  const f = settings.fields.find(x => x.id === id);
+  if (f) { f.enabled = !f.enabled; saveSettings(); renderSettingsFields(); }
+}
+
+function addCustomField() {
+  const id = 'custom_' + Date.now();
+  settings.fields.push({ id, name: 'Custom Field', desc: 'Your custom enrichment', enabled: true, builtin: false, prompt: '' });
+  saveSettings();
+  renderSettingsFields();
+  // Focus the new field's name — actually let's use a prompt
+  const name = prompt('Field name (e.g. "Investment Potential", "Renovation Estimate"):');
+  if (name) {
+    const f = settings.fields.find(x => x.id === id);
+    f.name = name;
+    f.desc = 'Custom enrichment field';
+    saveSettings();
+    renderSettingsFields();
+    // Focus the prompt textarea
+    setTimeout(() => { const ta = document.getElementById('ef-prompt-' + id); if (ta) ta.focus(); }, 100);
+  } else {
+    settings.fields = settings.fields.filter(x => x.id !== id);
+    saveSettings();
+    renderSettingsFields();
+  }
+}
+
+function removeField(id) {
+  settings.fields = settings.fields.filter(x => x.id !== id);
+  saveSettings();
+  renderSettingsFields();
+}
+
+function buildEnrichmentPrompt(lead) {
+  const enabledFields = settings.fields.filter(f => f.enabled);
+  let prompt = `You are a real estate research assistant. Given this property lead, provide a brief enrichment analysis. Be concise and actionable.\n\nLead info:\n- Name: ${lead.name}\n- Address: ${lead.address || 'Unknown'}\n- Status: ${lead.status || 'Unknown'}\n- Price: ${lead.price || 'Unknown'}\n- Notes: ${lead.notes || 'None'}`;
+  if (lead.phone) prompt += `\n- Phone: ${lead.phone}`;
+  prompt += '\n\nAnalyze the following (use **bold** for field names):';
+  enabledFields.forEach((f, i) => {
+    prompt += `\n${i+1}. **${f.name}**: ${f.prompt}`;
+  });
+  return prompt;
+}
+
+function buildEmailPrompt(lead) {
+  const toneMap = {
+    warm: 'warm, genuine, and empathetic',
+    professional: 'professional, direct, and confident',
+    casual: 'casual, friendly, and neighborly — like a friend who happens to be in real estate',
+    urgent: 'empathetic but with subtle urgency — time is a factor'
+  };
+  const tone = toneMap[settings.emailTone] || toneMap.warm;
+  const maxWords = settings.emailLength || '150';
+  let prompt = `You are a real estate agent writing a personalized cold outreach email. Tone: ${tone}. Keep it under ${maxWords} words. No fake urgency, no pushy language.`;
+  if (settings.agentName) prompt += ` Sign off as "${settings.agentName}".`;
+  if (settings.emailCustom) prompt += `\n\nAdditional instructions: ${settings.emailCustom}`;
+  prompt += `\n\nLead:\n- Owner: ${lead.name}\n- Property: ${lead.address || 'their property'}\n- Status: ${lead.status || 'potential seller'}\n- Context: ${lead.enrichment || lead.notes || 'No additional context'}`;
+  prompt += '\n\nWrite ONLY the email body. Start with a personalized opening line about their specific situation. End with a soft call to action.';
+  return prompt;
+}
 
 // ═══ CSV Parsing ═══
 function handleFile(e) {
@@ -480,19 +705,7 @@ async function enrichLead(id) {
   const btn = document.getElementById('enrichBtn');
   if (btn) { btn.disabled = true; btn.classList.add('loading'); btn.textContent = 'Enriching'; }
 
-  const prompt = `You are a real estate research assistant. Given this property lead, provide a brief enrichment analysis. Be concise (under 150 words).
-
-Lead info:
-- Name: ${lead.name}
-- Address: ${lead.address || 'Unknown'}
-- Status: ${lead.status || 'Unknown'}
-- Price: ${lead.price || 'Unknown'}
-- Notes: ${lead.notes || 'None'}
-
-Provide:
-1. **Estimated Situation**: Why this property might be available (2-3 sentences)
-2. **Outreach Angle**: The best way to approach this owner (1-2 sentences)
-3. **Urgency Level**: Low / Medium / High with brief reason`;
+  const prompt = buildEnrichmentPrompt(lead);
 
   try {
     const result = await callAI(prompt);
@@ -514,15 +727,7 @@ async function draftEmail(id) {
   const ta = document.getElementById('emailDraft');
   if (ta) ta.value = 'Drafting...';
 
-  const prompt = `You are a real estate agent writing a personalized cold outreach email. Write a warm, professional email under 150 words. No fake urgency, no pushy language. Be genuine and helpful.
-
-Lead:
-- Owner: ${lead.name}
-- Property: ${lead.address || 'their property'}
-- Status: ${lead.status || 'potential seller'}
-- Context: ${lead.enrichment || lead.notes || 'No additional context'}
-
-Write ONLY the email body (no subject line, no greeting template). Start with a personalized opening line about their specific situation. End with a soft call to action like grabbing coffee or a quick call.`;
+  const prompt = buildEmailPrompt(lead);
 
   try {
     const result = await callAI(prompt);
@@ -615,6 +820,7 @@ window.addEventListener('scroll', () => {
 });
 
 // ═══ Init ═══
+loadSettings();
 loadLeads();
 render();
 </script>
