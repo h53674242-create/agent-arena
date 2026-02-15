@@ -415,11 +415,11 @@ function renderSettingsFields() {
     <div class="ef-item${f.enabled ? '' : ' off'}${f.builtin ? '' : ' ef-custom'}">
       <button class="ef-toggle${f.enabled ? ' on' : ''}" onclick="toggleField('${f.id}')"></button>
       <div class="ef-info">
-        <div class="ef-name">${esc(f.name)}${f.builtin ? '' : ' <span class=\\'pro-badge\\'>CUSTOM</span>'}</div>
+        <div class="ef-name">${esc(f.name)}${f.builtin ? '' : ' <span class="pro-badge">CUSTOM</span>'}</div>
         <div class="ef-desc">${esc(f.desc)}</div>
         <div class="ef-edit"><textarea id="ef-prompt-${f.id}" oninput="saveSettings()" placeholder="Instructions for AI...">${esc(f.prompt)}</textarea></div>
       </div>
-      ${f.builtin ? '' : '<button class="ef-remove" onclick="removeField(\\''+f.id+'\\')">✕</button>'}
+      ${f.builtin ? '' : '<button class="ef-remove" onclick="removeField(\''+f.id+'\')">✕</button>'}
     </div>
   `).join('');
 }
